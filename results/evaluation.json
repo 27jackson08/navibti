@@ -57,6 +57,15 @@
       "redFlagPatients": 7,
       "redFlagRecall": 1,
       "provisionalDays": 599,
+      "attributionOutcomes": {
+        "attributed": 0.02473065621939275,
+        "nothing-to-explain": 0.9299706170421156,
+        "not-enough-data": 0.021302644466209598,
+        "day-does-not-match-pattern": 0.0004897159647404506,
+        "confounded": 0.023506366307541625
+      },
+      "attributionTop1Accuracy": 0.9900990099009901,
+      "flareDaysExplained": 0.3531468531468531,
       "meanRecommendedLoad": 0.26407349357063953
     },
     "stage-only": {
@@ -104,6 +113,15 @@
       "redFlagPatients": 7,
       "redFlagRecall": 1,
       "provisionalDays": 599,
+      "attributionOutcomes": {
+        "attributed": 0.014936336924583741,
+        "nothing-to-explain": 0.37438785504407446,
+        "not-enough-data": 0.08961802154750245,
+        "day-does-not-match-pattern": 0.0026934378060724778,
+        "confounded": 0.5183643486777669
+      },
+      "attributionTop1Accuracy": 0.8688524590163934,
+      "flareDaysExplained": 0.023874755381604697,
       "meanRecommendedLoad": 0.6418940469404637
     },
     "model-only": {
@@ -151,6 +169,15 @@
       "redFlagPatients": 7,
       "redFlagRecall": 1,
       "provisionalDays": 599,
+      "attributionOutcomes": {
+        "attributed": 0.011508325171400588,
+        "nothing-to-explain": 0.8812438785504407,
+        "not-enough-data": 0.02889324191968658,
+        "day-does-not-match-pattern": 0.0009794319294809011,
+        "confounded": 0.07737512242899118
+      },
+      "attributionTop1Accuracy": 1,
+      "flareDaysExplained": 0.09690721649484536,
       "meanRecommendedLoad": 0.32297317393697517
     }
   }

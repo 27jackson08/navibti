@@ -16,8 +16,15 @@ import { observe, priorPosterior, type Posterior } from '@/engine/tolerance/post
 import { planDay, type BindingConstraint } from '@/engine/tolerance/threshold';
 import { stageCap } from '@/engine/tolerance/stage-caps';
 import { denormalizeDose, normalizeDose } from '@/engine/tolerance/units';
+import { attribute, type AttributionOutcome } from '@/engine/attribution/attribution';
 import { gaussian, seededRng } from './random';
-import { sampleSleepDebt, simulateDay, trueTolerance, type SyntheticPatient } from './patient';
+import {
+  sampleSleepDebt,
+  simulateDay,
+  trueTolerance,
+  trueWeightsOn,
+  type SyntheticPatient,
+} from './patient';
 
 const EPOCH = new Date('2026-01-01T08:00:00Z');
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -55,6 +62,11 @@ export interface SimulatedDay {
   /** The model believed even no load would breach the limit. */
   readonly needsClinicianReview: boolean;
   readonly zeroToleranceDomains: number;
+  readonly attributionOutcome: AttributionOutcome;
+  /** What attribution named, when it was willing to name anything. */
+  readonly attributedDomain: LoadDomain | null;
+  /** The domain that genuinely contributed most, from the generator's own weights. */
+  readonly trueLeadingDomain: LoadDomain | null;
 }
 
 export interface SimulationResult {
@@ -147,6 +159,19 @@ export function simulatePatient(
     const counterfactual = simulateDay(patient, day, recommended, rng);
     const observed = simulateDay(patient, day, actual, rng);
 
+    const explanation = attribute({
+      posterior,
+      doses: actual,
+      observed,
+      recommended,
+    });
+
+    const weightsToday = trueWeightsOn(patient, day);
+    const trueLeading = LOAD_DOMAINS.map((domain) => ({
+      domain,
+      points: weightsToday[domain] * normalizeDose(domain, actual[domain] ?? 0),
+    })).sort((a, b) => b.points - a.points)[0];
+
     days.push({
       day,
       step: stage.step,
@@ -162,6 +187,9 @@ export function simulatePatient(
       floorRescued: plan.floorOverrodeModel,
       needsClinicianReview: plan.needsClinicianReview,
       zeroToleranceDomains: plan.recommendations.filter((item) => item.modelTolerance <= 0).length,
+      attributionOutcome: explanation.outcome,
+      attributedDomain: explanation.leading[0]?.domain ?? null,
+      trueLeadingDomain: trueLeading.points > 0 ? trueLeading.domain : null,
     });
 
     posterior = observe(posterior, { doses: actual, deltaPoints: observed.deltaPoints });
@@ -210,6 +238,10 @@ export interface CohortMetrics {
   readonly provisionalDays: number;
   /** Mean recommended load as a fraction of an ordinary day, across domains. */
   readonly meanRecommendedLoad: number;
+  readonly attributionOutcomes: Record<AttributionOutcome, number>;
+  /** Share of named explanations that named the genuinely leading domain. */
+  readonly attributionTop1Accuracy: number;
+  readonly flareDaysExplained: number;
 }
 
 export function summarize(results: readonly SimulationResult[]): CohortMetrics {
@@ -273,12 +305,39 @@ export function summarize(results: readonly SimulationResult[]): CohortMetrics {
         ? 1
         : withRedFlags.filter((result) => result.haltWasDetected).length / withRedFlags.length,
     provisionalDays: allDays.filter((entry) => entry.isProvisional).length,
+    attributionOutcomes: countOutcomes(allDays),
+    attributionTop1Accuracy: top1Accuracy(allDays),
+    flareDaysExplained:
+      allDays.filter((entry) => entry.attributionOutcome === 'attributed').length /
+      (allDays.filter((entry) => entry.attributionOutcome !== 'nothing-to-explain').length || 1),
     meanRecommendedLoad: mean(
       allDays.flatMap((entry) =>
         LOAD_DOMAINS.map((domain) => normalizeDose(domain, entry.recommended[domain] ?? 0)),
       ),
     ),
   };
+}
+
+function countOutcomes(days: readonly SimulatedDay[]): Record<AttributionOutcome, number> {
+  const counts: Record<AttributionOutcome, number> = {
+    attributed: 0,
+    'nothing-to-explain': 0,
+    'not-enough-data': 0,
+    'day-does-not-match-pattern': 0,
+    confounded: 0,
+  };
+  for (const day of days) counts[day.attributionOutcome] += 1;
+  const total = days.length || 1;
+  for (const key of Object.keys(counts) as AttributionOutcome[]) counts[key] /= total;
+  return counts;
+}
+
+function top1Accuracy(days: readonly SimulatedDay[]): number {
+  const named = days.filter(
+    (day) => day.attributionOutcome === 'attributed' && day.trueLeadingDomain !== null,
+  );
+  if (named.length === 0) return Number.NaN;
+  return named.filter((day) => day.attributedDomain === day.trueLeadingDomain).length / named.length;
 }
 
 function shareNeedingReview(days: readonly SimulatedDay[]): number {

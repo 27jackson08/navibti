@@ -105,6 +105,36 @@ The "model only" row is the more honest test of the guardrails, and it is the on
 matters: removing the stage ceiling, the ramp and the floor makes the system less safe
 while recommending only slightly more load.
 
+## Explaining a flare
+
+| Outcome | Share of days |
+|---|---|
+| Named a likely driver | ${percent(shipped.attributionOutcomes.attributed)} |
+| Nothing to explain — symptoms stayed mild | ${percent(shipped.attributionOutcomes['nothing-to-explain'])} |
+| Declined: not enough data yet | ${percent(shipped.attributionOutcomes['not-enough-data'])} |
+| Declined: the day did not match the pattern | ${percent(shipped.attributionOutcomes['day-does-not-match-pattern'])} |
+| Declined: two loads were indistinguishable | ${percent(shipped.attributionOutcomes.confounded)} |
+
+**Top-1 accuracy when it did name a driver: ${percent(shipped.attributionTop1Accuracy)}** — the share of
+named explanations that picked the domain which genuinely contributed most, according to the
+generator's own weights.
+
+Of the days where symptoms actually rose past the limit, ${percent(shipped.flareDaysExplained)} got a
+named explanation and the rest got an explicit refusal.
+
+### Why so many refusals
+
+The confounding rate is high here partly as an artefact of the simulation. A synthetic
+patient follows a generated plan that scales every domain together, so cognitive load,
+screen exposure and social load genuinely do move in lockstep — and when they do, no
+method can say which one mattered. The gate is behaving correctly; it is the simulated
+behaviour that is unusually uninformative.
+
+Real days vary in ways these do not: a bad night, an exam, a quiet weekend, a long
+drive. That variation is what makes causes separable, and it is the main reason to
+expect a higher named-explanation rate in practice than this figure suggests. It is
+also the reason not to quote this number as a limitation of the method.
+
 ## What bound the recommendation
 
 | Constraint | Share of decisions |
@@ -147,5 +177,11 @@ console.log(
 );
 console.log(
   `red-flag recall  ${percent(shipped.redFlagRecall)} across ${shipped.redFlagPatients} patients`,
+);
+console.log(
+  `attribution      top-1 ${percent(shipped.attributionTop1Accuracy)}` +
+    `   named ${percent(shipped.attributionOutcomes.attributed)}` +
+    `   unusual-day ${percent(shipped.attributionOutcomes['day-does-not-match-pattern'])}` +
+    `   confounded ${percent(shipped.attributionOutcomes.confounded)}`,
 );
 console.log('\nwrote results/evaluation.json and results/evaluation.md');
