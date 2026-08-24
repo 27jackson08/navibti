@@ -149,6 +149,25 @@ export function evaluate(
 
   // 5 — Gates.
   const nextStep = state.step + 1;
+
+  // Return-to-Learn step 4 means full days with no accommodations. Arriving
+  // there because a very light day produced no symptoms would hand someone who
+  // is still plainly struggling an empty accommodations letter.
+  if (
+    state.protocol === 'return-to-learn' &&
+    nextStep === 4 &&
+    observation.demonstratedFullDay !== true
+  ) {
+    return {
+      kind: 'hold',
+      step: state.step,
+      reason:
+        'Step 4 means full days without any concussion-related accommodations. Keep building ' +
+        'up the school or work day first — the accommodations come off once full days are ' +
+        'comfortable, not before.',
+      citation: protocol.citation,
+    };
+  }
   const requirements = unmetRequirements(state, nextStep);
 
   const needsExertionCheck = state.protocol === 'return-to-sport' && state.step === 3;

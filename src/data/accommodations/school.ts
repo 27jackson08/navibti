@@ -12,7 +12,7 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     id: 'school-shortened-day',
     role: 'school',
     domain: 'cognitive',
-    text: 'Schedule a shortened day: {{hours}} hours of class, ideally in the morning.',
+    text: 'Schedule a shortened day: {{hours}} of class, ideally in the morning.',
     rationale:
       'Cognitive stamina is the limiting factor and it is lowest late in the day. Attending ' +
       'part of the day is better than staying home.',
@@ -40,6 +40,24 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     priority: 2,
   },
   {
+    // Separate from the numeric cap because at the lowest band that cap reads
+    // "no more than 0 minutes", which is not an instruction anyone can follow
+    // and is not what the guideline means by minimising screen time.
+    id: 'school-screen-minimal',
+    role: 'school',
+    domain: 'visualVestibular',
+    text:
+      'Avoid screen-based work for now. Provide printed materials, and read aloud or use audio ' +
+      'where the lesson would normally use a screen.',
+    rationale: 'Screens load the visual and vestibular systems harder than paper does.',
+    citation: 'pedsconcussion-2023',
+    protocol: 'return-to-learn',
+    minStep: 2,
+    maxStep: 3,
+    bands: ['very-low'],
+    priority: 3,
+  },
+  {
     id: 'school-screen-cap',
     role: 'school',
     domain: 'visualVestibular',
@@ -51,7 +69,7 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     protocol: 'return-to-learn',
     minStep: 2,
     maxStep: 3,
-    bands: ['very-low', 'low', 'moderate'],
+    bands: ['low', 'moderate'],
     priority: 3,
   },
   {
@@ -64,7 +82,9 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     protocol: 'return-to-learn',
     minStep: 2,
     maxStep: 3,
-    bands: ['very-low', 'low', 'moderate'],
+    // Not at the lowest band, where school-screen-minimal already says this and
+    // says it better. Two items making the same request reads as padding.
+    bands: ['low', 'moderate'],
     priority: 4,
   },
   {

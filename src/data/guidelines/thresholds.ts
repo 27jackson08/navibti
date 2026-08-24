@@ -140,6 +140,26 @@ export const UNDER_EXPOSURE_CONSECUTIVE_DAYS: Sourced<number> = {
 };
 
 /**
+ * How close to an ordinary day's cognitive load counts as "a full day".
+ *
+ * Return-to-Learn step 4 is defined as full days without accommodations, so
+ * reaching it has to mean the patient is actually managing something close to a
+ * full day. Advancing on the absence of symptoms alone lets someone doing
+ * ninety minutes of work arrive at the step that says they need no support --
+ * which is how a person still plainly struggling ends up with an empty
+ * accommodations letter.
+ */
+export const FULL_DAY_COGNITIVE_FRACTION: Sourced<number> = {
+  value: 0.8,
+  provenance: 'product-default',
+  citation: 'pedsconcussion-2023',
+  rationale:
+    'The guideline says to increase workload "until full days without concussion-related ' +
+    'accommodations are tolerated" but does not quantify a full day. Four fifths of an ordinary ' +
+    'demanding day is our reading of close enough to count.',
+};
+
+/**
  * How much of yesterday's accumulated evidence survives into today.
  *
  * Tolerance genuinely improves during recovery, so a model that weights a day

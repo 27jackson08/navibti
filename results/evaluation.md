@@ -11,15 +11,15 @@ Not a medical device.**
 
 | Metric | Result |
 |---|---|
-| Recommendations that would have breached the 2-point limit | **7.5%** |
+| Recommendations that would have breached the 2-point limit | **6.0%** |
 | Red-flag halt recall | 100.0% (7 patients) |
 | Estimates that exceeded true tolerance | 0.0% |
-| Mean signed tolerance error | -0.952 reference units |
-| Domain-days where the model recommended nothing | 30.5% |
-| Days the guideline floor overrode the model | 75.1% |
-| Days the model judged a floor-only day risky | 41.2% |
-| — of those, in the first four days | 43.0% |
-| — from day 8 onward | 34.2% |
+| Mean signed tolerance error | -0.939 reference units |
+| Domain-days where the model recommended nothing | 23.5% |
+| Days the guideline floor overrode the model | 62.8% |
+| Days the model judged a floor-only day risky | 27.1% |
+| — of those, in the first four days | 38.1% |
+| — from day 8 onward | 19.3% |
 | Patient-days simulated | 4084 |
 
 Two figures above need reading carefully.
@@ -45,9 +45,9 @@ has not been failed by the plan.
 
 | Policy | Unsafe recommendations | Mean recommended load |
 |---|---|---|
-| NaviTBI — min(model, ramp, stage) | 7.5% | 0.281 |
-| Guideline ceiling only, no personalization | 55.5% | 0.642 |
-| Model only, both guardrails removed | 9.5% | 0.315 |
+| NaviTBI — min(model, ramp, stage) | 6.0% | 0.268 |
+| Guideline ceiling only, no personalization | 51.0% | 0.596 |
+| Model only, both guardrails removed | 10.5% | 0.327 |
 
 Load is expressed as a fraction of an ordinary demanding day.
 
@@ -73,17 +73,17 @@ while recommending only slightly more load.
 
 | Outcome | Share of days |
 |---|---|
-| Named a likely driver | 3.4% |
-| Nothing to explain — symptoms stayed mild | 90.1% |
+| Named a likely driver | 3.0% |
+| Nothing to explain — symptoms stayed mild | 92.0% |
 | Declined: not enough data yet | 2.3% |
 | Declined: the day did not match the pattern | 0.0% |
-| Declined: two loads were indistinguishable | 4.3% |
+| Declined: two loads were indistinguishable | 2.8% |
 
-**Top-1 accuracy when it did name a driver: 94.9%** — the share of
+**Top-1 accuracy when it did name a driver: 98.3%** — the share of
 named explanations that picked the domain which genuinely contributed most, according to the
 generator's own weights.
 
-Of the days where symptoms actually rose past the limit, 33.7% got a
+Of the days where symptoms actually rose past the limit, 36.9% got a
 named explanation and the rest got an explicit refusal.
 
 ### Why so many refusals
@@ -103,10 +103,10 @@ also the reason not to quote this number as a limitation of the method.
 
 | Constraint | Share of decisions |
 |---|---|
-| Stage ceiling | 1.2% |
-| Ramp cap | 17.3% |
-| Model tolerance | 38.3% |
-| Guideline activity floor | 43.2% |
+| Stage ceiling | 2.6% |
+| Ramp cap | 21.7% |
+| Model tolerance | 43.3% |
+| Guideline activity floor | 32.4% |
 
 ## Tolerance error by day
 
@@ -118,21 +118,21 @@ averaged across all five load domains.
 | 1 | 0.685 |
 | 2 | 0.653 |
 | 3 | 0.705 |
-| 4 | 0.747 |
-| 5 | 0.791 |
-| 6 | 0.836 |
-| 7 | 0.905 |
-| 8 | 0.933 |
-| 9 | 0.99 |
-| 10 | 1.022 |
-| 11 | 1.061 |
-| 12 | 1.081 |
-| 13 | 1.076 |
-| 14 | 1.081 |
-| 15 | 1.096 |
-| 16 | 1.078 |
-| 17 | 1.08 |
-| 18 | 1.073 |
-| 19 | 1.063 |
-| 20 | 1.035 |
-| 21 | 1.027 |
+| 4 | 0.762 |
+| 5 | 0.806 |
+| 6 | 0.858 |
+| 7 | 0.913 |
+| 8 | 0.938 |
+| 9 | 0.992 |
+| 10 | 1.01 |
+| 11 | 1.05 |
+| 12 | 1.064 |
+| 13 | 1.051 |
+| 14 | 1.048 |
+| 15 | 1.07 |
+| 16 | 1.052 |
+| 17 | 1.041 |
+| 18 | 1.033 |
+| 19 | 1.03 |
+| 20 | 1 |
+| 21 | 0.998 |

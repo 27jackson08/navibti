@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "eval": "tsx scripts/eval/run.ts",
     "trace": "tsx scripts/eval/trace.ts",
-    "calibrate:confounding": "tsx scripts/eval/confounding.ts"
+    "calibrate:confounding": "tsx scripts/eval/confounding.ts",
+    "packets": "tsx scripts/eval/packets.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

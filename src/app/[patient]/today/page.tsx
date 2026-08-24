@@ -11,6 +11,12 @@ import { buildSession, deltaPointsOf, isoDay } from '@/engine/session';
 // at build time -- a static snapshot would show the seeded history forever.
 export const dynamic = 'force-dynamic';
 
+const PACKET_BLURB: Record<string, string> = {
+  school: 'Class blocks, break cadence, screen caps and assessment limits.',
+  employer: 'Meeting caps, phased hours, async-first working and deferred decisions.',
+  caregiver: 'What helps, what does not, and the red flags to watch for.',
+};
+
 export default async function TodayPage({ params }: PageProps<'/[patient]/today'>) {
   const { patient: patientId } = await params;
   const patient = getPatient(patientId);
@@ -163,6 +169,30 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
             </section>
           )}
         </>
+      )}
+
+      {!session.redFlag && session.plan && (
+        <section className="mt-12">
+          <h2 className="border-t border-rule pt-5 text-xl">Share with the people around them</h2>
+          <p className="mt-2 max-w-[58ch] text-sm text-ink-soft">
+            The same tolerance, written for whoever has to act on it. Each one is composed from a
+            cited library — nothing here is generated prose.
+          </p>
+          <ul className="mt-5 grid gap-px border border-rule bg-rule sm:grid-cols-3">
+            {patient.roles.map((role) => (
+              <li key={role} className="bg-ground">
+                <Link
+                  href={`/${patient.id}/packet/${role}`}
+                  className="flex h-full flex-col gap-2 p-5 hover:bg-surface focus-visible:bg-surface"
+                >
+                  <span className="text-lg capitalize">{role}</span>
+                  <span className="text-sm text-ink-soft">{PACKET_BLURB[role]}</span>
+                  <span className="mt-auto pt-2 font-mono text-xs text-accent">Open packet →</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <p className="mt-12 border-l-2 border-rule pl-4 font-mono text-xs leading-relaxed text-ink-faint">

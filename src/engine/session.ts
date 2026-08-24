@@ -12,6 +12,7 @@
 
 import {
   CLINICIAN_PROMPT_DAYS_ADULT,
+  FULL_DAY_COGNITIVE_FRACTION,
   CLINICIAN_PROMPT_DAYS_CHILD,
   RED_FLAG_INSTRUCTION,
   type LoadDomain,
@@ -146,7 +147,14 @@ export function buildSession(
       }) > TOLERANCE_EXCEEDANCE_QUANTILE.value,
     );
 
-    const learnDecision = evaluate(learnStage, { at, exacerbation, redFlagIds: [] });
+    const learnDecision = evaluate(learnStage, {
+      at,
+      exacerbation,
+      redFlagIds: [],
+      demonstratedFullDay:
+        normalizeDose('cognitive', checkIn.doses.cognitive ?? 0) >=
+        FULL_DAY_COGNITIVE_FRACTION.value,
+    });
     learnStage = applyDecision(learnStage, learnDecision, at);
 
     if (onSport) {

@@ -14,7 +14,7 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
     id: 'work-phased-hours',
     role: 'employer',
     domain: 'sleepFatigue',
-    text: 'Phase hours back in: {{hours}} hours per day this week, reviewed weekly.',
+    text: 'Phase hours back in: {{hours}} per day this week, reviewed weekly.',
     rationale:
       'A phased return that holds is faster than a full return that fails and restarts.',
     citation: 'onf-living-adults',

@@ -189,7 +189,7 @@ describe('return to learn is never gated on a doctor', () => {
   it.each([1, 2, 3])('advances from step %i with no clearance recorded', (step) => {
     const decision = evaluate(
       state({ protocol: 'return-to-learn', step }),
-      observation({ at: hoursLater(step === 1 ? 48 : 30) }),
+      observation({ at: hoursLater(step === 1 ? 48 : 30), demonstratedFullDay: true }),
     );
     expect(decision.kind).toBe('advance');
   });
@@ -201,6 +201,47 @@ describe('return to learn is never gated on a doctor', () => {
         observation({ at: hoursLater(50) }),
       );
       expect(decision.kind).not.toBe('blocked');
+    }
+  });
+});
+
+describe('the full-day gate on learn step 4', () => {
+  const readyExceptCapacity = state({ protocol: 'return-to-learn', step: 3 });
+
+  it('holds at step 3 when the patient is only managing a light day', () => {
+    // Absence of symptoms at ninety minutes of work is not evidence that full
+    // days are tolerated, and step 4 is defined as needing no accommodations.
+    const decision = evaluate(
+      readyExceptCapacity,
+      observation({ at: hoursLater(30), demonstratedFullDay: false }),
+    );
+    expect(decision).toMatchObject({ kind: 'hold', step: 3 });
+    expect(decision.reason).toMatch(/full days without any concussion-related accommodations/i);
+  });
+
+  it('advances once full days are actually being managed', () => {
+    const decision = evaluate(
+      readyExceptCapacity,
+      observation({ at: hoursLater(30), demonstratedFullDay: true }),
+    );
+    expect(decision).toMatchObject({ kind: 'advance', from: 3, to: 4 });
+  });
+
+  it('is a hold, not a block — nothing external is required', () => {
+    const decision = evaluate(
+      readyExceptCapacity,
+      observation({ at: hoursLater(30), demonstratedFullDay: false }),
+    );
+    expect(decision.kind).not.toBe('blocked');
+  });
+
+  it('does not gate the earlier learn steps', () => {
+    for (const step of [1, 2]) {
+      const decision = evaluate(
+        state({ protocol: 'return-to-learn', step }),
+        observation({ at: hoursLater(50), demonstratedFullDay: false }),
+      );
+      expect(decision.kind, `step ${step}`).toBe('advance');
     }
   });
 });

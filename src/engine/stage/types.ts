@@ -47,6 +47,12 @@ export interface DayObservation {
    * resolution of symptoms with exertion before at-risk activity.
    */
   readonly symptomFreeWithExertion?: boolean;
+  /**
+   * Whether the patient actually managed close to a full day of cognitive load.
+   * Consulted only when leaving Return-to-Learn step 3, where the guideline
+   * requires that full days be *tolerated* rather than merely symptom-free.
+   */
+  readonly demonstratedFullDay?: boolean;
 }
 
 interface DecisionBase {

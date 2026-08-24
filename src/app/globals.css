@@ -66,3 +66,22 @@ h1, h2, h3, .display {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* A packet is meant to be printed and filed. Strip the app furniture and force
+   an ink-on-paper palette regardless of the reader's chosen surface. */
+@media print {
+  :root {
+    --nv-ground: #ffffff;
+    --nv-surface: #ffffff;
+    --nv-ink: #111111;
+    --nv-ink-soft: #333333;
+    --nv-ink-faint: #555555;
+    --nv-rule: #cccccc;
+    --nv-accent: #000000;
+    --nv-caution-surface: #ffffff;
+  }
+
+  body {
+    background: #ffffff;
+  }
+}
