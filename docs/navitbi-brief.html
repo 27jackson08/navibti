@@ -1,0 +1,598 @@
+<title>NaviTBI Build Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground:      #E9ECEA;
+    --surface:     #F4F6F4;
+    --surface-alt: #DFE4E1;
+    --ink:         #16221F;
+    --ink-soft:    #4B5B56;
+    --ink-faint:   #7C8B85;
+    --rule:        #C7CFCB;
+    --accent:      #2E6E63;
+    --accent-soft: #D8E5E1;
+    --caution:     #8A5F1F;
+    --caution-soft:#EFE3CE;
+    --critical:    #9E3A2E;
+    --critical-soft:#F0DAD5;
+
+    --display: "Newsreader", Georgia, "Times New Roman", serif;
+    --body: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --measure: 68ch;
+    --gutter: clamp(1.25rem, 1rem + 2vw, 3rem);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #111917;
+      --surface:     #18221F;
+      --surface-alt: #202D29;
+      --ink:         #DDE5E1;
+      --ink-soft:    #A2B0AB;
+      --ink-faint:   #7A8983;
+      --rule:        #2C3A36;
+      --accent:      #6FB5A6;
+      --accent-soft: #1E332E;
+      --caution:     #D3A45C;
+      --caution-soft:#2E2718;
+      --critical:    #DE8272;
+      --critical-soft:#33201C;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #111917;
+    --surface:     #18221F;
+    --surface-alt: #202D29;
+    --ink:         #DDE5E1;
+    --ink-soft:    #A2B0AB;
+    --ink-faint:   #7A8983;
+    --rule:        #2C3A36;
+    --accent:      #6FB5A6;
+    --accent-soft: #1E332E;
+    --caution:     #D3A45C;
+    --caution-soft:#2E2718;
+    --critical:    #DE8272;
+    --critical-soft:#33201C;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .masthead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem var(--gutter);
+    background: color-mix(in oklab, var(--ground) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .masthead strong { color: var(--ink); font-weight: 500; letter-spacing: 0.12em; }
+  .countdown {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .countdown::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .wrap { padding: 0 var(--gutter) 6rem; }
+  .col { max-width: var(--measure); margin-inline: auto; }
+  .wide { max-width: 78rem; margin-inline: auto; }
+
+  /* ---- hero ---- */
+  .hero { max-width: 78rem; margin: 0 auto; padding: clamp(2.5rem, 5vw, 4.5rem) 0 2rem; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 1.1rem;
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: clamp(2.6rem, 1.6rem + 4.4vw, 5rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 0 0 1.1rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .lede {
+    font-family: var(--display);
+    font-size: clamp(1.15rem, 1rem + 0.6vw, 1.5rem);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 0 2rem;
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .facts div { background: var(--ground); padding: 0.9rem 1rem; }
+  .facts dt {
+    font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.3rem;
+  }
+  .facts dd { margin: 0; font-size: 0.95rem; font-weight: 500; }
+
+  /* ---- sections ---- */
+  section { padding-top: 3.4rem; }
+  .sec-head {
+    max-width: var(--measure); margin-inline: auto;
+    display: flex; align-items: baseline; gap: 1rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 1.1rem;
+    margin-bottom: 1.4rem;
+  }
+  .sec-num {
+    font-family: var(--mono); font-size: 0.72rem; color: var(--accent);
+    letter-spacing: 0.08em; flex: none; padding-top: 0.35rem;
+  }
+  .sec-head h2 {
+    font-family: var(--display); font-weight: 500;
+    font-size: clamp(1.6rem, 1.3rem + 1.1vw, 2.2rem);
+    line-height: 1.16; letter-spacing: -0.015em;
+    text-wrap: balance; margin: 0;
+  }
+  .col p { margin: 0 0 1.05rem; }
+  .col h3 {
+    font-family: var(--body); font-weight: 600; font-size: 1rem;
+    letter-spacing: 0.005em; margin: 2rem 0 0.6rem;
+  }
+  strong { font-weight: 600; }
+  code {
+    font-family: var(--mono); font-size: 0.86em;
+    background: var(--surface-alt); padding: 0.1em 0.35em; border-radius: 2px;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, .countdown:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 3px;
+  }
+
+  /* ---- callouts ---- */
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 0.9rem 1.1rem;
+    margin: 1.4rem 0;
+    font-size: 0.94rem;
+  }
+  .note.caution { border-color: var(--caution); background: var(--caution-soft); }
+  .note.critical { border-color: var(--critical); background: var(--critical-soft); }
+  .note p { margin: 0; }
+  .note p + p { margin-top: 0.6rem; }
+  .note-label {
+    display: block; font-family: var(--mono); font-size: 0.66rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 0.35rem;
+  }
+
+  /* ---- tables ---- */
+  .scroller { overflow-x: auto; margin: 1.6rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 34rem; }
+  th, td {
+    text-align: left; vertical-align: top;
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  thead th {
+    font-family: var(--mono); font-weight: 500; font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-faint); border-bottom-color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  tbody tr:hover { background: var(--surface); }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink-soft); }
+  .strike { color: var(--ink-faint); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .fix { color: var(--accent); font-weight: 600; }
+
+  /* ---- step ladders ---- */
+  .ladders { display: grid; gap: 1.4rem; margin: 1.6rem 0; }
+  @media (min-width: 46rem) { .ladders { grid-template-columns: 1fr 1fr; } }
+  .ladder { border: 1px solid var(--rule); background: var(--surface); padding: 1rem 1.1rem 1.1rem; }
+  .ladder h4 {
+    margin: 0 0 0.15rem; font-family: var(--body); font-weight: 600; font-size: 0.95rem;
+  }
+  .ladder .count {
+    font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 0.8rem;
+  }
+  .ladder ol { margin: 0; padding: 0; list-style: none; counter-reset: rung; display: grid; gap: 0.4rem; }
+  .ladder li {
+    counter-increment: rung;
+    display: grid; grid-template-columns: 1.5rem 1fr; gap: 0.6rem;
+    font-size: 0.86rem; line-height: 1.45;
+  }
+  .ladder li::before {
+    content: counter(rung);
+    font-family: var(--mono); font-size: 0.75rem;
+    color: var(--ink-faint);
+    border: 1px solid var(--rule); border-radius: 2px;
+    height: 1.4rem; display: grid; place-items: center;
+  }
+  .ladder li.gate { color: var(--critical); }
+  .ladder li.gate::before { border-color: var(--critical); color: var(--critical); }
+
+  /* ---- figure ---- */
+  figure { margin: 2rem 0; }
+  figure svg { display: block; width: 100%; max-width: 100%; height: auto; color: var(--ink-soft); }
+  figcaption {
+    font-size: 0.85rem; color: var(--ink-soft);
+    max-width: 56ch; margin: 0.9rem auto 0; text-align: center;
+  }
+
+  /* ---- schedule ---- */
+  .sched { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: 1.6rem 0; }
+  .sched-row {
+    display: grid; grid-template-columns: 3.2rem 5rem 1fr; gap: 0.9rem;
+    background: var(--ground); padding: 0.7rem 0.9rem; align-items: baseline;
+    font-size: 0.9rem;
+  }
+  .sched-row:hover { background: var(--surface); }
+  .sched-row .d { font-family: var(--mono); color: var(--accent); font-variant-numeric: tabular-nums; }
+  .sched-row .dt { font-family: var(--mono); font-size: 0.8rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+  .sched-row.buffer { background: var(--surface-alt); }
+  .sched-row.buffer .d { color: var(--ink-faint); }
+
+  /* ---- ordered cut list ---- */
+  ol.cuts { padding-left: 1.3rem; margin: 1.2rem 0; }
+  ol.cuts li { margin-bottom: 0.45rem; }
+  ul.plain { padding-left: 1.15rem; margin: 1.1rem 0; }
+  ul.plain li { margin-bottom: 0.45rem; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    margin-top: 4rem; padding-top: 1.6rem;
+    font-size: 0.85rem; color: var(--ink-soft);
+  }
+  footer h3 {
+    font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.7rem; font-weight: 500;
+  }
+  footer ol { padding-left: 1.2rem; margin: 0; }
+  footer li { margin-bottom: 0.5rem; }
+</style>
+
+<header class="masthead">
+  <strong>NaviTBI</strong>
+  <span class="countdown">11 days to submission</span>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <p class="eyebrow">Build brief · Hack for Humanity Summer '26 · Concussion track</p>
+    <h1>The restriction is clear. The <em>environment</em> never hears it.</h1>
+    <p class="lede">Every concussion tool on the market talks to the patient. NaviTBI talks to the school, the manager, and the family who keep overloading them.</p>
+    <dl class="facts">
+      <div><dt>Deadline</dt><dd>September 4, 2026</dd></div>
+      <div><dt>Working days</dt><dd>11, not 14</dd></div>
+      <div><dt>Team</dt><dd>1–4 people</dd></div>
+      <div><dt>Stack</dt><dd>Next.js · TypeScript · Postgres</dd></div>
+      <div><dt>Novelty claim</dt><dd>Closed-loop accommodation translator</dd></div>
+    </dl>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Fix the citations before they propagate</h2></div>
+    <div class="col">
+      <p>Three errors in the original concept doc. They matter because one of the six judged criteria is literally named <em>Research Foundation</em>, and the track is sponsored by people who read these guidelines for a living.</p>
+    </div>
+    <div class="col scroller">
+      <table>
+        <thead><tr><th>Concept doc said</th><th>Actually</th><th>Consequence</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="strike">6th Berlin Consensus</td>
+            <td>Berlin was the <strong>5th</strong> (2016). The <span class="fix">6th is Amsterdam 2023</span> — conference Oct 2022, published in <em>BJSM</em> June 2023.</td>
+            <td>Miscitation on the research criterion.</td>
+          </tr>
+          <tr>
+            <td class="strike">RTL 6-step framework</td>
+            <td><span class="fix">Return-to-Learn is 4 steps.</span> The 6-step ladder is Return-to-Sport.</td>
+            <td>The school packet is built on the wrong ladder.</td>
+          </tr>
+          <tr>
+            <td class="strike">max 2-point increase, mild and brief</td>
+            <td>"No more than a 2-point increase <span class="fix">compared with the pre-activity value</span> on a 0–10 severity scale," lasting <span class="fix">up to 1 hour</span>.</td>
+            <td>Changes what the model predicts. See §03.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col">
+      <div class="ladders">
+        <div class="ladder">
+          <h4>Return to Learn</h4>
+          <span class="count">4 steps · no clearance needed</span>
+          <ol>
+            <li>Daily activities and relative rest — max 24–48h</li>
+            <li>School activities, return as soon as tolerated</li>
+            <li>Part-time or full days with accommodations</li>
+            <li>Full-time, no concussion accommodations</li>
+          </ol>
+        </div>
+        <div class="ladder">
+          <h4>Return to Activity / Sport</h4>
+          <span class="count">6 steps · clearance gate at 4</span>
+          <ol>
+            <li>Daily activities and relative rest</li>
+            <li>Aerobic exercise — light, then moderate</li>
+            <li>Individual sport-specific activity, no impact risk</li>
+            <li class="gate">Non-contact drills — medical clearance <em>and</em> full return to school required</li>
+            <li class="gate">Full-contact practice</li>
+            <li class="gate">Unrestricted competition</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="note-label">Two domain facts worth encoding</span>
+        <p><strong>Medical clearance is not required to return to school.</strong> It is required for Sport Step 4+. Most tools blur this and end up over-restricting. Stating the asymmetry correctly is a cheap, strong signal of domain knowledge.</p>
+        <p><strong>Strict rest is out.</strong> Relative rest caps at 24–48 hours, and "a complete absence from the school environment for more than one week is not generally recommended." So the engine must also detect <em>under</em>-exposure and nudge upward. Every competing pacing app only ever caps. This is a genuine differentiator — take it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Two engines, deliberately separated</h2></div>
+    <div class="col">
+      <p>The safety architecture is the split itself. A deterministic stage machine encodes the published protocols verbatim and decides what is <em>permitted</em>. A personalized Bayesian model decides <em>how much</em>, but only inside the box the guideline already drew. The model can never advance a stage.</p>
+    </div>
+
+    <div class="wide">
+      <figure>
+        <svg viewBox="0 0 900 340" role="img" aria-label="Flow diagram: the daily check-in feeds a deterministic stage machine, a ramp cap, and a Bayesian tolerance model; all three converge on a minimum function that clamps the recommended dose, which then produces the day plan and the four role-specific accommodation packets.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+
+          <g fill="none" stroke="currentColor" stroke-width="1.25" marker-end="url(#ah)" opacity="0.75">
+            <polyline points="116,170 134,170 134,56 148,56"/>
+            <polyline points="116,170 148,170"/>
+            <polyline points="116,170 134,170 134,284 148,284"/>
+            <polyline points="320,56 420,56 420,164 448,164"/>
+            <polyline points="320,170 448,170"/>
+            <polyline points="320,284 420,284 420,176 448,176"/>
+            <polyline points="540,170 592,170"/>
+            <polyline points="720,170 772,170"/>
+          </g>
+
+          <g stroke="currentColor" stroke-width="1.25" fill="none">
+            <rect x="8" y="140" width="108" height="60" rx="2"/>
+            <rect x="148" y="24" width="172" height="64" rx="2"/>
+            <rect x="148" y="138" width="172" height="64" rx="2"/>
+            <rect x="148" y="252" width="172" height="64" rx="2"/>
+            <rect x="592" y="138" width="128" height="64" rx="2"/>
+            <rect x="772" y="138" width="120" height="64" rx="2"/>
+          </g>
+          <rect x="448" y="138" width="92" height="64" rx="2" fill="none" stroke="#2E6E63" stroke-width="2.25"/>
+
+          <g font-family="Public Sans, sans-serif" font-size="12.5" fill="currentColor" text-anchor="middle">
+            <text x="62" y="166">Daily</text>
+            <text x="62" y="182">check-in</text>
+            <text x="234" y="52">Stage machine</text>
+            <text x="234" y="166">Ramp cap</text>
+            <text x="234" y="280">Tolerance model</text>
+            <text x="656" y="166">Today's dose</text>
+            <text x="656" y="182">plan</text>
+            <text x="832" y="166">4 role</text>
+            <text x="832" y="182">packets</text>
+          </g>
+
+          <text x="494" y="176" font-family="IBM Plex Mono, monospace" font-size="15" fill="#2E6E63" text-anchor="middle" font-weight="500">min( )</text>
+
+          <g font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.72" text-anchor="middle">
+            <text x="234" y="70">RTL 1–4 · RTS 1–6, verbatim</text>
+            <text x="234" y="184">≤ +20% over yesterday</text>
+            <text x="234" y="298">Bayesian posterior, per user</text>
+            <text x="832" y="199">school · work · family · clinic</text>
+          </g>
+
+          <g font-family="IBM Plex Mono, monospace" font-size="10.5" fill="currentColor" opacity="0.85" text-anchor="start">
+            <text x="328" y="48">stage cap</text>
+            <text x="328" y="162">ramp cap</text>
+            <text x="328" y="276">tolerance</text>
+          </g>
+
+          <g font-family="IBM Plex Mono, monospace" font-size="10" fill="#2E6E63" text-anchor="middle">
+            <text x="494" y="222">the clamp</text>
+          </g>
+
+          <g fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 4" opacity="0.55" marker-end="url(#ah)">
+            <polyline points="832,206 832,300 62,300 62,206"/>
+          </g>
+          <text x="447" y="316" font-family="IBM Plex Mono, monospace" font-size="10" fill="currentColor" opacity="0.7" text-anchor="middle">tomorrow's check-in re-fits the posterior</text>
+        </svg>
+        <figcaption>The personalized model never sets the ceiling on its own — its output is one of three arguments to a minimum, and the guideline supplies another.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>What the model actually predicts</h2></div>
+    <div class="col">
+      <p>Because the guideline threshold is defined against the <em>pre-activity</em> value, the target variable is <code>Δ</code> — the worst within-day symptom increase over baseline, on the same 0–10 scale the guideline uses, plus how long it lasted. Two check-in questions carry the whole model, which is also what keeps the check-in under a minute.</p>
+
+      <p>Bayesian linear regression over five load domains — cognitive, visual-vestibular, physical, sleep/fatigue, emotional-autonomic — with a Normal–Inverse-Gamma conjugate prior. Closed-form nightly updates. No sampling, no training loop, no Python service: it is roughly 150 lines of TypeScript that runs in-process and unit-tests alongside everything else.</p>
+
+      <p>Tolerance for a domain is the largest dose where the posterior predictive still satisfies <code>P(Δ &gt; 2) ≤ 0.2</code>.</p>
+
+      <div class="note">
+        <span class="note-label">Say this part out loud in the demo</span>
+        <p>Sparse data produces a wide posterior, which automatically produces a lower recommended dose. The "be conservative when you don't know the user yet" requirement <em>falls out of the math</em> rather than being bolted on as a special case. That is the difference between a model and a heuristic with a model-shaped wrapper.</p>
+      </div>
+
+      <h3>Explaining a flare without overclaiming</h3>
+      <p>Contribution per domain is the posterior mean weight times today's exposure, ranked, delivered with a counterfactual: <em>"most consistent with 3 back-to-back calls on 5 hours of sleep — had meetings been 2 instead of 5, predicted increase would be 1.2 rather than 3.4."</em></p>
+      <p>Then the part that wins the safety criterion: if two domains are strongly collinear in this user's own history, <strong>refuse to name a single cause.</strong> Say they moved together and the data can't separate them yet. Knowing when your model can't answer is worth more to these judges than a confident answer.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>The packets — and the constraint that makes them safe</h2></div>
+    <div class="col">
+      <p>Accommodations come from a curated library, not free generation. Each item is a record carrying its domain, dose band, applicable stage range, target role, and citation. Composition is a deterministic query. An LLM may rephrase for tone, behind a validator that rejects any output introducing a recommendation absent from the selected set.</p>
+      <p><strong>The model can rewrite a sentence. It cannot invent a clinical claim.</strong> That single constraint deserves its own slide.</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Role</th><th>What they receive</th></tr></thead>
+          <tbody>
+            <tr><td><strong>School</strong></td><td>Shortened day, break cadence, screen caps, one test per day, no timed tests, print over screen, extended deadlines, no makeup-work backlog, early hallway pass, permission to leave class without explaining.</td></tr>
+            <tr><td><strong>Employer</strong></td><td>Meeting count and duration caps, no back-to-back, async-first, camera-off default, deep-work budget, 20-20-20 breaks, phased hours ramp, deferral list for high-stakes cognitive work.</td></tr>
+            <tr><td><strong>Caregiver</strong></td><td>Do/don't guide, check-in scripts that support without hovering, printable red-flag card.</td></tr>
+            <tr><td><strong>Clinician</strong></td><td>One page: VAS trajectory, current stage and date entered, exposure against tolerance, flare events, adherence, escalation triggers.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note caution">
+        <span class="note-label">Product detail that proves you've thought about the user</span>
+        <p>Regenerate packets only on <em>material</em> change, and show what changed since the copy the recipient already has. A school office will not accept a new document every morning — and a judge who has ever dealt with a 504 plan will notice that you knew that.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Safety layer</h2></div>
+    <div class="col">
+      <p>Hard rules, enforced in one module, unit-tested like any other invariant.</p>
+      <ul class="plain">
+        <li><strong>Red flags</strong> — neck pain or tenderness, double vision, limb weakness or tingling, severe or worsening headache, seizure, loss of or deteriorating consciousness, repeated vomiting, growing agitation → full-screen interrupt, emergency-care instruction, <strong>no plan generated at all.</strong></li>
+        <li><strong>Never clears sport.</strong> Step 4+ requires written medical clearance; the app displays the requirement and declines to advance.</li>
+        <li><strong>Never gates school on clearance</strong> — it states the opposite, correctly.</li>
+        <li><strong>Prolonged symptoms</strong> — past 14 days in adults, 4 weeks in children → clinician-escalation banner citing the Living Guidelines.</li>
+        <li><strong>Under three days of data</strong> → population prior only, labeled provisional, visibly wide margins.</li>
+        <li>Every artifact carries not-medical-advice framing, its citation, generation date, and current stage.</li>
+        <li>Share links are role-scoped to minimum necessary data, expiring, one-click revocable, access-logged. The patient chooses whether tolerance bands travel without raw symptom detail.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Measure the model, don't just ship it</h2></div>
+    <div class="col">
+      <p>No human data exists and none should be collected in eleven days. Instead, generate 21-day trajectories from <em>known ground-truth coefficients</em>. This converts "we built a model" into "we measured our model," which is the gap between a 3 and a 5 on technical complexity.</p>
+      <div class="scroller">
+        <table>
+          <thead><tr><th>Metric</th><th>Method</th><th>Target</th></tr></thead>
+          <tbody>
+            <tr><td>Threshold recovery</td><td>MAE vs. true tolerance by day, n=200 synthetic patients</td><td class="num">usable by day 5–7</td></tr>
+            <tr><td><strong>Safety rate</strong></td><td>Share of recommended doses that would have exceeded 2 points under ground truth</td><td class="num">&lt; 5%</td></tr>
+            <tr><td>Attribution accuracy</td><td>Top-1 cause vs. ground truth</td><td class="num">reported</td></tr>
+            <tr><td>Red-flag recall</td><td>Scripted red-flag inputs — deterministic, so prove it</td><td class="num">100%</td></tr>
+            <tr><td>Accessibility</td><td>axe-core, full keyboard path, Lighthouse</td><td class="num">clean</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Safety rate is the headline number. Lead with it.</p>
+      <p>Three demo personas: a 16-year-old student athlete, a 34-year-old knowledge worker, and a 9-year-old whose parent does the check-ins.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Accessibility is the product, not the polish</h2></div>
+    <div class="col">
+      <p>The users are photophobic and cognitively fatigued. Treat every item here as a functional requirement.</p>
+      <ul class="plain">
+        <li><strong>Low stimulation by default</strong> — no pure white, no pure black, nothing saturated. A warm dimmed mode plus user brightness and warmth controls.</li>
+        <li><strong>Name the real tension.</strong> WCAG pushes contrast <em>up</em>; photophobia pushes glare <em>down</em>. Resolve it by reducing luminance rather than contrast, and be ready to explain exactly that — it is the best possible answer to an accessibility judging question.</li>
+        <li><strong>No motion by default.</strong> Honor <code>prefers-reduced-motion</code>, no autoplay, no parallax.</li>
+        <li><strong>Audio-first check-in</strong> — spoken prompts and voice input, so the daily log can be done with eyes closed.</li>
+        <li><strong>Minimal typing</strong> — dials, steppers, large targets. Resumable if someone has to stop partway.</li>
+        <li>Adjustable text size, capped line length, optional dyslexia-friendly face, full keyboard navigation, screen-reader pass.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Eleven days</h2></div>
+    <div class="col">
+      <p>Ship one closed loop end to end rather than six half-features. Everything not on this schedule is on the cut list.</p>
+      <div class="sched">
+        <div class="sched-row"><span class="d">01</span><span class="dt">Aug 24</span><span>Scaffold, schema, design tokens, and <strong>encode the guideline data</strong> — protocol steps, red flags, accommodation library seed</span></div>
+        <div class="sched-row"><span class="d">02</span><span class="dt">Aug 25</span><span>Check-in flow and persistence</span></div>
+        <div class="sched-row"><span class="d">03</span><span class="dt">Aug 26</span><span>Stage machine, test-first — the guideline text <em>is</em> the spec</span></div>
+        <div class="sched-row"><span class="d">04</span><span class="dt">Aug 27</span><span>Tolerance model, posterior update, tests</span></div>
+        <div class="sched-row"><span class="d">05</span><span class="dt">Aug 28</span><span>Synthetic generator; confirm the model recovers ground truth</span></div>
+        <div class="sched-row"><span class="d">06</span><span class="dt">Aug 29</span><span>Attribution, counterfactuals, collinearity refusal</span></div>
+        <div class="sched-row"><span class="d">07</span><span class="dt">Aug 30</span><span>Today's plan UI and headroom visualization</span></div>
+        <div class="sched-row"><span class="d">08</span><span class="dt">Aug 31</span><span>Packet composition and the four role views</span></div>
+        <div class="sched-row"><span class="d">09</span><span class="dt">Sep 1</span><span>Share links, consent, revocation, versioned diffs</span></div>
+        <div class="sched-row"><span class="d">10</span><span class="dt">Sep 2</span><span>Safety pass, evaluation harness, accessibility audit</span></div>
+        <div class="sched-row"><span class="d">11</span><span class="dt">Sep 3</span><span>Demo video and Devpost writeup</span></div>
+        <div class="sched-row buffer"><span class="d">—</span><span class="dt">Sep 4</span><span>Buffer. Submit early.</span></div>
+      </div>
+      <p>With two people: one owns engine and evaluation, one owns UI and packets. With three or four, add an owner for guideline data and the accommodation library — it is more work than it looks — and hand the demo and writeup to someone starting on day 8.</p>
+
+      <h3>Cut in this order</h3>
+      <ol class="cuts">
+        <li>Voice <em>input</em> — keep spoken prompts, which are cheaper and carry most of the benefit</li>
+        <li>The child and caregiver persona — keep student and worker</li>
+        <li>Clinician PDF export — show the on-screen summary</li>
+        <li>Packet version diffs — keep versioning, drop the diff UI</li>
+        <li>The LLM tone pass — deterministic templates are safer anyway</li>
+      </ol>
+
+      <div class="note critical">
+        <span class="note-label">Never cut</span>
+        <p>Red-flag interrupt · stage machine · not-medical-advice framing · citations. Those four <em>are</em> the judged criteria.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>What to claim, and what not to</h2></div>
+    <div class="col">
+      <p>Claim: <strong>the first closed-loop accommodation translator built on personalized tolerance signals.</strong></p>
+      <p>Do not claim the first personalized pacing app — MyBrainPacer and Parkwood hold that, and a sponsor-side judge knows it. Do not claim clinical validation. State plainly: evaluated on synthetic cohorts with known ground truth, not validated in humans, not a medical device.</p>
+      <p>Open the demo on the <em>stakeholder</em>, not the app. Show the email from the school demanding full attendance. Then show the packet. A judge should see the gap inside twenty seconds.</p>
+
+      <footer>
+        <h3>Sources to cite in-app and on Devpost</h3>
+        <ol>
+          <li>Patricios JS et al. <em>Consensus statement on concussion in sport: the 6th International Conference on Concussion in Sport, Amsterdam, October 2022.</em> British Journal of Sports Medicine, 2023.</li>
+          <li>PedsConcussion. <em>Living Guideline Return to Activity/Sport and Return to School/Learn Protocols.</em> September 2023. <a href="https://pedsconcussion.com">pedsconcussion.com</a></li>
+          <li>Ontario Neurotrauma Foundation. <em>Living Concussion Guidelines</em> (adults 18+), including return-to-work guidance.</li>
+        </ol>
+      </footer>
+    </div>
+  </section>
+
+</div>
