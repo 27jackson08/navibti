@@ -1,0 +1,167 @@
+/*
+ * NaviTBI design tokens.
+ *
+ * The users are photophobic and cognitively fatigued, so these are functional
+ * requirements rather than styling preferences.
+ *
+ * The central tension: WCAG pushes contrast UP, photophobia pushes emitted
+ * light DOWN, and the naive response — greying the text — satisfies neither.
+ * We resolve it in OKLCH by lowering the lightness of ground and ink together,
+ * which reduces the light coming off the screen while holding the perceptual
+ * distance between them that actually carries legibility.
+ *
+ * Three surfaces, chosen deliberately rather than inherited:
+ *   calm   default. A low-glare light page. Never pure white.
+ *   dim    photophobia mode. Substantially less emitted light, contrast held.
+ *   night  dark. Never pure black, which haloes badly against light text.
+ */
+
+:root {
+  /* Hues are picked, not defaulted: a cool green-teal neutral so greys read as
+     chosen, with the accent sitting adjacent rather than fighting the ground. */
+  --hue-neutral: 165;
+  --hue-accent: 178;
+  --chroma-neutral: 0.006;
+  --chroma-accent: 0.072;
+
+  /* --- calm (default) --- */
+  --l-ground: 0.955;
+  --l-surface: 0.982;
+  --l-surface-sunken: 0.918;
+  --l-ink: 0.255;
+  --l-ink-soft: 0.455;
+  --l-ink-faint: 0.605;
+  --l-rule: 0.855;
+  --l-accent: 0.505;
+
+  --nv-ground: oklch(var(--l-ground) var(--chroma-neutral) var(--hue-neutral));
+  --nv-surface: oklch(var(--l-surface) var(--chroma-neutral) var(--hue-neutral));
+  --nv-surface-sunken: oklch(var(--l-surface-sunken) var(--chroma-neutral) var(--hue-neutral));
+  --nv-ink: oklch(var(--l-ink) var(--chroma-neutral) var(--hue-neutral));
+  --nv-ink-soft: oklch(var(--l-ink-soft) var(--chroma-neutral) var(--hue-neutral));
+  --nv-ink-faint: oklch(var(--l-ink-faint) var(--chroma-neutral) var(--hue-neutral));
+  --nv-rule: oklch(var(--l-rule) var(--chroma-neutral) var(--hue-neutral));
+  --nv-accent: oklch(var(--l-accent) var(--chroma-accent) var(--hue-accent));
+
+  /* Semantic colours, kept separate from the accent so severity never reads as
+     branding. Muted on purpose — an alarm colour at full chroma is a symptom
+     trigger, and everything here is already serious enough without it. */
+  --nv-caution: oklch(0.545 0.088 72);
+  --nv-caution-surface: oklch(0.945 0.032 78);
+  --nv-critical: oklch(0.505 0.132 28);
+  --nv-critical-surface: oklch(0.942 0.038 30);
+  --nv-steady: oklch(0.505 0.062 168);
+  --nv-steady-surface: oklch(0.948 0.026 168);
+
+  /* --- type --- */
+  --text-scale: 1;
+  --text-xs: calc(0.78rem * var(--text-scale));
+  --text-sm: calc(0.9rem * var(--text-scale));
+  --text-base: calc(1.06rem * var(--text-scale));
+  --text-lg: calc(1.28rem * var(--text-scale));
+  --text-xl: calc(1.62rem * var(--text-scale));
+  --text-2xl: calc(2.1rem * var(--text-scale));
+  --measure: 62ch;
+  --leading-body: 1.65;
+
+  /* --- space --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.875rem;
+  --space-4: 1.25rem;
+  --space-5: 2rem;
+  --space-6: 3rem;
+  --space-section: clamp(2.5rem, 2rem + 3vw, 5rem);
+
+  /* Minimum interactive target. Larger than the 44px floor because the user may
+     be dizzy, one-handed, or looking away from the screen. */
+  --target-min: 56px;
+  --radius: 3px;
+
+  /* --- motion ---
+     Off by default. Opt in with [data-motion="on"], and even then a system
+     reduced-motion preference wins. */
+  --duration-fast: 0ms;
+  --duration-normal: 0ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-motion='on'] {
+  --duration-fast: 120ms;
+  --duration-normal: 260ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  [data-motion='on'] {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+  }
+}
+
+/*
+ * Photophobia mode. Ground drops by ~0.14 lightness and ink drops with it, so
+ * the page emits meaningfully less light while the ground-to-ink distance stays
+ * near the calm value. Warmth comes from a small hue shift rather than an
+ * overlay, so text stays crisp instead of hazing over.
+ */
+[data-surface='dim'] {
+  --hue-neutral: 78;
+  --chroma-neutral: 0.014;
+  --l-ground: 0.815;
+  --l-surface: 0.845;
+  --l-surface-sunken: 0.775;
+  --l-ink: 0.145;
+  --l-ink-soft: 0.415;
+  --l-ink-faint: 0.505;
+  --l-rule: 0.68;
+  --l-accent: 0.415;
+}
+
+[data-surface='night'] {
+  --hue-neutral: 168;
+  --chroma-neutral: 0.008;
+  --l-ground: 0.185;
+  --l-surface: 0.235;
+  --l-surface-sunken: 0.145;
+  --l-ink: 0.905;
+  --l-ink-soft: 0.735;
+  --l-ink-faint: 0.605;
+  --l-rule: 0.325;
+  --l-accent: 0.775;
+  --nv-caution: oklch(0.805 0.098 78);
+  --nv-caution-surface: oklch(0.285 0.042 72);
+  --nv-critical: oklch(0.755 0.118 30);
+  --nv-critical-surface: oklch(0.275 0.056 28);
+  --nv-steady: oklch(0.795 0.062 168);
+  --nv-steady-surface: oklch(0.265 0.032 168);
+}
+
+/*
+ * Users who have expressed no preference get `calm` on a light OS and `night`
+ * on a dark one. An explicit [data-surface] choice always wins.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-surface]) {
+    --hue-neutral: 168;
+    --chroma-neutral: 0.008;
+    --l-ground: 0.185;
+    --l-surface: 0.235;
+    --l-surface-sunken: 0.145;
+    --l-ink: 0.905;
+    --l-ink-soft: 0.735;
+    --l-ink-faint: 0.605;
+    --l-rule: 0.325;
+    --l-accent: 0.775;
+    --nv-caution: oklch(0.805 0.098 78);
+    --nv-caution-surface: oklch(0.285 0.042 72);
+    --nv-critical: oklch(0.755 0.118 30);
+    --nv-critical-surface: oklch(0.275 0.056 28);
+    --nv-steady: oklch(0.795 0.062 168);
+    --nv-steady-surface: oklch(0.265 0.032 168);
+  }
+}
+
+/* Text size control, exposed to the user rather than assumed. */
+[data-text='large'] { --text-scale: 1.15; }
+[data-text='larger'] { --text-scale: 1.32; }
