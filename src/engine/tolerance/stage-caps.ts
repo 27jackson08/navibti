@@ -127,11 +127,22 @@ const FLOORS: Record<ProtocolId, Record<number, Partial<Record<LoadDomain, Stage
         floor: 0.25,
         readingOf: 'Missing more than one week of school is not generally recommended.',
       },
+      // School work involves screens. A step that describes reintroducing
+      // school work cannot coherently also demand zero screen exposure.
+      visualVestibular: { floor: 0.1, readingOf: 'Gradual reintroduction of school work.' },
       emotionalAutonomic: { floor: 0.1, readingOf: 'Tolerating the classroom environment.' },
     },
     4: {
       physical: { floor: 0.2, readingOf: 'Full days without concussion-related accommodations.' },
       cognitive: { floor: 0.3, readingOf: 'Full days without concussion-related accommodations.' },
+      visualVestibular: {
+        floor: 0.25,
+        readingOf: 'Full days without concussion-related accommodations.',
+      },
+      emotionalAutonomic: {
+        floor: 0.15,
+        readingOf: 'Full days without concussion-related accommodations.',
+      },
     },
   },
   'return-to-sport': {

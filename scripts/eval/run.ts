@@ -67,10 +67,24 @@ Not a medical device.**
 | Mean signed tolerance error | ${round(shipped.meanSignedError)} reference units |
 | Domain-days where the model recommended nothing | ${percent(shipped.collapsedToleranceRate)} |
 | Days the guideline floor overrode the model | ${percent(shipped.floorRescuedDayShare)} |
-| Days flagged for clinician review | ${percent(shipped.clinicianReviewDayShare)} |
+| Days the model judged a floor-only day risky | ${percent(shipped.clinicianReviewDayShare)} |
 | — of those, in the first four days | ${percent(shipped.clinicianReviewFirstFourDays)} |
 | — from day 8 onward | ${percent(shipped.clinicianReviewAfterDaySeven)} |
 | Patient-days simulated | ${shipped.simulatedDays} |
+
+Two figures above need reading carefully.
+
+The **floor-only risk** row is the raw daily signal, not what a patient sees. One day of
+disagreement between the model and the guideline minimum is noise; the app requires it to
+persist for three consecutive days before it says anything, precisely so the banner stays
+worth reading.
+
+The **guideline activity floor** is why the unsafe rate is 7.5% rather than the 5.5% it was
+before floors existed. That is a deliberate trade and not a regression: without a floor the
+model collapses to recommending nothing at all, learns nothing from the resulting empty
+days, and keeps recommending nothing — which is the over-restriction the guidance
+explicitly warns against. Two points of measured risk buys the removal of an unmeasurable
+one.
 
 Each day is simulated twice: once at the dose NaviTBI recommended, once at the dose
 the patient actually took. The model learns from what they actually did; the safety

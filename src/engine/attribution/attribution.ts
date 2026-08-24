@@ -317,7 +317,10 @@ function phrase(
   counterfactual: Counterfactual | null,
 ): string {
   const names = leading.map((item) => LOAD_DOMAIN_LABELS[item.domain].toLowerCase());
-  const subject = names.length > 1 ? `${names[0]} and ${names[1]}` : names[0];
+  // The domain labels contain their own conjunctions ("stress, noise and social
+  // load"), so joining two of them with "and" produces "sleep and fatigue and
+  // stress, noise and social load". Use a separator that survives that.
+  const subject = names.length > 1 ? `${names[0]}, together with ${names[1]}` : names[0];
 
   const opening = `Today is most consistent with ${subject}.`;
   if (!counterfactual) return opening;

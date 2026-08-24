@@ -16,12 +16,14 @@
   --color-caution: var(--nv-caution);
   --color-critical: var(--nv-critical);
   --color-steady: var(--nv-steady);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), Georgia, 'Times New Roman', serif;
+  --font-mono: var(--font-mono-data), ui-monospace, Menlo, monospace;
 }
 
 body {
   background: var(--nv-ground);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   color: var(--nv-ink);
   font-size: var(--text-base);
   line-height: var(--leading-body);
@@ -44,4 +46,23 @@ select {
 ::selection {
   background: var(--nv-accent);
   color: var(--nv-ground);
+}
+
+h1, h2, h3, .display {
+  font-family: var(--font-display), Georgia, 'Times New Roman', serif;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

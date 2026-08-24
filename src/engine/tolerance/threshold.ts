@@ -136,19 +136,48 @@ export function toBand(normalizedDose: number): ToleranceBand {
 
 export interface PlanInput {
   readonly posterior: Posterior;
+  /** The protocol governing physical progression. */
   readonly protocol: ProtocolId;
   readonly step: number;
+  /**
+   * The Return-to-Learn step, which governs every non-physical domain.
+   *
+   * The two ladders run in parallel -- Amsterdam is explicit that they do, and
+   * that sport step 4 cannot be reached without a full return to school. A
+   * student athlete is on both at once, and treating them as one ladder is how
+   * a patient on Return-to-Sport ends up with no cognitive floor at all and
+   * gets told to do zero minutes of screens.
+   *
+   * Defaults to `step`, which is correct when the patient is on
+   * Return-to-Learn alone.
+   */
+  readonly learnStep?: number;
   /** A recent typical day, used to hold the other domains fixed while solving. */
   readonly context: Partial<Record<LoadDomain, number>>;
   readonly yesterday: Partial<Record<LoadDomain, number>>;
 }
 
+/**
+ * Which ladder governs a domain. Physical progression follows the patient's
+ * primary protocol; everything else follows Return-to-Learn.
+ */
+export function ladderFor(
+  input: PlanInput,
+  domain: LoadDomain,
+): { protocol: ProtocolId; step: number } {
+  if (domain === 'physical' || input.protocol === 'return-to-learn') {
+    return { protocol: input.protocol, step: input.step };
+  }
+  return { protocol: 'return-to-learn', step: input.learnStep ?? input.step };
+}
+
 export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRecommendation {
+  const ladder = ladderFor(input, domain);
   const model = solveTolerance(input.posterior, domain, input.context);
   const ramp = rampCap(domain, input.yesterday[domain]);
-  const stage = stageCap(input.protocol, input.step, domain);
+  const stage = stageCap(ladder.protocol, ladder.step, domain);
 
-  const floor = stageFloor(input.protocol, input.step, domain);
+  const floor = stageFloor(ladder.protocol, ladder.step, domain);
 
   const candidates = [
     { value: model, binding: 'model' as const },
@@ -225,6 +254,38 @@ const NOT_ALLOCATED: readonly LoadDomain[] = ['sleepFatigue'];
  * clinically right as well as safer: a day with three hours of screens genuinely
  * does leave less room for meetings, and the plan should say so.
  */
+/**
+ * A day built entirely from guideline minimums, with sleep left as it actually
+ * is because no plan can prescribe it.
+ */
+export function minimumDay(input: PlanInput): Partial<Record<LoadDomain, number>> {
+  return Object.fromEntries(
+    LOAD_DOMAINS.map((domain) => {
+      if (domain === 'sleepFatigue') return [domain, input.context[domain] ?? 0];
+      const ladder = ladderFor(input, domain);
+      return [
+        domain,
+        denormalizeDose(domain, stageFloor(ladder.protocol, ladder.step, domain).floor),
+      ];
+    }),
+  );
+}
+
+/**
+ * How likely the model thinks a guideline-minimum day is to breach the limit.
+ *
+ * If even this is predicted to flare, the answer is not a smaller number — there
+ * is no smaller number the guidance supports — so it is a question for a
+ * clinician. Exposed separately so callers with history can require the signal
+ * to persist before acting on it.
+ */
+export function floorDayRisk(input: PlanInput): number {
+  return exceedanceProbability(
+    predict(input.posterior, minimumDay(input)),
+    EXACERBATION_POINT_LIMIT.value,
+  );
+}
+
 export interface DayPlan {
   readonly recommendations: readonly DomainRecommendation[];
   readonly doses: Partial<Record<LoadDomain, number>>;
@@ -272,16 +333,6 @@ export function planDay(input: PlanInput): DayPlan {
 
   const doses = Object.fromEntries(ordered.map((item) => [item.domain, item.dose]));
 
-  // A day built entirely from guideline minimums. If even this is predicted to
-  // flare, the answer is not a smaller number, it is a clinician.
-  const floorDay = Object.fromEntries(
-    LOAD_DOMAINS.map((domain) => [
-      domain,
-      domain === 'sleepFatigue'
-        ? (input.context[domain] ?? 0)
-        : denormalizeDose(domain, stageFloor(input.protocol, input.step, domain).floor),
-    ]),
-  );
 
   return {
     recommendations: ordered,
@@ -290,9 +341,7 @@ export function planDay(input: PlanInput): DayPlan {
       predict(input.posterior, doses),
       EXACERBATION_POINT_LIMIT.value,
     ),
-    needsClinicianReview:
-      exceedanceProbability(predict(input.posterior, floorDay), EXACERBATION_POINT_LIMIT.value) >
-      TOLERANCE_EXCEEDANCE_QUANTILE.value,
+    needsClinicianReview: floorDayRisk(input) > TOLERANCE_EXCEEDANCE_QUANTILE.value,
     isProvisional: !isPersonalized(input.posterior),
     floorOverrodeModel: ordered.some((item) => item.belowModelTolerance),
   };
