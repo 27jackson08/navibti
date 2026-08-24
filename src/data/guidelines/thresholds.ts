@@ -140,6 +140,24 @@ export const UNDER_EXPOSURE_CONSECUTIVE_DAYS: Sourced<number> = {
 };
 
 /**
+ * How much of yesterday's accumulated evidence survives into today.
+ *
+ * Tolerance genuinely improves during recovery, so a model that weights a day
+ * three weeks ago as heavily as yesterday will keep insisting on restrictions
+ * the patient has already outgrown. That is the same over-restriction the
+ * guidance warns against, arriving by a different route. Discounting toward the
+ * prior each day gives roughly a ten-day memory.
+ */
+export const POSTERIOR_FORGETTING_FACTOR: Sourced<number> = {
+  value: 0.9,
+  provenance: 'product-default',
+  citation: 'amsterdam-2023',
+  rationale:
+    'No source specifies a forgetting rate. Chosen so the estimate tracks a recovering patient ' +
+    'within about a week rather than lagging behind them for the whole episode.',
+};
+
+/**
  * When to put a "talk to a clinician" banner on screen.
  *
  * Deliberately EARLIER than the ~4-week persisting-symptoms definitions used in

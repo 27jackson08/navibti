@@ -16,6 +16,7 @@
 
 import {
   MIN_CHECK_INS_FOR_PERSONALIZATION,
+  POSTERIOR_FORGETTING_FACTOR,
   type LoadDomain,
 } from '@/data/guidelines';
 import {
@@ -98,6 +99,46 @@ export function update(prior: Posterior, observation: Observation): Posterior {
     rate: Math.max(rate, 1e-9),
     observationCount: prior.observationCount + 1,
   };
+}
+
+/**
+ * Shrinks accumulated evidence back toward the prior.
+ *
+ * Kept separate from `update` on purpose: `update` stays an exact conjugate
+ * step, which is what lets the test suite check daily updating against a direct
+ * batch fit. Forgetting is a modelling choice layered on top, not part of the
+ * mathematics.
+ */
+export function discount(posterior: Posterior, factor = POSTERIOR_FORGETTING_FACTOR.value): Posterior {
+  const prior = priorPosterior();
+  const keep = factor;
+  const revert = 1 - factor;
+
+  const precision = posterior.precision.map((row, i) =>
+    row.map((value, j) => keep * value + revert * prior.precision[i][j]),
+  );
+
+  // Blend the information-form mean (Λμ) rather than μ itself, so the shrinkage
+  // is toward the prior belief rather than toward an arbitrary midpoint.
+  const information = matVec(posterior.precision, posterior.meanWeights);
+  const priorInformation = matVec(prior.precision, prior.meanWeights);
+  const blended = information.map((value, i) => keep * value + revert * priorInformation[i]);
+
+  return {
+    meanWeights: solveSpd(precision, blended),
+    precision,
+    shape: keep * posterior.shape + revert * prior.shape,
+    rate: keep * posterior.rate + revert * prior.rate,
+    observationCount: posterior.observationCount,
+  };
+}
+
+/**
+ * One day of evidence, with forgetting applied first. This is what the daily
+ * loop should call; `update` alone is the exact conjugate step.
+ */
+export function observe(posterior: Posterior, observation: Observation): Posterior {
+  return update(discount(posterior), observation);
 }
 
 export function updateAll(prior: Posterior, observations: readonly Observation[]): Posterior {

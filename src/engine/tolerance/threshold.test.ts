@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { EXACERBATION_POINT_LIMIT, TOLERANCE_EXCEEDANCE_QUANTILE } from '@/data/guidelines';
 import { gaussian, seededRng } from '@/data/synthetic/random';
 import { exceedanceProbability, predict, priorPosterior, updateAll } from './posterior';
-import { stageCap } from './stage-caps';
 import {
   detectUnderExposure,
   planDay,
@@ -12,7 +11,8 @@ import {
   toBand,
   type PlanInput,
 } from './threshold';
-import { REFERENCE_DOSES, normalizeDose } from './units';
+import { stageCap, stageFloor } from './stage-caps';
+import { REFERENCE_DOSES, denormalizeDose, normalizeDose } from './units';
 
 const LIMIT = EXACERBATION_POINT_LIMIT.value;
 const TARGET = TOLERANCE_EXCEEDANCE_QUANTILE.value;
@@ -111,11 +111,22 @@ describe('the three-way clamp', () => {
 
   it('reports the ramp as binding after a very light day', () => {
     const recommendation = recommendDomain(
-      input({ posterior: settledPosterior(), step: 4, yesterday: { cognitive: 30 } }),
+      input({ posterior: settledPosterior(), step: 2, yesterday: { cognitive: 30 } }),
       'cognitive',
     );
     expect(recommendation.binding).toBe('ramp');
     expect(recommendation.dose).toBeLessThan(recommendation.modelTolerance);
+  });
+
+  it('lets the guideline floor beat a ramp that would hold a patient back', () => {
+    // At step 4 the guidance expects full days. A 54-minute ramp derived from
+    // one quiet yesterday is not a reason to keep someone there.
+    const recommendation = recommendDomain(
+      input({ posterior: settledPosterior(), step: 4, yesterday: { cognitive: 30 } }),
+      'cognitive',
+    );
+    expect(recommendation.binding).toBe('floor');
+    expect(recommendation.dose).toBeGreaterThan(recommendation.rampCap);
   });
 
   it('reports the model as binding when the guideline and the ramp allow more', () => {
@@ -126,21 +137,23 @@ describe('the three-way clamp', () => {
     expect(recommendation.binding).toBe('model');
   });
 
-  it('always recommends the smallest of the three', () => {
+  it('recommends the smallest of the three, then lifts to the floor', () => {
     for (const step of [1, 2, 3, 4]) {
       for (const yesterday of [0, 45, 200, 400]) {
         const recommendation = recommendDomain(
           input({ posterior: settledPosterior(), step, yesterday: { cognitive: yesterday } }),
           'cognitive',
         );
-        expect(recommendation.dose).toBeCloseTo(
-          Math.min(
-            recommendation.modelTolerance,
-            recommendation.rampCap,
-            recommendation.stageCap,
-          ),
-          6,
+        const capped = Math.min(
+          recommendation.modelTolerance,
+          recommendation.rampCap,
+          recommendation.stageCap,
         );
+        const floor = denormalizeDose(
+          'cognitive',
+          stageFloor('return-to-learn', step, 'cognitive').floor,
+        );
+        expect(recommendation.dose).toBeCloseTo(Math.max(capped, floor), 6);
       }
     }
   });
@@ -150,8 +163,11 @@ describe('the three-way clamp', () => {
     // so anything at or below the model tolerance is inside the target.
     const posterior = settledPosterior();
     for (const step of [1, 2, 3, 4]) {
-      for (const recommendation of planDay(input({ posterior, step, yesterday: { cognitive: 180 } }))) {
-        if (recommendation.modelTolerance === 0) continue;
+      for (const recommendation of planDay(input({ posterior, step, yesterday: { cognitive: 180 } }))
+        .recommendations) {
+        // The floor is the one constraint allowed to exceed the model's
+        // estimate, and when it does the plan says so and escalates.
+        if (recommendation.modelTolerance === 0 || recommendation.binding === 'floor') continue;
         expect(
           recommendation.exceedanceProbability,
           `${recommendation.domain} at step ${step}`,
@@ -204,7 +220,7 @@ describe('provisional labelling', () => {
 
 describe('planDay', () => {
   it('covers every load domain', () => {
-    expect(planDay(input()).map((r) => r.domain)).toEqual([
+    expect(planDay(input()).recommendations.map((r) => r.domain)).toEqual([
       'cognitive',
       'visualVestibular',
       'physical',
@@ -214,8 +230,63 @@ describe('planDay', () => {
   });
 
   it("explains the stage ceiling in the guideline's own words", () => {
-    const screens = planDay(input({ step: 1 })).find((r) => r.domain === 'visualVestibular');
+    const screens = planDay(input({ step: 1 })).recommendations.find(
+      (r) => r.domain === 'visualVestibular',
+    );
     expect(screens?.stageCapReadingOf).toMatch(/screentime/i);
+  });
+});
+
+describe('the day as a whole', () => {
+  it('checks joint risk, not just each domain in isolation', () => {
+    // Five individually safe doses can add up to an unsafe day. Our own
+    // evaluation caught exactly that: independent per-domain solving produced a
+    // 60% unsafe rate before allocation was made sequential.
+    const posterior = settledPosterior();
+    for (const step of [1, 2, 3, 4]) {
+      const plan = planDay(input({ posterior, step, yesterday: { cognitive: 150 } }));
+      if (plan.floorOverrodeModel) continue;
+      expect(plan.jointExceedanceProbability, `step ${step}`).toBeLessThanOrEqual(TARGET + 0.02);
+    }
+  });
+
+  it('never plans a day of literally nothing at any step', () => {
+    // The collapse-to-zero failure: recommend nothing, learn nothing, recommend
+    // nothing again. The guideline floor exists to make this unreachable.
+    const rng = seededRng(31);
+    const catastrophizing = updateAll(
+      priorPosterior(),
+      Array.from({ length: 20 }, () => ({ doses: { cognitive: 5 }, deltaPoints: 7 })),
+    );
+    void rng;
+    for (const step of [1, 2, 3, 4]) {
+      const plan = planDay(input({ posterior: catastrophizing, step }));
+      const physical = plan.recommendations.find((r) => r.domain === 'physical');
+      expect(physical?.dose, `step ${step}`).toBeGreaterThan(0);
+      expect(physical?.binding).toBe('floor');
+    }
+  });
+
+  it('escalates when even a floor-only day is predicted to flare', () => {
+    const catastrophizing = updateAll(
+      priorPosterior(),
+      Array.from({ length: 20 }, () => ({ doses: { cognitive: 5 }, deltaPoints: 7 })),
+    );
+    expect(planDay(input({ posterior: catastrophizing, step: 3 })).needsClinicianReview).toBe(true);
+  });
+
+  it('does not escalate for an ordinary patient', () => {
+    expect(planDay(input({ posterior: settledPosterior(), step: 3 })).needsClinicianReview).toBe(
+      false,
+    );
+  });
+
+  it('says so when the floor had to override the model', () => {
+    const catastrophizing = updateAll(
+      priorPosterior(),
+      Array.from({ length: 20 }, () => ({ doses: { cognitive: 5 }, deltaPoints: 7 })),
+    );
+    expect(planDay(input({ posterior: catastrophizing, step: 3 })).floorOverrodeModel).toBe(true);
   });
 });
 

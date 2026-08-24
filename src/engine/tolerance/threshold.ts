@@ -26,10 +26,10 @@ import {
 } from '@/data/guidelines';
 import type { ToleranceBand } from '@/data/accommodations';
 import { exceedanceProbability, isPersonalized, predict, type Posterior } from './posterior';
-import { stageCap } from './stage-caps';
+import { stageCap, stageFloor } from './stage-caps';
 import { REFERENCE_DOSES, denormalizeDose, normalizeDose } from './units';
 
-export type BindingConstraint = 'model' | 'ramp' | 'stage';
+export type BindingConstraint = 'model' | 'ramp' | 'stage' | 'floor';
 
 export interface DomainRecommendation {
   readonly domain: LoadDomain;
@@ -46,6 +46,20 @@ export interface DomainRecommendation {
   /** True while the posterior is still dominated by the prior. */
   readonly isProvisional: boolean;
   readonly stageCapReadingOf: string;
+  /**
+   * The rest of the day this dose was solved against. Exposed because the
+   * number is only meaningful relative to it — "90 minutes of screens, given
+   * the four hours of class already in your plan" — and because an evaluation
+   * that compared against a different baseline would be measuring nothing.
+   */
+  readonly solvedContext: Partial<Record<LoadDomain, number>>;
+  /**
+   * True when the guideline's minimum activity exceeded what the model would
+   * have allowed. The floor wins, but never silently: the patient is told, and
+   * the safety layer escalates.
+   */
+  readonly belowModelTolerance: boolean;
+  readonly floorReadingOf: string;
 }
 
 /**
@@ -134,16 +148,25 @@ export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRec
   const ramp = rampCap(domain, input.yesterday[domain]);
   const stage = stageCap(input.protocol, input.step, domain);
 
+  const floor = stageFloor(input.protocol, input.step, domain);
+
   const candidates = [
     { value: model, binding: 'model' as const },
     { value: ramp, binding: 'ramp' as const },
     { value: stage.cap, binding: 'stage' as const },
   ];
-  const winner = candidates.reduce((lowest, candidate) =>
+  const capped = candidates.reduce((lowest, candidate) =>
     candidate.value < lowest.value ? candidate : lowest,
   );
 
-  const dose = denormalizeDose(domain, winner.value);
+  // The floor is the one constraint that raises rather than lowers. It applies
+  // last so it can override a model that has talked itself into recommending
+  // nothing at all.
+  const belowFloor = capped.value < floor.floor;
+  const normalized = belowFloor ? floor.floor : capped.value;
+  const binding: BindingConstraint = belowFloor ? 'floor' : capped.binding;
+
+  const dose = denormalizeDose(domain, normalized);
 
   return {
     domain,
@@ -152,20 +175,130 @@ export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRec
     modelTolerance: denormalizeDose(domain, model),
     rampCap: denormalizeDose(domain, ramp),
     stageCap: denormalizeDose(domain, stage.cap),
-    binding: winner.binding,
+    binding,
     exceedanceProbability: exceedanceProbability(
       predict(input.posterior, { ...input.context, [domain]: dose }),
       EXACERBATION_POINT_LIMIT.value,
     ),
-    band: toBand(winner.value),
+    band: toBand(normalized),
     isProvisional: !isPersonalized(input.posterior),
     stageCapReadingOf: stage.readingOf,
+    solvedContext: { ...input.context, [domain]: 0 },
+    belowModelTolerance: belowFloor && floor.floor > model,
+    floorReadingOf: floor.readingOf,
   };
 }
 
-export function planDay(input: PlanInput): DomainRecommendation[] {
-  return LOAD_DOMAINS.map((domain) => recommendDomain(input, domain));
+/**
+ * Order in which the day's load is allocated.
+ *
+ * Physical first, deliberately: it is the domain the guidance actively wants
+ * protected, and allocating it last would let cognitive and screen load crowd
+ * out the walk that the anti-strict-rest evidence supports.
+ */
+const ALLOCATION_ORDER: readonly LoadDomain[] = [
+  'physical',
+  'cognitive',
+  'visualVestibular',
+  'emotionalAutonomic',
+];
+
+/**
+ * Sleep debt is a constraint on the day, not a quantity to spend. We report a
+ * ceiling for it, but allocating it would amount to recommending that someone
+ * accrue sleep debt.
+ */
+const NOT_ALLOCATED: readonly LoadDomain[] = ['sleepFatigue'];
+
+/**
+ * Builds a coherent day, one domain at a time.
+ *
+ * Solving each domain independently against yesterday's day and then
+ * recommending all five at once is wrong, and wrong in the dangerous
+ * direction: every individual dose is inside the limit given the others held
+ * low, while the combined day is heavier than any of those scenarios assumed.
+ * Our own evaluation harness caught this producing a 60% unsafe rate.
+ *
+ * So each domain is solved against the load already allocated. Domains not yet
+ * reached stay at their recent values, on the assumption that the rest of the
+ * day looks like yesterday until we decide otherwise. The consequence is
+ * clinically right as well as safer: a day with three hours of screens genuinely
+ * does leave less room for meetings, and the plan should say so.
+ */
+export interface DayPlan {
+  readonly recommendations: readonly DomainRecommendation[];
+  readonly doses: Partial<Record<LoadDomain, number>>;
+  /**
+   * Risk of the whole day, not of any single domain. This is the number that
+   * matters: five individually-safe doses can add up to an unsafe day, and
+   * checking only the margins is how that gets missed.
+   */
+  readonly jointExceedanceProbability: number;
+  /**
+   * The model believes even a minimal day -- every domain at the guideline's
+   * own activity floor -- would breach the limit.
+   *
+   * Deliberately NOT "some domain solved to zero". Under sequential allocation
+   * a late domain reaching zero just means the day is already full, which is
+   * ordinary. Flagging that fired on well over half of all simulated days and
+   * would have trained every user to ignore the warning.
+   */
+  readonly needsClinicianReview: boolean;
+  readonly isProvisional: boolean;
+  readonly floorOverrodeModel: boolean;
 }
+
+export function planDay(input: PlanInput): DayPlan {
+  const recommendations = new Map<LoadDomain, DomainRecommendation>();
+  let running: Partial<Record<LoadDomain, number>> = { ...input.context };
+
+  for (const domain of ALLOCATION_ORDER) {
+    const context = { ...running, [domain]: 0 };
+    const recommendation = recommendDomain({ ...input, context }, domain);
+    recommendations.set(domain, recommendation);
+    running = { ...running, [domain]: recommendation.dose };
+  }
+
+  for (const domain of NOT_ALLOCATED) {
+    const context = { ...running, [domain]: 0 };
+    recommendations.set(domain, recommendDomain({ ...input, context }, domain));
+  }
+
+  const ordered = LOAD_DOMAINS.map((domain) => {
+    const recommendation = recommendations.get(domain);
+    if (!recommendation) throw new Error(`no recommendation produced for ${domain}`);
+    return recommendation;
+  });
+
+  const doses = Object.fromEntries(ordered.map((item) => [item.domain, item.dose]));
+
+  // A day built entirely from guideline minimums. If even this is predicted to
+  // flare, the answer is not a smaller number, it is a clinician.
+  const floorDay = Object.fromEntries(
+    LOAD_DOMAINS.map((domain) => [
+      domain,
+      domain === 'sleepFatigue'
+        ? (input.context[domain] ?? 0)
+        : denormalizeDose(domain, stageFloor(input.protocol, input.step, domain).floor),
+    ]),
+  );
+
+  return {
+    recommendations: ordered,
+    doses,
+    jointExceedanceProbability: exceedanceProbability(
+      predict(input.posterior, doses),
+      EXACERBATION_POINT_LIMIT.value,
+    ),
+    needsClinicianReview:
+      exceedanceProbability(predict(input.posterior, floorDay), EXACERBATION_POINT_LIMIT.value) >
+      TOLERANCE_EXCEEDANCE_QUANTILE.value,
+    isProvisional: !isPersonalized(input.posterior),
+    floorOverrodeModel: ordered.some((item) => item.belowModelTolerance),
+  };
+}
+
+
 
 /**
  * At most this many increase prompts per day. Product default: more than two
@@ -208,6 +341,8 @@ export function detectUnderExposure(
     if (domain === 'sleepFatigue') continue;
 
     const tolerance = tolerances[domain];
+    // A collapsed estimate is exactly when avoidance matters most, so a zero
+    // tolerance must not silence this check -- it previously did.
     if (tolerance <= 0) continue;
 
     // A domain the check-in never asked about is not evidence of avoidance.

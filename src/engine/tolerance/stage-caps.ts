@@ -21,6 +21,11 @@ export interface StageCap {
   readonly readingOf: string;
 }
 
+export interface StageFloor {
+  readonly floor: number;
+  readonly readingOf: string;
+}
+
 type CapTable = Record<number, Partial<Record<LoadDomain, StageCap>>>;
 
 const RETURN_TO_LEARN_CAPS: CapTable = {
@@ -82,6 +87,68 @@ export function stageCap(protocol: ProtocolId, step: number, domain: LoadDomain)
     TABLES[protocol][step]?.[domain] ?? {
       cap: 1,
       readingOf: 'No step-specific ceiling for this domain.',
+    }
+  );
+}
+
+/**
+ * Minimum activity the guidance supports regardless of what the model thinks.
+ *
+ * The stage machine supplies a floor as well as a ceiling, and this is not
+ * symmetry for its own sake. A model fitted to a patient who is doing almost
+ * nothing will predict that almost anything is risky, recommend nothing, and
+ * then never see the data that would let it change its mind. Our own evaluation
+ * caught exactly that: tolerance collapsing to zero by day five and staying
+ * there for the rest of the episode.
+ *
+ * The guideline is unambiguous that this is the wrong answer. Relative rest
+ * explicitly includes activities of daily living and light walking from the
+ * first day, and a complete absence from school beyond a week is not
+ * recommended. So where the text supports a floor, the floor wins — and the
+ * conflict is surfaced to the patient and escalated, never resolved silently.
+ */
+const FLOORS: Record<ProtocolId, Record<number, Partial<Record<LoadDomain, StageFloor>>>> = {
+  'return-to-learn': {
+    1: {
+      physical: { floor: 0.1, readingOf: 'Light walking is permitted from the first 24-48 hours.' },
+      emotionalAutonomic: { floor: 0.06, readingOf: 'Social interactions at home.' },
+    },
+    2: {
+      physical: { floor: 0.15, readingOf: 'Light, symptom-limited physical exercise such as walking.' },
+      cognitive: {
+        floor: 0.08,
+        readingOf: 'Encouragement to return to school as soon as possible, as tolerated.',
+      },
+      emotionalAutonomic: { floor: 0.1, readingOf: 'Connect socially with peers.' },
+    },
+    3: {
+      physical: { floor: 0.2, readingOf: 'Activity without head-impact risk is appropriate.' },
+      cognitive: {
+        floor: 0.25,
+        readingOf: 'Missing more than one week of school is not generally recommended.',
+      },
+      emotionalAutonomic: { floor: 0.1, readingOf: 'Tolerating the classroom environment.' },
+    },
+    4: {
+      physical: { floor: 0.2, readingOf: 'Full days without concussion-related accommodations.' },
+      cognitive: { floor: 0.3, readingOf: 'Full days without concussion-related accommodations.' },
+    },
+  },
+  'return-to-sport': {
+    1: { physical: { floor: 0.1, readingOf: 'Relative rest includes light walking.' } },
+    2: { physical: { floor: 0.2, readingOf: 'Aerobic exercise at light effort.' } },
+    3: { physical: { floor: 0.25, readingOf: 'Individual sport-specific activity.' } },
+    4: { physical: { floor: 0.3, readingOf: 'Exercise to high intensity, non-contact.' } },
+    5: { physical: { floor: 0.3, readingOf: 'Full-contact practice.' } },
+    6: { physical: { floor: 0.3, readingOf: 'Unrestricted play.' } },
+  },
+};
+
+export function stageFloor(protocol: ProtocolId, step: number, domain: LoadDomain): StageFloor {
+  return (
+    FLOORS[protocol][step]?.[domain] ?? {
+      floor: 0,
+      readingOf: 'No minimum activity is specified for this domain.',
     }
   );
 }
