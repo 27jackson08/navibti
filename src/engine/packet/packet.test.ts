@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { ACCOMMODATION_LIBRARY, ACCOMMODATION_PLACEHOLDERS } from '@/data/accommodations';
 import { getCheckIns, getPatient } from '@/db/store';
 import { buildSession, isoDay, type Session } from '@/engine/session';
-import { composePacket, diffPackets, selectAccommodations, signatureOf } from './compose';
+import {
+  composePacket,
+  diffPackets,
+  emptyReasonFor,
+  selectAccommodations,
+  signatureOf,
+} from './compose';
 import { attendanceHours, deriveSlots, fillSlots } from './slots';
 import { applyRewrites, validateRewrite } from './validate';
 
@@ -380,5 +386,58 @@ describe('a packet has to make sense as one document', () => {
     const short = composePacket(withAttendance(maya, 0.5), 'school')!.items.length;
     const longer = composePacket(withAttendance(maya, 2.5), 'school')!.items.length;
     expect(short).toBeLessThan(longer);
+  });
+});
+
+describe('a packet with nothing in it', () => {
+  const freshPatient = {
+    id: 'new',
+    displayName: 'Priya',
+    isMinor: false,
+    injuryDate: isoDay(new Date()),
+    protocol: 'return-to-learn' as const,
+    roles: ['school' as const],
+  };
+
+  it('explains itself on day one rather than arriving blank', () => {
+    // A title, an intro and no items reads as "no accommodations needed", which
+    // is the opposite of what an empty list means while someone is in relative
+    // rest and not at school at all.
+    const session = buildSession(freshPatient, [], isoDay(new Date()));
+    const packet = composePacket(session, 'school')!;
+
+    expect(packet.items).toHaveLength(0);
+    expect(packet.emptyReason).toMatch(/relative rest/i);
+    expect(packet.emptyReason).toMatch(/nothing to arrange yet/i);
+  });
+
+  it('distinguishes "not yet" from "no longer"', () => {
+    // Two quite different reasons a list can be empty, and a recipient needs to
+    // be able to tell them apart.
+    const session = buildSession(freshPatient, [], isoDay(new Date()));
+
+    const dayOne = emptyReasonFor(session, 'school');
+    const recovered = emptyReasonFor(
+      { ...session, learnStage: { ...session.learnStage, step: 4 } },
+      'school',
+    );
+
+    expect(dayOne).toMatch(/relative rest/i);
+    expect(recovered).toMatch(/goal state/i);
+    expect(recovered).not.toMatch(/relative rest/i);
+  });
+
+  it('flags an unexpected gap rather than implying nothing is needed', () => {
+    const session = buildSession(freshPatient, [], isoDay(new Date()));
+    const midRecovery = emptyReasonFor(
+      { ...session, learnStage: { ...session.learnStage, step: 3 } },
+      'school',
+    );
+    expect(midRecovery).toMatch(/unusual/i);
+    expect(midRecovery).toMatch(/clinician/i);
+  });
+
+  it('carries no empty reason when there are items to show', () => {
+    expect(composePacket(maya, 'school')!.emptyReason).toBeNull();
   });
 });

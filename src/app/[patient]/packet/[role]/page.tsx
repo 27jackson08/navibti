@@ -14,7 +14,11 @@ const ROLES: readonly AccommodationRole[] = ['school', 'employer', 'caregiver'];
 export default async function PacketPage({ params }: PageProps<'/[patient]/packet/[role]'>) {
   const { patient: patientId, role } = await params;
   const patient = getPatient(patientId);
+  // Not just "is this a real role" but "is it one this patient has". Without
+  // the second check a crafted URL produces a workplace accommodations letter
+  // for a nine-year-old.
   if (!patient || !ROLES.includes(role as AccommodationRole)) notFound();
+  if (!patient.roles.includes(role as AccommodationRole)) notFound();
 
   const today = isoDay(new Date());
   const checkIns = getCheckIns(patient.id);

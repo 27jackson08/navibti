@@ -11,7 +11,8 @@ server, because contrast, focus order and layout are properties of what ships.
 |---|---|
 | Pages scanned | 7 |
 | Surfaces per page | 3 (calm, dim, night) |
-| Scans | 21 |
+| Browsers | Chromium, Firefox, WebKit |
+| Scans | 63 |
 | **Violations** | **0** |
 
 Also asserted:
@@ -67,10 +68,29 @@ only client-side JavaScript the product itself ships is the check-in flow, the
 reading-comfort controls and the revoke confirmation. Getting under 150 KB would
 mean changing framework, which is not a trade worth making for this.
 
+## Cross-browser
+
+119 tests pass across Chromium, Firefox and WebKit. Two failures in the first
+run, and neither was a rendering bug.
+
+**One was a test-isolation defect of our own.** The demo store is server state
+shared by every browser project, and the share-link test reached for "the first
+Revoke button" — which in a parallel run belongs to whichever project got there
+first. Each run now labels and owns its row.
+
+**One was a Safari platform behaviour.** WebKit leaves Tab focus on the body,
+because Safari ships with "press Tab to highlight each item on a webpage" turned
+off, so Tab only visits form fields until the user changes it. Nothing a page can
+influence. Diagnosing it exposed a genuine flaw in the test though: it asserted
+`outline-width > 0`, and `outline-width` computes to its initial value even when
+`outline-style` is `none` — so it would have passed on an element with no focus
+ring at all. The ring is now asserted on style, on an explicitly focused control,
+and it is solid 3px on all three engines.
+
 ## Not covered
 
 - No Lighthouse run. The performance numbers above are direct measurements;
   field metrics (LCP, INP, CLS) have not been collected and are not claimed.
 - Screen-reader testing is automated only. Axe catches missing names, roles and
   contrast; it does not tell you whether a screen reader experience is *good*.
-- One browser. Chromium only, no Firefox or WebKit run.
+- Desktop viewports only. No real mobile device testing.

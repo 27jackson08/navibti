@@ -19,7 +19,16 @@ export async function createLink(input: z.infer<typeof createSchema>): Promise<v
   // Authorisation, such as it is in a demo: the patient must exist. A real
   // deployment checks that the caller owns this record, which is exactly the
   // gap that keeps this out of production.
-  if (!getPatient(parsed.patientId)) throw new Error('unknown patient');
+  const patient = getPatient(parsed.patientId);
+  if (!patient) throw new Error('unknown patient');
+
+  // The form only offers roles this patient has, but the form is not the
+  // boundary. A crafted request must not be able to mint an employer link for a
+  // schoolchild.
+  const allowed: string[] = [...patient.roles, 'clinician'];
+  if (!allowed.includes(parsed.role)) {
+    throw new Error(`${patient.displayName} has no ${parsed.role} context to share`);
+  }
 
   createShareLink(parsed);
   revalidatePath(`/${parsed.patientId}/sharing`);

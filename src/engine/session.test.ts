@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { isMildAndBrief } from '@/data/guidelines';
-import { buildSession, daysBetween, deltaPointsOf, isoDay, type CheckIn } from './session';
+import {
+  buildSession,
+  daysBetween,
+  daysSinceInjury,
+  deltaPointsOf,
+  isoDay,
+  type CheckIn,
+} from './session';
 
 function checkIn(pre: number, worst: number): CheckIn {
   return {
@@ -114,5 +121,21 @@ describe('clinician escalation', () => {
     expect(buildSession(child, [symptomaticOn('2026-09-01')], '2026-09-01').escalations).toEqual(
       buildSession(patient, [symptomaticOn('2026-09-01')], '2026-09-01').escalations,
     );
+  });
+});
+
+describe('daysSinceInjury', () => {
+  it('counts forward from the injury', () => {
+    expect(daysSinceInjury('2026-08-01', '2026-08-15')).toBe(14);
+  });
+
+  it('never goes negative for a mistyped future date', () => {
+    // Unclamped this rendered as "Day -26427" on the plan screen, which is the
+    // kind of number that makes someone distrust every other figure on it.
+    expect(daysSinceInjury('2099-01-01', '2026-08-25')).toBe(0);
+  });
+
+  it('is zero on the day of injury', () => {
+    expect(daysSinceInjury('2026-08-25', '2026-08-25')).toBe(0);
   });
 });

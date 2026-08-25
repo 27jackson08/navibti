@@ -106,6 +106,17 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS);
 }
 
+/**
+ * Days since injury, never negative.
+ *
+ * An injury date in the future is a data-entry error, not a negative recovery.
+ * Unclamped it rendered as "Day -26427" on the plan screen, which is the kind
+ * of thing that makes someone distrust every other number on the page.
+ */
+export function daysSinceInjury(injuryDate: string, today: string): number {
+  return Math.max(0, daysBetween(injuryDate, today));
+}
+
 export function buildSession(
   patient: Patient,
   checkIns: readonly CheckIn[],
@@ -228,7 +239,7 @@ export function buildSession(
     checkIns: ordered,
     today,
     hasCheckedInToday: latest?.day === today,
-    daysSinceInjury: daysBetween(patient.injuryDate, today),
+    daysSinceInjury: daysSinceInjury(patient.injuryDate, today),
     posterior,
     stage,
     learnStage,
@@ -268,7 +279,7 @@ function collectEscalations(
   today: string,
 ): string[] {
   const escalations: string[] = [];
-  const elapsed = daysBetween(patient.injuryDate, today);
+  const elapsed = daysSinceInjury(patient.injuryDate, today);
 
   // Two tiers, because they say different things. The 28-day mark is the
   // guideline's own instruction and is worded as such; the 14-day one is our

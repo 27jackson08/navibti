@@ -60,6 +60,14 @@ export interface Packet {
     readonly instruction: string;
     readonly items: readonly RedFlag[];
   } | null;
+  /**
+   * Why there is nothing to list, when there is nothing to list.
+   *
+   * A packet with a title, an intro and no items looks broken, and worse, reads
+   * as "no accommodations needed" — the opposite of what an empty list means on
+   * day one, when the patient is in relative rest and not at school at all.
+   */
+  readonly emptyReason: string | null;
 }
 
 const TITLES: Record<AccommodationRole, string> = {
@@ -150,6 +158,7 @@ export function composePacket(session: Session, role: AccommodationRole): Packet
     slots,
     redFlags:
       role === 'caregiver' ? { instruction: RED_FLAG_INSTRUCTION, items: RED_FLAGS } : null,
+    emptyReason: items.length === 0 ? emptyReasonFor(session, role) : null,
   };
 }
 
@@ -189,4 +198,35 @@ export function diffPackets(previous: Packet | null, current: Packet): PacketDif
     changed,
     hasChanges: added.length > 0 || removed.length > 0 || changed.length > 0,
   };
+}
+
+/**
+ * There are two quite different reasons a packet can be empty, and telling them
+ * apart matters: one means "not yet", the other means "no longer".
+ */
+export function emptyReasonFor(session: Session, role: AccommodationRole): string {
+  const name = session.patient.displayName;
+
+  if (session.learnStage.step <= 1) {
+    return (
+      `${name} is in the first day or two after the injury, which the guidance describes as ` +
+      'relative rest — daily activities and light walking, not school or work. There is nothing ' +
+      'to arrange yet. This will fill in within a day or two, and a complete absence from the ' +
+      'school environment beyond a week is not recommended.'
+    );
+  }
+
+  if (session.learnStage.step >= 4) {
+    return (
+      `${name} is managing full days without concussion-related accommodations. That is the ` +
+      'goal state of the protocol, so there is nothing left to ask for. If that changes, this ' +
+      'document will repopulate.'
+    );
+  }
+
+  return (
+    `Nothing in the accommodation library applies to ${name} at this point in recovery for a ` +
+    `${role} setting. That is unusual — worth checking with a clinician rather than assuming no ` +
+    'support is needed.'
+  );
 }

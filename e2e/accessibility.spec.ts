@@ -141,9 +141,9 @@ test.describe('keyboard', () => {
     await expect(page.getByRole('heading', { level: 2 })).toContainText('symptoms right now');
   });
 
-  test('focus is always visible', async ({ page }) => {
+  test('a focused control shows a visible ring', async ({ page }) => {
     await page.goto('/maya/today');
-    await page.keyboard.press('Tab');
+    await page.getByRole('button', { name: 'Dim', exact: true }).focus();
 
     const outline = await page.evaluate(() => {
       const active = document.activeElement;
@@ -153,8 +153,27 @@ test.describe('keyboard', () => {
     });
 
     expect(outline).not.toBeNull();
-    expect(parseFloat(outline!.width)).toBeGreaterThan(0);
+    // Style, not width. outline-width computes to its initial value even when
+    // the style is none, so asserting on width alone passes on an element with
+    // no ring at all — which is how the original version of this test managed
+    // to look like it was checking something.
     expect(outline!.style).not.toBe('none');
+    expect(parseFloat(outline!.width)).toBeGreaterThan(0);
+  });
+
+  test('tabbing reaches the controls', async ({ page, browserName }) => {
+    // WebKit leaves Tab focus on the body: Safari ships with "press Tab to
+    // highlight each item on a webpage" turned off, so Tab only visits form
+    // fields until the user changes that preference. That is a platform
+    // setting, not something this page can influence, and the ring itself is
+    // verified above on all three engines.
+    test.skip(browserName === 'webkit', 'Safari does not tab to buttons by default');
+
+    await page.goto('/maya/today');
+    await page.keyboard.press('Tab');
+
+    const focused = await page.evaluate(() => document.activeElement?.tagName);
+    expect(focused).toBe('BUTTON');
   });
 });
 

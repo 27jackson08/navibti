@@ -53,6 +53,13 @@ export function PacketView({ packet, diff, stageLine }: Props) {
         </section>
       )}
 
+      {packet.emptyReason && (
+        <section className="mt-8 border-l-2 border-accent bg-accent-soft p-5">
+          <h2 className="text-xl">Nothing to arrange right now</h2>
+          <p className="mt-3 leading-relaxed">{packet.emptyReason}</p>
+        </section>
+      )}
+
       <ol className="mt-8 flex flex-col gap-6">
         {packet.items.map((item, index) => (
           <li key={item.id} className="grid grid-cols-[2.5rem_1fr] gap-4">

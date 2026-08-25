@@ -74,25 +74,31 @@ test('the caregiver packet carries the red-flag list', async ({ page }) => {
   await expect(page.getByText('Visible deformity of the skull')).toBeVisible();
 });
 
-test('a revoked share link stops working immediately', async ({ page }) => {
-  await page.goto('/maya/sharing');
+test('a revoked share link stops working immediately', async ({ page }, testInfo) => {
+  // The demo store is server state shared by every browser project, so this
+  // test has to own its row rather than reach for "the first Revoke button" —
+  // which in a parallel run belongs to whichever project got there first.
+  const label = `revoke check ${testInfo.project.name} ${testInfo.repeatEachIndex}`;
 
+  await page.goto('/maya/sharing');
   await page.getByRole('button', { name: 'School' }).click();
-  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill('E2E test link');
+  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
   await page.getByRole('button', { name: 'Create link' }).click();
 
-  const link = page.getByRole('link', { name: /\/s\// }).first();
-  await expect(link).toBeVisible();
-  const href = await link.getAttribute('href');
+  const row = page.locator('li').filter({ hasText: label });
+  await expect(row).toBeVisible();
+
+  const href = await row.getByRole('link').first().getAttribute('href');
   expect(href).toBeTruthy();
 
   await page.goto(href!);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('School accommodations');
 
   await page.goto('/maya/sharing');
-  await page.getByRole('button', { name: 'Revoke' }).first().click();
-  await page.getByRole('button', { name: 'Confirm' }).click();
-  await expect(page.getByText('no longer active').first()).toBeVisible();
+  const sameRow = page.locator('li').filter({ hasText: label });
+  await sameRow.getByRole('button', { name: 'Revoke' }).click();
+  await sameRow.getByRole('button', { name: 'Confirm' }).click();
+  await expect(sameRow.getByText('no longer active')).toBeVisible();
 
   const response = await page.goto(href!);
   expect(response?.status()).toBe(404);
