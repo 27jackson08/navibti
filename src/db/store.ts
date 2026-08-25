@@ -126,9 +126,30 @@ export function getCheckIns(patientId: string): CheckIn[] {
   return [...(store.checkIns.get(patientId) ?? [])];
 }
 
-/** Upserts by day, so re-doing today's check-in corrects it rather than duplicating. */
+/**
+ * Upserts by day, so redoing today's check-in corrects it rather than
+ * duplicating — with one exception.
+ *
+ * A red flag already recorded for that day is carried forward and never
+ * silently dropped. Without that, the guarantee that no plan is generated on a
+ * red-flag day is defeatable by simply redoing the check-in: the flag
+ * disappears, the plan comes back, and the clinician record loses the fact that
+ * an emergency symptom was reported at all.
+ *
+ * There is no mis-tap to protect here. The check-in offers "I selected that by
+ * mistake" *before* anything is stored, so a flag that reached this function was
+ * deliberate. Clearing one afterwards should be an explicit, recorded action,
+ * and deliberately is not one yet.
+ */
 export function saveCheckIn(patientId: string, checkIn: CheckIn): void {
   const existing = store.checkIns.get(patientId) ?? [];
+  const previous = existing.find((entry) => entry.day === checkIn.day);
+
+  const merged: CheckIn = {
+    ...checkIn,
+    redFlagIds: [...new Set([...(previous?.redFlagIds ?? []), ...checkIn.redFlagIds])],
+  };
+
   const without = existing.filter((entry) => entry.day !== checkIn.day);
-  store.checkIns.set(patientId, [...without, checkIn].sort((a, b) => a.day.localeCompare(b.day)));
+  store.checkIns.set(patientId, [...without, merged].sort((a, b) => a.day.localeCompare(b.day)));
 }
