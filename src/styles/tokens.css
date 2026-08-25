@@ -30,7 +30,7 @@
   --l-surface-sunken: 0.918;
   --l-ink: 0.255;
   --l-ink-soft: 0.455;
-  --l-ink-faint: 0.605;
+  --l-ink-faint: 0.505;
   --l-rule: 0.855;
   --l-accent: 0.505;
 
@@ -46,21 +46,20 @@
   /* Semantic colours, kept separate from the accent so severity never reads as
      branding. Muted on purpose — an alarm colour at full chroma is a symptom
      trigger, and everything here is already serious enough without it. */
-  --nv-caution: oklch(0.545 0.088 72);
+  --nv-caution: oklch(0.4 0.088 72);
   --nv-caution-surface: oklch(0.945 0.032 78);
-  --nv-critical: oklch(0.505 0.132 28);
+  --nv-critical: oklch(0.41 0.132 28);
   --nv-critical-surface: oklch(0.942 0.038 30);
-  --nv-steady: oklch(0.505 0.062 168);
+  --nv-steady: oklch(0.388 0.062 168);
   --nv-steady-surface: oklch(0.948 0.026 168);
 
   /* --- type --- */
-  --text-scale: 1;
-  --text-xs: calc(0.78rem * var(--text-scale));
-  --text-sm: calc(0.9rem * var(--text-scale));
-  --text-base: calc(1.06rem * var(--text-scale));
-  --text-lg: calc(1.28rem * var(--text-scale));
-  --text-xl: calc(1.62rem * var(--text-scale));
-  --text-2xl: calc(2.1rem * var(--text-scale));
+  --text-xs: 0.78rem;
+  --text-sm: 0.9rem;
+  --text-base: 1.06rem;
+  --text-lg: 1.28rem;
+  --text-xl: 1.62rem;
+  --text-2xl: 2.1rem;
   --measure: 62ch;
   --leading-body: 1.65;
 
@@ -109,12 +108,19 @@
   --hue-neutral: 78;
   --chroma-neutral: 0.014;
   --l-ground: 0.815;
-  --l-surface: 0.845;
-  --l-surface-sunken: 0.775;
+  /*
+   * The three backgrounds sit closer together here than in the other surfaces.
+   * Dim has less headroom to begin with, and a wide spread left no room between
+   * the darkest background and the text for two distinct levels of
+   * de-emphasis — secondary and faint text solved to the same lightness, which
+   * would have flattened the hierarchy exactly where legibility matters most.
+   */
+  --l-surface: 0.84;
+  --l-surface-sunken: 0.8;
   --l-ink: 0.145;
-  --l-ink-soft: 0.415;
-  --l-ink-faint: 0.505;
-  --l-rule: 0.68;
+  --l-ink-soft: 0.4;
+  --l-ink-faint: 0.3;
+  --l-rule: 0.66;
   --l-accent: 0.415;
 }
 
@@ -126,14 +132,14 @@
   --l-surface-sunken: 0.145;
   --l-ink: 0.905;
   --l-ink-soft: 0.735;
-  --l-ink-faint: 0.605;
+  --l-ink-faint: 0.621;
   --l-rule: 0.325;
   --l-accent: 0.775;
-  --nv-caution: oklch(0.805 0.098 78);
+  --nv-caution: oklch(0.661 0.098 78);
   --nv-caution-surface: oklch(0.285 0.042 72);
-  --nv-critical: oklch(0.755 0.118 30);
+  --nv-critical: oklch(0.659 0.118 30);
   --nv-critical-surface: oklch(0.275 0.056 28);
-  --nv-steady: oklch(0.795 0.062 168);
+  --nv-steady: oklch(0.638 0.062 168);
   --nv-steady-surface: oklch(0.265 0.032 168);
 }
 
@@ -150,18 +156,26 @@
     --l-surface-sunken: 0.145;
     --l-ink: 0.905;
     --l-ink-soft: 0.735;
-    --l-ink-faint: 0.605;
+    --l-ink-faint: 0.621;
     --l-rule: 0.325;
     --l-accent: 0.775;
-    --nv-caution: oklch(0.805 0.098 78);
+    --nv-caution: oklch(0.661 0.098 78);
     --nv-caution-surface: oklch(0.285 0.042 72);
-    --nv-critical: oklch(0.755 0.118 30);
+    --nv-critical: oklch(0.659 0.118 30);
     --nv-critical-surface: oklch(0.275 0.056 28);
-    --nv-steady: oklch(0.795 0.062 168);
+    --nv-steady: oklch(0.638 0.062 168);
     --nv-steady-surface: oklch(0.265 0.032 168);
   }
 }
 
-/* Text size control, exposed to the user rather than assumed. */
-[data-text='large'] { --text-scale: 1.15; }
-[data-text='larger'] { --text-scale: 1.32; }
+/*
+ * Text size control, exposed to the user rather than assumed.
+ *
+ * Applied as a root font size rather than as a multiplier on each token,
+ * because headings are sized with clamp() and a token multiplier left them
+ * untouched — the control appeared to work while the largest text on the page
+ * ignored it. Scaling the root scales every rem inside those clamps, and it
+ * respects the reader's own browser font-size setting at the same time.
+ */
+[data-text='large'] { font-size: 115%; }
+[data-text='larger'] { font-size: 132%; }

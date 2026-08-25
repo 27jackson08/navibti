@@ -75,6 +75,17 @@ function accentLuminance(tokens: Record<string, string>): number {
   );
 }
 
+/** Parses an `oklch(L C H)` literal, as the semantic colours are declared. */
+function parseOklch(value: string): [number, number, number] {
+  const match = value.match(/oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)/);
+  if (!match) throw new Error(`cannot parse "${value}" as oklch`);
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function semanticLuminance(tokens: Record<string, string>, name: string): number {
+  return relativeLuminance(...parseOklch(tokens[name]));
+}
+
 function luminanceOf(tokens: Record<string, string>, lightnessVar: string): number {
   const l = Number(tokens[lightnessVar]);
   const c = Number(tokens['--chroma-neutral']);
@@ -98,16 +109,32 @@ describe.each(Object.entries(SURFACES))('%s surface', (name, tokens) => {
   const ground = luminanceOf(tokens, '--l-ground');
   const sunken = luminanceOf(tokens, '--l-surface-sunken');
 
+  /**
+   * Text sits on all three backgrounds, not just the page ground. Checking only
+   * the ground missed that in the night palette the raised surface is *lighter*
+   * than the ground, so light text on a card has less contrast than the same
+   * text on the page — which is exactly what an axe scan of the built pages
+   * turned up.
+   */
+  const backgrounds = [
+    ['ground', ground],
+    ['surface', luminanceOf(tokens, '--l-surface')],
+    ['sunken', sunken],
+  ] as const;
+
   it('clears AAA for body text on the ground', () => {
     expect(contrast(ground, luminanceOf(tokens, '--l-ink'))).toBeGreaterThanOrEqual(7);
   });
 
-  it('clears AA for secondary text', () => {
-    expect(contrast(ground, luminanceOf(tokens, '--l-ink-soft'))).toBeGreaterThanOrEqual(4.5);
+  it.each(backgrounds)('clears AA for secondary text on the %s', (_where, background) => {
+    expect(contrast(background, luminanceOf(tokens, '--l-ink-soft'))).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('clears the 3:1 floor for faint labels and rules', () => {
-    expect(contrast(ground, luminanceOf(tokens, '--l-ink-faint'))).toBeGreaterThanOrEqual(3);
+  it.each(backgrounds)('clears AA for faint labels on the %s', (_where, background) => {
+    // Originally asserted 3:1 against the ground alone, which is the bar for
+    // large text on one background. --l-ink-faint is used for 11px mono labels
+    // on all three surfaces, and small text needs 4.5:1 on each of them.
+    expect(contrast(background, luminanceOf(tokens, '--l-ink-faint'))).toBeGreaterThanOrEqual(4.5);
   });
 
   it('keeps body text legible on the sunken surface too', () => {
@@ -122,6 +149,51 @@ describe.each(Object.entries(SURFACES))('%s surface', (name, tokens) => {
     const lightness = Number(tokens['--l-ground']);
     expect(lightness).toBeLessThan(0.99);
     expect(lightness).toBeGreaterThan(0.02);
+  });
+});
+
+/**
+ * Severity colours are text, not decoration — they carry the caution and
+ * critical notices, and the adherence chips in the clinician summary. They were
+ * not covered by the neutral checks above, and an axe scan of the built pages
+ * caught them failing on the clinician page in both light surfaces.
+ */
+describe.each(Object.entries(SURFACES))('%s semantic colours', (_name, tokens) => {
+  const backgrounds = [
+    ['ground', luminanceOf(tokens, '--l-ground')],
+    ['surface', luminanceOf(tokens, '--l-surface')],
+    ['sunken', luminanceOf(tokens, '--l-surface-sunken')],
+  ] as const;
+
+  const semantics = ['caution', 'critical', 'steady'] as const;
+
+  it.each(semantics)('%s is legible as text on every background', (semantic) => {
+    const colour = semanticLuminance(tokens, `--nv-${semantic}`);
+    for (const [where, background] of backgrounds) {
+      expect(contrast(background, colour), `${semantic} on ${where}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it.each(semantics)('%s is legible on its own tinted notice background', (semantic) => {
+    expect(
+      contrast(
+        semanticLuminance(tokens, `--nv-${semantic}-surface`),
+        semanticLuminance(tokens, `--nv-${semantic}`),
+      ),
+      semantic,
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(semantics)('%s stays distinguishable from the accent', (semantic) => {
+    // Severity must never read as branding, so the two are kept apart in hue.
+    const [, , semanticHue] = parseOklch(tokens[`--nv-${semantic}`]);
+    const accentHue = Number(tokens['--hue-accent']);
+    const separation = Math.min(
+      Math.abs(semanticHue - accentHue),
+      360 - Math.abs(semanticHue - accentHue),
+    );
+    if (semantic === 'steady') return;
+    expect(separation, semantic).toBeGreaterThan(40);
   });
 });
 

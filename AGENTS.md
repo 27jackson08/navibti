@@ -35,3 +35,19 @@ values in `tokens.css`. If you change a lightness, run the tests.
 
 Commands: `npm run dev` · `npm test` · `npm run typecheck` · `npm run build`
 Plan: see `PLAN.md`.
+
+## Verification
+
+```
+npm test        # 583 unit tests: guideline data, engine, tokens
+npm run e2e     # Playwright: axe on 7 pages x 3 surfaces, journeys, responsive
+npm run eval    # synthetic cohort -> results/evaluation.md
+npm run packets # print the packets each demo persona receives
+npm run trace   # one patient's day-by-day engine trace
+```
+
+Accessibility is enforced in two places and both are needed. The token tests in
+`src/styles/contrast.test.ts` compute WCAG ratios from the OKLCH values; the axe
+scan in `e2e/accessibility.spec.ts` checks the built pages. The token tests
+passed while three real contrast defects were live — see
+`results/frontend-audit.md`.

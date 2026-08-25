@@ -67,6 +67,25 @@ export function PacketView({ packet, diff, stageLine }: Props) {
         ))}
       </ol>
 
+      {packet.redFlags && (
+        <section className="mt-10 border-2 border-critical p-5">
+          <h2 className="text-xl text-critical">Get medical help immediately if you see</h2>
+          <ul className="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+            {packet.redFlags.items.map((flag) => (
+              <li key={flag.id} className="flex gap-2 text-sm">
+                <span aria-hidden="true" className="text-critical">
+                  •
+                </span>
+                <span>{flag.label}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 border-t border-critical pt-3 font-medium">
+            {packet.redFlags.instruction}
+          </p>
+        </section>
+      )}
+
       <footer className="mt-12 border-t border-rule pt-6">
         <h2 className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-faint">
           Where this comes from

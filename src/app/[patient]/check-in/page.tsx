@@ -24,6 +24,11 @@ export default async function CheckInPage({ params }: PageProps<'/[patient]/chec
       <div className="mt-8">
         <CheckInFlow patientId={patient.id} patientName={patient.displayName} />
       </div>
+
+      <p className="mt-14 border-l-2 border-rule pl-4 font-mono text-xs leading-relaxed text-ink-faint">
+        Not medical advice. If symptoms are severe or getting worse, seek medical care rather than
+        completing this check-in.
+      </p>
     </main>
   );
 }

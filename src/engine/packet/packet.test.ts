@@ -289,3 +289,25 @@ describe('the rewrite guard', () => {
     }
   });
 });
+
+describe('the red-flag card', () => {
+  it('is attached to the caregiver packet', () => {
+    const packet = composePacket(maya, 'caregiver')!;
+    expect(packet.redFlags).not.toBeNull();
+    expect(packet.redFlags?.items).toHaveLength(10);
+    expect(packet.redFlags?.instruction).toMatch(/urgent medical care/i);
+  });
+
+  it('is not attached to a school or employer packet', () => {
+    // A school is not the right audience for an emergency list; a caregiver is
+    // the person who will be in the room.
+    expect(composePacket(maya, 'school')!.redFlags).toBeNull();
+    expect(composePacket(daniel, 'employer')!.redFlags).toBeNull();
+  });
+
+  it('does not change the content signature, being fixed content', () => {
+    const a = composePacket(maya, 'caregiver')!;
+    const b = composePacket({ ...maya, today: '2099-01-01' }, 'caregiver')!;
+    expect(a.signature).toBe(b.signature);
+  });
+});

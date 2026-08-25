@@ -18,7 +18,14 @@ import {
   type Accommodation,
   type AccommodationRole,
 } from '@/data/accommodations';
-import { CITATIONS, type CitationId, type LoadDomain } from '@/data/guidelines';
+import {
+  CITATIONS,
+  RED_FLAGS,
+  RED_FLAG_INSTRUCTION,
+  type CitationId,
+  type LoadDomain,
+  type RedFlag,
+} from '@/data/guidelines';
 import type { Session } from '@/engine/session';
 import type { DayPlan } from '@/engine/tolerance/threshold';
 import { deriveSlots, fillSlots, type SlotValues } from './slots';
@@ -42,6 +49,17 @@ export interface Packet {
   /** Stable over content, so an unchanged day does not reissue the document. */
   readonly signature: string;
   readonly slots: SlotValues;
+  /**
+   * The emergency list, attached to the caregiver packet only.
+   *
+   * A caregiver is the person most likely to be in the room when one of these
+   * appears, and least likely to have been told what they are. Every other
+   * item in a packet is an adjustment; this is the one that says stop.
+   */
+  readonly redFlags: {
+    readonly instruction: string;
+    readonly items: readonly RedFlag[];
+  } | null;
 }
 
 const TITLES: Record<AccommodationRole, string> = {
@@ -123,6 +141,8 @@ export function composePacket(session: Session, role: AccommodationRole): Packet
     generatedOn: session.today,
     signature: signatureOf(items),
     slots,
+    redFlags:
+      role === 'caregiver' ? { instruction: RED_FLAG_INSTRUCTION, items: RED_FLAGS } : null,
   };
 }
 

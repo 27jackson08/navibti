@@ -14,7 +14,8 @@
     "eval": "tsx scripts/eval/run.ts",
     "trace": "tsx scripts/eval/trace.ts",
     "calibrate:confounding": "tsx scripts/eval/confounding.ts",
-    "packets": "tsx scripts/eval/packets.ts"
+    "packets": "tsx scripts/eval/packets.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
@@ -25,11 +26,14 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.11",
+    "axe-core": "^4.13.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
