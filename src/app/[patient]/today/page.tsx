@@ -179,6 +179,18 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
             cited library — nothing here is generated prose.
           </p>
           <ul className="mt-5 grid gap-px border border-rule bg-rule sm:grid-cols-3">
+            <li className="bg-ground">
+              <Link
+                href={`/${patient.id}/clinician`}
+                className="flex h-full flex-col gap-2 p-5 hover:bg-surface focus-visible:bg-surface"
+              >
+                <span className="text-lg">Clinician</span>
+                <span className="text-sm text-ink-soft">
+                  Trajectory, adherence, current limits and what to ask about.
+                </span>
+                <span className="mt-auto pt-2 font-mono text-xs text-accent">Open summary →</span>
+              </Link>
+            </li>
             {patient.roles.map((role) => (
               <li key={role} className="bg-ground">
                 <Link
@@ -192,6 +204,14 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
               </li>
             ))}
           </ul>
+          <p className="mt-4">
+            <Link
+              href={`/${patient.id}/sharing`}
+              className="font-mono text-xs text-accent underline-offset-4 hover:underline"
+            >
+              Manage who can see these →
+            </Link>
+          </p>
         </section>
       )}
 

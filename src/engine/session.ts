@@ -58,8 +58,19 @@ export interface CheckIn {
   readonly note?: string;
 }
 
+/**
+ * The rise over pre-activity, rounded to two decimals.
+ *
+ * The rounding is not cosmetic. Severity is reported on a 0-10 scale to one
+ * decimal place, and subtracting two such values in binary floating point
+ * produces things like 4.4 - 2.4 = 2.0000000000000004 — which is greater than
+ * the guideline's 2-point limit, so a patient whose symptoms rose exactly two
+ * points would be told they had breached it. The clinician table displayed
+ * "2.0" next to "within limit: no", which is how this was found.
+ */
 export function deltaPointsOf(checkIn: CheckIn): number {
-  return Math.max(0, checkIn.worstSeverity - checkIn.preActivitySeverity);
+  const raw = Math.max(0, checkIn.worstSeverity - checkIn.preActivitySeverity);
+  return Math.round(raw * 100) / 100;
 }
 
 export interface Session {
