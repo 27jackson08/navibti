@@ -1,4 +1,4 @@
-<title>NaviTBI Build Brief</title>
+<title>NaviTBI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -287,21 +287,21 @@
 
 <header class="masthead">
   <strong>NaviTBI</strong>
-  <span class="countdown">11 days to submission</span>
+  <span class="countdown">Built &middot; 596 tests passing</span>
 </header>
 
 <div class="wrap">
 
   <div class="hero">
-    <p class="eyebrow">Build brief · Hack for Humanity Summer '26 · Concussion track</p>
+    <p class="eyebrow">Hack for Humanity Summer '26 &middot; Concussion track</p>
     <h1>The restriction is clear. The <em>environment</em> never hears it.</h1>
     <p class="lede">Every concussion tool on the market talks to the patient. NaviTBI talks to the school, the manager, and the family who keep overloading them.</p>
     <dl class="facts">
-      <div><dt>Deadline</dt><dd>September 4, 2026</dd></div>
-      <div><dt>Working days</dt><dd>11, not 14</dd></div>
-      <div><dt>Team</dt><dd>1–4 people</dd></div>
-      <div><dt>Stack</dt><dd>Next.js · TypeScript · Postgres</dd></div>
-      <div><dt>Novelty claim</dt><dd>Closed-loop accommodation translator</dd></div>
+      <div><dt>Unsafe recommendations</dt><dd>6.0%</dd></div>
+      <div><dt>Fixed ceiling, no model</dt><dd>51.0%</dd></div>
+      <div><dt>Over-estimated tolerance</dt><dd>0.0%</dd></div>
+      <div><dt>Red-flag recall</dt><dd>100%</dd></div>
+      <div><dt>Evaluated over</dt><dd>4,084 patient-days</dd></div>
     </dl>
   </div>
 
@@ -506,23 +506,27 @@
   </section>
 
   <section>
-    <div class="sec-head"><span class="sec-num">06</span><h2>Measure the model, don't just ship it</h2></div>
+    <div class="sec-head"><span class="sec-num">06</span><h2>What it measures, and what it does not</h2></div>
     <div class="col">
-      <p>No human data exists and none should be collected in eleven days. Instead, generate 21-day trajectories from <em>known ground-truth coefficients</em>. This converts "we built a model" into "we measured our model," which is the gap between a 3 and a 5 on technical complexity.</p>
+      <p>No human data exists and none was collected. Instead, 200 synthetic patients over 21 days &mdash; 4,084 patient-days &mdash; generated from <em>known ground-truth coefficients</em> whose sensitivity decays over time, so the model fits a moving target rather than a stationary one. Each day is simulated twice: once at the dose NaviTBI recommended, once at the dose the patient took. The model learns from what they did; safety is measured against the recommendation, because a patient who overshoots by 50% has not been failed by the plan.</p>
       <div class="scroller">
         <table>
-          <thead><tr><th>Metric</th><th>Method</th><th>Target</th></tr></thead>
+          <thead><tr><th>Metric</th><th>Result</th><th>Comparison</th></tr></thead>
           <tbody>
-            <tr><td>Threshold recovery</td><td>MAE vs. true tolerance by day, n=200 synthetic patients</td><td class="num">usable by day 5–7</td></tr>
-            <tr><td><strong>Safety rate</strong></td><td>Share of recommended doses that would have exceeded 2 points under ground truth</td><td class="num">&lt; 5%</td></tr>
-            <tr><td>Attribution accuracy</td><td>Top-1 cause vs. ground truth</td><td class="num">reported</td></tr>
-            <tr><td>Red-flag recall</td><td>Scripted red-flag inputs — deterministic, so prove it</td><td class="num">100%</td></tr>
-            <tr><td>Accessibility</td><td>axe-core, full keyboard path, Lighthouse</td><td class="num">clean</td></tr>
+            <tr><td><strong>Recommendations that would have breached the 2-point limit</strong></td><td class="num fix">6.0%</td><td class="num">51.0% for a fixed guideline ceiling with no personalisation</td></tr>
+            <tr><td>Estimates that exceeded true tolerance</td><td class="num fix">0.0%</td><td>The dangerous direction, essentially never taken</td></tr>
+            <tr><td>Red-flag halt recall</td><td class="num fix">100%</td><td class="num">7 patients</td></tr>
+            <tr><td>Flare attribution, top-1 accuracy</td><td class="num fix">98.3%</td><td>When it names a driver at all — it declines about two thirds of the time</td></tr>
+            <tr><td>Accessibility violations</td><td class="num fix">0</td><td class="num">21 axe scans, 7 pages &times; 3 surfaces</td></tr>
+            <tr><td>Mean signed tolerance error</td><td class="num">&minus;0.94</td><td>Markedly conservative, and recorded as a limitation</td></tr>
           </tbody>
         </table>
       </div>
-      <p>Safety rate is the headline number. Lead with it.</p>
-      <p>Three demo personas: a 16-year-old student athlete, a 34-year-old knowledge worker, and a 9-year-old whose parent does the check-ins.</p>
+      <div class="note caution">
+        <span class="note-label">Not claimed</span>
+        <p>Not validated in humans &mdash; every figure above is on synthetic cohorts with known ground truth. Not a medical device. The system is markedly conservative, and the guideline floor overrides the model on 63% of days, which means the floor is doing a large share of the work.</p>
+      </div>
+      <p>The three demo patients are seeded from this same generator, so they behave like the measured cohort rather than like curated happy paths.</p>
     </div>
   </section>
 
@@ -542,37 +546,42 @@
   </section>
 
   <section>
-    <div class="sec-head"><span class="sec-num">08</span><h2>Eleven days</h2></div>
+    <div class="sec-head"><span class="sec-num">08</span><h2>What the measurements caught</h2></div>
     <div class="col">
-      <p>Ship one closed loop end to end rather than six half-features. Everything not on this schedule is on the cut list.</p>
-      <div class="sched">
-        <div class="sched-row"><span class="d">01</span><span class="dt">Aug 24</span><span>Scaffold, schema, design tokens, and <strong>encode the guideline data</strong> — protocol steps, red flags, accommodation library seed</span></div>
-        <div class="sched-row"><span class="d">02</span><span class="dt">Aug 25</span><span>Check-in flow and persistence</span></div>
-        <div class="sched-row"><span class="d">03</span><span class="dt">Aug 26</span><span>Stage machine, test-first — the guideline text <em>is</em> the spec</span></div>
-        <div class="sched-row"><span class="d">04</span><span class="dt">Aug 27</span><span>Tolerance model, posterior update, tests</span></div>
-        <div class="sched-row"><span class="d">05</span><span class="dt">Aug 28</span><span>Synthetic generator; confirm the model recovers ground truth</span></div>
-        <div class="sched-row"><span class="d">06</span><span class="dt">Aug 29</span><span>Attribution, counterfactuals, collinearity refusal</span></div>
-        <div class="sched-row"><span class="d">07</span><span class="dt">Aug 30</span><span>Today's plan UI and headroom visualization</span></div>
-        <div class="sched-row"><span class="d">08</span><span class="dt">Aug 31</span><span>Packet composition and the four role views</span></div>
-        <div class="sched-row"><span class="d">09</span><span class="dt">Sep 1</span><span>Share links, consent, revocation, versioned diffs</span></div>
-        <div class="sched-row"><span class="d">10</span><span class="dt">Sep 2</span><span>Safety pass, evaluation harness, accessibility audit</span></div>
-        <div class="sched-row"><span class="d">11</span><span class="dt">Sep 3</span><span>Demo video and Devpost writeup</span></div>
-        <div class="sched-row buffer"><span class="d">—</span><span class="dt">Sep 4</span><span>Buffer. Submit early.</span></div>
-      </div>
-      <p>With two people: one owns engine and evaluation, one owns UI and packets. With three or four, add an owner for guideline data and the accommodation library — it is more work than it looks — and hand the demo and writeup to someone starting on day 8.</p>
+      <p>Every headline number in this project was wrong the first time it was measured. Each of these was found by building the measurement, not by thinking harder — and each would have demoed perfectly on a happy-path patient.</p>
+    </div>
+    <div class="col scroller">
+      <table>
+        <thead><tr><th>Found by</th><th>What was wrong</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Evaluation harness</td>
+            <td><strong>60.8% of recommendations were unsafe.</strong> Each domain was solved independently against yesterday, then all five recommended at once — individually safe, jointly far heavier. Allocation is now sequential, which is clinically righter too: three hours of screens really does leave less room for meetings.</td>
+          </tr>
+          <tr>
+            <td>Evaluation harness</td>
+            <td><strong>Tolerance collapsed to zero by day five and stayed there.</strong> Recommend nothing, learn nothing from the empty days, recommend nothing again — an app telling a recovering patient to do nothing, indefinitely. The stage machine now supplies a guideline-grounded activity <em>floor</em> as well as a ceiling.</td>
+          </tr>
+          <tr>
+            <td>Composing real packets</td>
+            <td><strong>A patient reached &ldquo;full days, no accommodations&rdquo; while managing 107 focused minutes,</strong> so his employer packet came out nearly empty. Absence of symptoms at a tiny dose is not evidence of tolerance.</td>
+          </tr>
+          <tr>
+            <td>Reading the clinician view</td>
+            <td><strong>Floating point manufactured a clinical breach.</strong> A rise of 2.0 points lasting 50 minutes — inside the limit on both counts — displayed next to &ldquo;within limit: no&rdquo;, because 4.4 &minus; 2.4 is 2.0000000000000004.</td>
+          </tr>
+          <tr>
+            <td>axe on the built pages</td>
+            <td><strong>Three contrast defects the palette unit tests were passing on.</strong> A colour tested at 3:1 and used at 12px; contrast checked only against the page ground when text also sits on raised and sunken surfaces; and the semantic notice colours never checked at all.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-      <h3>Cut in this order</h3>
-      <ol class="cuts">
-        <li>Voice <em>input</em> — keep spoken prompts, which are cheaper and carry most of the benefit</li>
-        <li>The child and caregiver persona — keep student and worker</li>
-        <li>Clinician PDF export — show the on-screen summary</li>
-        <li>Packet version diffs — keep versioning, drop the diff UI</li>
-        <li>The LLM tone pass — deterministic templates are safer anyway</li>
-      </ol>
-
-      <div class="note critical">
-        <span class="note-label">Never cut</span>
-        <p>Red-flag interrupt · stage machine · not-medical-advice framing · citations. Those four <em>are</em> the judged criteria.</p>
+    <div class="col">
+      <div class="note">
+        <span class="note-label">The pattern underneath all of it</span>
+        <p>A light day producing no symptoms is not good news on its own. That single mistake appeared three separate times in three different subsystems — and every instance failed in the over-restriction direction, which is exactly the direction current guidance was rewritten to prevent.</p>
       </div>
     </div>
   </section>
