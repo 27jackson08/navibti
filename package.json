@@ -16,7 +16,8 @@
     "calibrate:confounding": "tsx scripts/eval/confounding.ts",
     "packets": "tsx scripts/eval/packets.ts",
     "e2e": "playwright test",
-    "read-packet": "tsx scripts/eval/read-packet.ts"
+    "read-packet": "tsx scripts/eval/read-packet.ts",
+    "verify": "bash scripts/verify.sh"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

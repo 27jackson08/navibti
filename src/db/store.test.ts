@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getCheckIns, getPatient, listPatients, saveCheckIn } from './store';
-import { buildSession, isoDay, type CheckIn } from '@/engine/session';
+import { getCheckIns, getPatient, listPatients, saveCheckIn, seededOn } from './store';
+import { buildSession, type CheckIn } from '@/engine/session';
 import { composePacket } from '@/engine/packet/compose';
 
-const today = isoDay(new Date());
+// Read from the store rather than the clock: the seeded histories are
+// positioned against the date the store initialised, and computing a second
+// "today" here disagrees with it once a day, across UTC midnight.
+const today = seededOn;
 const PATIENT = 'daniel';
 
 function ordinary(overrides: Partial<CheckIn> = {}): CheckIn {

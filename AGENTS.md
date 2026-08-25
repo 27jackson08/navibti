@@ -39,7 +39,10 @@ Plan: see `PLAN.md`.
 ## Verification
 
 ```
-npm test        # 583 unit tests: guideline data, engine, tokens
+npm run verify           # typecheck + lint + unit
+npm run verify -- --full # ...and 119 e2e across Chromium, Firefox, WebKit
+
+npm test        # unit tests: guideline data, engine, tokens
 npm run e2e     # Playwright: axe on 7 pages x 3 surfaces, journeys, responsive
 npm run eval    # synthetic cohort -> results/evaluation.md
 npm run packets # print the packets each demo persona receives
@@ -51,3 +54,12 @@ Accessibility is enforced in two places and both are needed. The token tests in
 scan in `e2e/accessibility.spec.ts` checks the built pages. The token tests
 passed while three real contrast defects were live — see
 `results/frontend-audit.md`.
+
+**Do not verify with a pipe.** `npx vitest run | grep Tests && git commit` will
+commit a red suite: the pipe masks vitest's exit code, and grep's success becomes
+the chain's success. `set -e` does not reliably rescue this either. That is what
+`npm run verify` is for — it captures each gate's exit code directly.
+
+**Tests read `seededOn` from the store, never the clock.** The seeded demo
+histories are positioned against the moment the store initialised; a test that
+computes its own "today" disagrees with that once a day, across UTC midnight.

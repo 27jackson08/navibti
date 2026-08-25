@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ACCOMMODATION_LIBRARY, ACCOMMODATION_PLACEHOLDERS } from '@/data/accommodations';
-import { getCheckIns, getPatient } from '@/db/store';
-import { buildSession, isoDay, type Session } from '@/engine/session';
+import { getCheckIns, getPatient, seededOn } from '@/db/store';
+import { buildSession, type Session } from '@/engine/session';
 import {
   composePacket,
   diffPackets,
@@ -15,7 +15,8 @@ import { applyRewrites, validateRewrite } from './validate';
 function sessionFor(id: string): Session {
   const patient = getPatient(id);
   if (!patient) throw new Error(`no seeded patient ${id}`);
-  return buildSession(patient, getCheckIns(id), isoDay(new Date()));
+  // seededOn, not the clock — see the note in db/store.ts.
+  return buildSession(patient, getCheckIns(id), seededOn);
 }
 
 const maya = sessionFor('maya');
@@ -394,7 +395,7 @@ describe('a packet with nothing in it', () => {
     id: 'new',
     displayName: 'Priya',
     isMinor: false,
-    injuryDate: isoDay(new Date()),
+    injuryDate: seededOn,
     protocol: 'return-to-learn' as const,
     roles: ['school' as const],
   };
@@ -403,7 +404,7 @@ describe('a packet with nothing in it', () => {
     // A title, an intro and no items reads as "no accommodations needed", which
     // is the opposite of what an empty list means while someone is in relative
     // rest and not at school at all.
-    const session = buildSession(freshPatient, [], isoDay(new Date()));
+    const session = buildSession(freshPatient, [], seededOn);
     const packet = composePacket(session, 'school')!;
 
     expect(packet.items).toHaveLength(0);
@@ -414,7 +415,7 @@ describe('a packet with nothing in it', () => {
   it('distinguishes "not yet" from "no longer"', () => {
     // Two quite different reasons a list can be empty, and a recipient needs to
     // be able to tell them apart.
-    const session = buildSession(freshPatient, [], isoDay(new Date()));
+    const session = buildSession(freshPatient, [], seededOn);
 
     const dayOne = emptyReasonFor(session, 'school');
     const recovered = emptyReasonFor(
@@ -428,7 +429,7 @@ describe('a packet with nothing in it', () => {
   });
 
   it('flags an unexpected gap rather than implying nothing is needed', () => {
-    const session = buildSession(freshPatient, [], isoDay(new Date()));
+    const session = buildSession(freshPatient, [], seededOn);
     const midRecovery = emptyReasonFor(
       { ...session, learnStage: { ...session.learnStage, step: 3 } },
       'school',

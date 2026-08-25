@@ -18,6 +18,15 @@ import { isoDay, type CheckIn, type Patient } from '@/engine/session';
 interface Store {
   readonly patients: Map<string, Patient>;
   readonly checkIns: Map<string, CheckIn[]>;
+  /**
+   * The date this store seeded itself against.
+   *
+   * Exposed because the seeded histories are positioned relative to it, and a
+   * caller that computes its own "today" from the clock can disagree with it —
+   * the two are read at different moments, and once a day they land on opposite
+   * sides of UTC midnight. Tests use this instead of reading the clock again.
+   */
+  readonly seededOn: string;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -88,6 +97,7 @@ function createStore(): Store {
   const patients = new Map<string, Patient>();
   const checkIns = new Map<string, CheckIn[]>();
   const now = Date.now();
+  const seededOn = isoDay(new Date(now));
 
   for (const persona of PERSONAS) {
     const injuryDate = isoDay(new Date(now - persona.historyDays * DAY_MS));
@@ -103,7 +113,7 @@ function createStore(): Store {
     checkIns.set(persona.id, seedHistory(persona.seed, persona.historyDays, injuryDate));
   }
 
-  return { patients, checkIns };
+  return { patients, checkIns, seededOn };
 }
 
 /**
@@ -113,6 +123,9 @@ function createStore(): Store {
  */
 const globalStore = globalThis as typeof globalThis & { __navitbiStore?: Store };
 const store: Store = (globalStore.__navitbiStore ??= createStore());
+
+/** The date the seeded demo histories were positioned against. */
+export const seededOn = store.seededOn;
 
 export function listPatients(): Patient[] {
   return [...store.patients.values()];

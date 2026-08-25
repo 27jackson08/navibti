@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getCheckIns, getPatient } from '@/db/store';
-import { isoDay, type CheckIn } from '@/engine/session';
+import { getCheckIns, getPatient, seededOn } from '@/db/store';
+import { type CheckIn } from '@/engine/session';
 import { clinicianSummary } from './clinician';
 
-const today = isoDay(new Date());
+const today = seededOn;
 const maya = getPatient('maya')!;
 const daniel = getPatient('daniel')!;
 
