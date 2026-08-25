@@ -28,7 +28,7 @@ import {
 } from '@/data/guidelines';
 import type { Session } from '@/engine/session';
 import type { DayPlan } from '@/engine/tolerance/threshold';
-import { deriveSlots, fillSlots, type SlotValues } from './slots';
+import { attendanceHours, deriveSlots, fillSlots, type SlotValues } from './slots';
 
 export interface PacketItem {
   readonly id: string;
@@ -105,10 +105,17 @@ export function selectAccommodations(session: Session, role: AccommodationRole):
   const plan = session.plan;
   if (!plan) return [];
 
+  const attendance = attendanceHours(plan);
+
   return ACCOMMODATIONS_BY_ROLE[role]
     .filter((item) => {
       const step = stepFor(session, item);
       if (step < item.minStep || step > item.maxStep) return false;
+      // An item that presupposes a longer day than the plan supports would
+      // contradict the very first line of the letter.
+      if (item.minAttendanceHours !== undefined && attendance < item.minAttendanceHours) {
+        return false;
+      }
       return item.bands.includes(bandFor(plan, item.domain));
     })
     .sort((a, b) => a.priority - b.priority);

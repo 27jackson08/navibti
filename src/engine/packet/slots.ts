@@ -38,6 +38,22 @@ function blockLength(cognitiveMinutes: number): number {
   return clamp(roundTo(cognitiveMinutes / 3, 5), 10, 45);
 }
 
+/**
+ * Hours of attendance the plan supports, as a number.
+ *
+ * Exported because selection needs it as well as rendering: several
+ * accommodations only make sense at a certain scale of attendance, and a letter
+ * that asks for a one-hour day and then offers a quiet space for lunch and free
+ * periods reads as boilerplate nobody checked.
+ */
+export function attendanceHours(plan: DayPlan): number {
+  const cognitive = plan.recommendations.find((item) => item.domain === 'cognitive')?.dose ?? 0;
+  // Attendance is capped by concentration, not by willingness. Half an hour is
+  // the smallest visit worth arranging; seven hours is a full day, at which
+  // point the accommodation is no longer needed.
+  return clamp(roundTo(cognitive / 60, 0.5), 0.5, 7);
+}
+
 export function deriveSlots(plan: DayPlan): SlotValues {
   const cognitive = doseOf(plan, 'cognitive');
   const visual = doseOf(plan, 'visualVestibular');
@@ -51,10 +67,7 @@ export function deriveSlots(plan: DayPlan): SlotValues {
   // work" is not an instruction a timetable can carry out.
   const breakMinutes = Math.min(workMinutes, workMinutes <= 20 ? 15 : 10);
 
-  // Attendance is capped by concentration, not by willingness. Half an hour is
-  // the smallest visit worth arranging; seven hours is a full day, at which
-  // point the accommodation is no longer needed.
-  const attendanceHours = clamp(roundTo(cognitive / 60, 0.5), 0.5, 7);
+  const attendance = attendanceHours(plan);
 
   // A live meeting is roughly forty-five minutes of dense, unpausable
   // concentration -- listening, tracking and responding at once. Budgeting them
@@ -71,7 +84,7 @@ export function deriveSlots(plan: DayPlan): SlotValues {
   const earliestHour = sleepDebtTolerance < 1.5 ? '10am' : '9am';
 
   return {
-    hours: formatHours(attendanceHours),
+    hours: formatHours(attendance),
     breakMinutes: String(breakMinutes),
     workMinutes: String(workMinutes),
     screenMinutes: String(clamp(roundTo(visual / 4, 5), 0, 90)),

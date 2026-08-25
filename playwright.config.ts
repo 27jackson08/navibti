@@ -21,7 +21,10 @@ export default defineConfig({
   webServer: {
     command: 'npm run build && npm run start',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    // Never reuse. A stale `next start` left over from another task serves the
+    // previous build's HTML against a rebuilt .next, so every stylesheet 404s
+    // and the suite silently measures an unstyled page. That cost an hour once.
+    reuseExistingServer: false,
     timeout: 180_000,
   },
 });

@@ -178,32 +178,37 @@ export const POSTERIOR_FORGETTING_FACTOR: Sourced<number> = {
 };
 
 /**
- * When to put a "talk to a clinician" banner on screen.
+ * The point at which the guideline itself says to seek medical advice.
  *
- * Deliberately EARLIER than the ~4-week persisting-symptoms definitions used in
- * the literature, because prompting a conversation is low-risk and delaying one
- * is not. Do not present these as guideline-defined recovery windows.
- *
- * TODO before submission: cross-check the exact persisting-symptom windows in
- * the ONF adult Living Guideline and PedsConcussion, and cite them alongside
- * (not instead of) these prompts.
+ * Applied uniformly rather than split by age. NaviTBI previously used 14 days
+ * for adults and 28 for children, which had two problems: the 14-day figure
+ * came from the superseded Berlin-era definition of persistent symptoms, and
+ * the age asymmetry was not grounded in anything at all.
  */
-export const CLINICIAN_PROMPT_DAYS_ADULT: Sourced<number> = {
-  value: 14,
-  provenance: 'product-default',
-  citation: 'onf-living-adults',
-  rationale:
-    'An escalation prompt, not a diagnosis of persisting symptoms. Chosen to fire before the ' +
-    'commonly cited four-week mark.',
+export const PERSISTING_SYMPTOMS_DAYS: Sourced<number> = {
+  value: 28,
+  provenance: 'guideline',
+  citation: 'amsterdam-2023',
+  quote:
+    'Individuals should seek medical advice from their GP if symptoms persist beyond 28 days, ' +
+    'which may include onward referral.',
 };
 
-export const CLINICIAN_PROMPT_DAYS_CHILD: Sourced<number> = {
-  value: 28,
+/**
+ * An earlier, softer nudge of our own.
+ *
+ * Deliberately before the guideline's own 28-day mark, because suggesting a
+ * conversation is low-risk and delaying one is not. Presented as a suggestion,
+ * never as a finding of persisting symptoms — that determination is 28 days and
+ * belongs to a clinician.
+ */
+export const EARLY_CLINICIAN_PROMPT_DAYS: Sourced<number> = {
+  value: 14,
   provenance: 'product-default',
-  citation: 'pedsconcussion-2023',
+  citation: 'amsterdam-2023',
   rationale:
-    'An escalation prompt, not a diagnosis of persisting symptoms. Children are given a longer ' +
-    'window than adults, consistent with how the literature treats the two groups differently.',
+    'Half the guideline window. Chosen so someone whose symptoms are clearly not settling hears ' +
+    'the suggestion before the point at which the guidance would tell them to act on it.',
 };
 
 // ---------------------------------------------------------------------------

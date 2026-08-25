@@ -114,6 +114,7 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 6,
+    minAttendanceHours: 1.5,
   },
   {
     id: 'school-no-makeup-backlog',
@@ -157,6 +158,7 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 9,
+    minAttendanceHours: 1.5,
   },
   {
     id: 'school-leave-without-explaining',
@@ -198,8 +200,9 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     protocol: 'return-to-learn',
     minStep: 2,
     maxStep: 3,
-    bands: ['very-low', 'low'],
+    bands: ['very-low', 'low', 'moderate'],
     priority: 12,
+    minAttendanceHours: 2.5,
   },
   {
     id: 'school-rest-period',
@@ -211,8 +214,9 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     protocol: 'return-to-learn',
     minStep: 2,
     maxStep: 3,
-    bands: ['very-low', 'low'],
+    bands: ['very-low', 'low', 'moderate'],
     priority: 13,
+    minAttendanceHours: 2,
   },
   {
     id: 'school-late-start',
@@ -226,6 +230,7 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low'],
     priority: 14,
+    minAttendanceHours: 1.5,
   },
   {
     id: 'school-pe-restriction',

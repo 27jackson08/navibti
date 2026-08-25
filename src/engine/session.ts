@@ -11,9 +11,9 @@
  */
 
 import {
-  CLINICIAN_PROMPT_DAYS_ADULT,
+  EARLY_CLINICIAN_PROMPT_DAYS,
   FULL_DAY_COGNITIVE_FRACTION,
-  CLINICIAN_PROMPT_DAYS_CHILD,
+  PERSISTING_SYMPTOMS_DAYS,
   RED_FLAG_INSTRUCTION,
   type LoadDomain,
   type ProtocolId,
@@ -270,15 +270,22 @@ function collectEscalations(
   const escalations: string[] = [];
   const elapsed = daysBetween(patient.injuryDate, today);
 
-  const window = patient.isMinor
-    ? CLINICIAN_PROMPT_DAYS_CHILD.value
-    : CLINICIAN_PROMPT_DAYS_ADULT.value;
+  // Two tiers, because they say different things. The 28-day mark is the
+  // guideline's own instruction and is worded as such; the 14-day one is our
+  // suggestion and is worded as a suggestion.
+  const stillSymptomatic = checkIns.at(-1) !== undefined && deltaPointsOf(checkIns.at(-1)!) > 0;
 
-  const stillSymptomatic = checkIns.at(-1) && deltaPointsOf(checkIns.at(-1)!) > 0;
-  if (elapsed >= window && stillSymptomatic) {
+  if (stillSymptomatic && elapsed >= PERSISTING_SYMPTOMS_DAYS.value) {
     escalations.push(
-      `It has been ${elapsed} days since the injury and symptoms are still rising with ` +
-        'activity. This is a good point to check in with a clinician.',
+      `It has been ${elapsed} days and symptoms are still rising with activity. The guidance is ` +
+        `to seek medical advice when symptoms persist beyond ${PERSISTING_SYMPTOMS_DAYS.value} ` +
+        'days, which may include a referral onwards.',
+    );
+  } else if (stillSymptomatic && elapsed >= EARLY_CLINICIAN_PROMPT_DAYS.value) {
+    escalations.push(
+      `It has been ${elapsed} days and symptoms are still rising with activity. Recovery often ` +
+        'takes this long, so this is not a warning sign on its own — but it is a reasonable ' +
+        'point to mention it to a clinician if you have not already.',
     );
   }
 

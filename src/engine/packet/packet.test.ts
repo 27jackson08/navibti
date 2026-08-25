@@ -3,7 +3,7 @@ import { ACCOMMODATION_LIBRARY, ACCOMMODATION_PLACEHOLDERS } from '@/data/accomm
 import { getCheckIns, getPatient } from '@/db/store';
 import { buildSession, isoDay, type Session } from '@/engine/session';
 import { composePacket, diffPackets, selectAccommodations, signatureOf } from './compose';
-import { deriveSlots, fillSlots } from './slots';
+import { attendanceHours, deriveSlots, fillSlots } from './slots';
 import { applyRewrites, validateRewrite } from './validate';
 
 function sessionFor(id: string): Session {
@@ -309,5 +309,76 @@ describe('the red-flag card', () => {
     const a = composePacket(maya, 'caregiver')!;
     const b = composePacket({ ...maya, today: '2099-01-01' }, 'caregiver')!;
     expect(a.signature).toBe(b.signature);
+  });
+});
+
+describe('a packet has to make sense as one document', () => {
+  /** A plan supporting roughly `hours` of attendance. */
+  function withAttendance(session: Session, hours: number): Session {
+    const normalized = (hours * 60) / 240;
+    // The band has to follow the dose. Setting them independently produces a
+    // patient who cannot exist, and the packet you get for them is meaningless.
+    const band =
+      normalized < 0.25
+        ? 'very-low'
+        : normalized < 0.5
+          ? 'low'
+          : normalized < 0.85
+            ? 'moderate'
+            : 'near-full';
+
+    return {
+      ...session,
+      plan: {
+        ...session.plan!,
+        recommendations: session.plan!.recommendations.map((item) =>
+          item.domain === 'cognitive' ? { ...item, dose: hours * 60, band } : item,
+        ),
+      },
+    };
+  }
+
+  it('never asks for a one-hour day and then discusses lunch', () => {
+    // Items are selected independently, so without a gate they can each be
+    // right and jointly incoherent — which is how a document that is correct in
+    // every particular reads as boilerplate nobody checked.
+    const packet = composePacket(withAttendance(maya, 1), 'school')!;
+    const prose = packet.items.map((item) => item.text).join(' ').toLowerCase();
+
+    expect(prose).toMatch(/1 hour of class/);
+    expect(prose).not.toMatch(/lunch|free period|first period|hallway/);
+  });
+
+  it('includes those once the student is there long enough for them to exist', () => {
+    const ids = composePacket(withAttendance(maya, 2.5), 'school')!.items.map((item) => item.id);
+
+    expect(ids).toContain('school-quiet-lunch');
+    expect(ids).toContain('school-early-hallway-pass');
+  });
+
+  it('never advises against back-to-back meetings when only one is allowed', () => {
+    const packet = composePacket(withAttendance(daniel, 0.5), 'employer')!;
+    const prose = packet.items.map((item) => item.text).join(' ');
+
+    expect(prose).not.toMatch(/back-to-back/i);
+  });
+
+  it.each([0.5, 1, 2, 3.5, 5, 7])(
+    'contains no item requiring more attendance than the plan supports (%f hours)',
+    (hours) => {
+      const session = withAttendance(maya, hours);
+      const attendance = attendanceHours(session.plan!);
+
+      for (const item of selectAccommodations(session, 'school')) {
+        if (item.minAttendanceHours === undefined) continue;
+        expect(item.minAttendanceHours, item.id).toBeLessThanOrEqual(attendance);
+      }
+    },
+  );
+
+  it('gets shorter as the day gets shorter', () => {
+    const short = composePacket(withAttendance(maya, 0.5), 'school')!.items.length;
+    const longer = composePacket(withAttendance(maya, 2.5), 'school')!.items.length;
+    expect(short).toBeLessThan(longer);
   });
 });

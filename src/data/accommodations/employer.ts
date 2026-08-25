@@ -54,6 +54,7 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 3,
+    minAttendanceHours: 1.5,
   },
   {
     id: 'work-camera-off',

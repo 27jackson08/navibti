@@ -26,11 +26,28 @@ async function setSurface(page: Page, surface: string) {
   }, surface);
 }
 
+/**
+ * Fails loudly if the stylesheet did not load.
+ *
+ * Without this the contrast scans pass vacuously against an unstyled page —
+ * default black on white clears every threshold, so a broken build reports as a
+ * clean accessibility result. That happened: a stale `next start` served the
+ * previous build's HTML against a rebuilt .next, every stylesheet 404ed, and
+ * 21 scans came back green while measuring nothing.
+ */
+async function assertStylesLoaded(page: Page) {
+  const token = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--nv-ground').trim(),
+  );
+  expect(token, 'stylesheet did not load — this scan would pass on an unstyled page').not.toBe('');
+}
+
 for (const surface of SURFACES) {
   test.describe(`${surface} surface`, () => {
     for (const target of PAGES) {
       test(`${target.name} has no accessibility violations`, async ({ page }) => {
         await page.goto(target.path);
+        await assertStylesLoaded(page);
         await setSurface(page, surface);
 
         const results = await new AxeBuilder({ page })
@@ -150,6 +167,7 @@ test.describe('responsive', () => {
 
       for (const target of PAGES) {
         await page.goto(target.path);
+        await assertStylesLoaded(page);
         const overflow = await page.evaluate(
           () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
         );

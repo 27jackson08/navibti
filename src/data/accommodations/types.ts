@@ -46,4 +46,14 @@ export interface Accommodation {
   readonly bands: readonly ToleranceBand[];
   /** Lower sorts first within a section. */
   readonly priority: number;
+  /**
+   * Hours of attendance below which this item makes no sense.
+   *
+   * An accommodation about lunch, free periods or first period presupposes a
+   * school day with those things in it. Without this gate a letter can ask for
+   * a one-hour day and then, four items later, offer a quiet space for lunch —
+   * which is how a document that is right in every particular reads as
+   * boilerplate nobody checked.
+   */
+  readonly minAttendanceHours?: number;
 }
