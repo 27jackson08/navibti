@@ -181,11 +181,21 @@ correlation threshold; calibration showed no single cutoff can work, so it now
 asks whether the *difference* between two contributions is distinguishable from
 zero given the posterior covariance.
 
-**A language model cannot invent a clinical claim here.** Packets are composed
-by selection from a cited library. If a tone pass is added, a validator rejects
-any rewrite that invents a number, drops a limit, or strays into diagnosis,
-clearance, medication or imaging — and falls back to the template. A validator
-that logs and continues is decoration; this one substitutes.
+**We tried to break our own safety claim, and did.** The README used to say a
+language model could not invent a clinical claim here. So we attacked the
+validator, and four fabrications went straight through — a recovery claim, an
+invented clinician endorsement, an appended instruction, and a flat "no
+restrictions are necessary" — all by appending a sentence. Those are blocked
+now, along with introduced negations and loss of the item's subject.
+
+But an instruction can still be reversed without a negation: "Cap live meetings
+at 1 per day" becomes "Require at least 1 per day" and survives every check. A
+lexical validator has no access to meaning. So the claim is now the narrower true
+one: **no language model writes packet text at all.** Every sentence is selected
+from the cited library verbatim, and the validator exists so that adding a tone
+pass later is a bounded, reviewable change rather than a leap of faith. The
+limits it cannot cover are asserted in the test suite instead of being left
+implicit.
 
 **Zero accessibility violations across 21 scans**, three surfaces, with
 photophobia mode emitting ~38% less light than the default while holding 11:1

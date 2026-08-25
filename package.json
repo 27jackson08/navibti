@@ -17,7 +17,8 @@
     "packets": "tsx scripts/eval/packets.ts",
     "e2e": "playwright test",
     "read-packet": "tsx scripts/eval/read-packet.ts",
-    "verify": "bash scripts/verify.sh"
+    "verify": "bash scripts/verify.sh",
+    "attack": "tsx scripts/eval/attack.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

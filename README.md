@@ -86,9 +86,15 @@ Full detail, including the limitations, in
 - **Never gates school on clearance** — it states the opposite, correctly, which
   is what the guideline says and what most tools get wrong.
 - **Selection, never generation.** Every sentence a recipient reads comes from a
-  cited library. A validator ensures any tone rewrite can rephrase but cannot
-  invent a number, drop a limit, or stray into diagnosis, medication, imaging or
-  clearance — and a failure falls back to the template.
+  cited library, verbatim. No language model writes packet text. That, rather
+  than any validator, is the guarantee.
+- **A bounded path to adding a tone pass.** `engine/packet/validate.ts` blocks
+  added sentences, invented figures, dropped limits, introduced negations, loss
+  of the item's subject, and named clinical territory — diagnosis, clearance,
+  medication, imaging, declaring recovery, attributing a claim to a clinician.
+  It **cannot** verify that a rephrasing still means the same thing: rewriting
+  "Cap live meetings at 1 per day" to "Require at least 1 per day" survives every
+  check. That limit is asserted in the tests rather than left implicit.
 - **Refuses to guess.** Attribution declines to name a cause when there is too
   little data, when the day does not match the pattern, or when two loads cannot
   be told apart.
