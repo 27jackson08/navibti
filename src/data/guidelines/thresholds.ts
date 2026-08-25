@@ -122,6 +122,39 @@ export const MIN_CHECK_INS_FOR_PERSONALIZATION: Sourced<number> = {
     'model but label output provisional rather than implying it is personalized.',
 };
 
+/**
+ * The most we will ever name as a tolerance, in reference units.
+ *
+ * A model that has seen a few consistent easy days can extrapolate to "three
+ * ordinary days' worth of screens" with a straight face. That is an artefact of
+ * fitting a line, not a recommendation anyone should act on, so the search
+ * simply stops here.
+ */
+export const MAX_RECOMMENDED_LOAD: Sourced<number> = {
+  value: 1.5,
+  provenance: 'product-default',
+  citation: 'pedsconcussion-2023',
+  rationale:
+    'Half again as much as a demanding ordinary day. Beyond this the number is extrapolation ' +
+    'rather than evidence, and the guidance has nothing to say about it either.',
+};
+
+/**
+ * The smallest step up the ramp will allow, in reference units.
+ *
+ * Without a floor the ramp is purely multiplicative, so a single fully rested
+ * day pins every subsequent recommendation at zero — the ramp becomes a trap
+ * rather than a pace.
+ */
+export const RAMP_FLOOR_INCREMENT: Sourced<number> = {
+  value: 0.1,
+  provenance: 'product-default',
+  citation: 'amsterdam-2023',
+  rationale:
+    'A tenth of an ordinary day is small enough to be safe from any starting point and large ' +
+    'enough that recovery is not held hostage to one quiet day.',
+};
+
 export const UNDER_EXPOSURE_HEADROOM_FRACTION: Sourced<number> = {
   value: 0.5,
   provenance: 'product-default',

@@ -18,6 +18,8 @@ import {
   EXACERBATION_POINT_LIMIT,
   LOAD_DOMAINS,
   MAX_DAILY_RAMP_FRACTION,
+  MAX_RECOMMENDED_LOAD,
+  RAMP_FLOOR_INCREMENT,
   TOLERANCE_EXCEEDANCE_QUANTILE,
   UNDER_EXPOSURE_CONSECUTIVE_DAYS,
   UNDER_EXPOSURE_HEADROOM_FRACTION,
@@ -62,13 +64,10 @@ export interface DomainRecommendation {
   readonly floorReadingOf: string;
 }
 
-/**
- * How far above a full reference day we are willing to search. Nothing is
- * recommended beyond this even if the model would allow it — a tolerance
- * estimate of "three ordinary days of screens" is a modelling artefact, not a
- * recommendation.
- */
-const SEARCH_CEILING = 1.5;
+/** See MAX_RECOMMENDED_LOAD — held in the provenance system, not as a literal here. */
+const SEARCH_CEILING = MAX_RECOMMENDED_LOAD.value;
+
+/** Search resolution. Numerical rather than clinical: finer costs time, not safety. */
 const GRID_STEPS = 240;
 
 /**
@@ -122,7 +121,7 @@ export function solveTolerance(
  * the anti-strict-rest guidance asks for.
  */
 export function rampCap(domain: LoadDomain, yesterdayDose: number | undefined): number {
-  const floorIncrement = 0.1;
+  const floorIncrement = RAMP_FLOOR_INCREMENT.value;
   const yesterday = normalizeDose(domain, yesterdayDose ?? 0);
   return Math.max(yesterday * (1 + MAX_DAILY_RAMP_FRACTION.value), yesterday + floorIncrement);
 }
