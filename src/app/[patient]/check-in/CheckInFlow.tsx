@@ -48,6 +48,7 @@ export function CheckInFlow({ patientId, patientName }: Props) {
   const [answers, setAnswers] = useState<Answers>(EMPTY);
   const [index, setIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const rose =
     answers.worstSeverity !== null &&
@@ -94,6 +95,19 @@ export function CheckInFlow({ patientId, patientName }: Props) {
 
   async function save(finalAnswers: Answers) {
     setSubmitting(true);
+    setError(null);
+    try {
+      await saveOrThrow(finalAnswers);
+      router.push(`/${patientId}/today`);
+    } catch {
+      setError(
+        `Could not save this check-in. Open ${patientName}’s record from the patient list first.`,
+      );
+      setSubmitting(false);
+    }
+  }
+
+  async function saveOrThrow(finalAnswers: Answers) {
     await submitCheckIn({
       patientId,
       preActivitySeverity: finalAnswers.preActivitySeverity ?? 0,
@@ -103,7 +117,6 @@ export function CheckInFlow({ patientId, patientName }: Props) {
       doses: finalAnswers.doses,
       redFlagIds: finalAnswers.redFlagIds,
     });
-    router.push(`/${patientId}/today`);
   }
 
   return (
@@ -129,6 +142,12 @@ export function CheckInFlow({ patientId, patientName }: Props) {
       <div className="mt-8">
         {current.render(setAnswers, () => setIndex((value) => value + 1))}
       </div>
+
+      {error && (
+        <p role="alert" className="mt-6 border-l-2 border-critical bg-critical-surface p-3 text-sm">
+          {error}
+        </p>
+      )}
 
       <div className="mt-10 flex items-center justify-between gap-4">
         <button

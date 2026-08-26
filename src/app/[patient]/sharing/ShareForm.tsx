@@ -20,6 +20,7 @@ export function ShareForm({ patientId, patientName, roles }: Props) {
   const [expiresInDays, setExpiresInDays] = useState<(typeof EXPIRY_OPTIONS)[number]>(14);
   const [includesRawSymptoms, setIncludesRawSymptoms] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const rawAllowed = canShareRawSymptoms(role);
 
@@ -29,16 +30,26 @@ export function ShareForm({ patientId, patientName, roles }: Props) {
       onSubmit={async (event) => {
         event.preventDefault();
         setBusy(true);
-        await createLink({
-          patientId,
-          role,
-          includesRawSymptoms: includesRawSymptoms && rawAllowed,
-          expiresInDays,
-          label: label.trim() || `${role} link`,
-        });
-        setLabel('');
-        setBusy(false);
-        router.refresh();
+        setError(null);
+        try {
+          await createLink({
+            patientId,
+            role,
+            includesRawSymptoms: includesRawSymptoms && rawAllowed,
+            expiresInDays,
+            label: label.trim() || `${role} link`,
+          });
+          setLabel('');
+          router.refresh();
+        } catch {
+          // The server rejected it — most likely this session is not acting as
+          // this patient. Say so plainly rather than leaving the button stuck.
+          setError(
+            `Could not create the link. Open ${patientName}’s record from the patient list first.`,
+          );
+        } finally {
+          setBusy(false);
+        }
       }}
     >
       <fieldset className="flex flex-col gap-2">
@@ -119,6 +130,12 @@ export function ShareForm({ patientId, patientName, roles }: Props) {
           </span>
         </label>
       </div>
+
+      {error && (
+        <p role="alert" className="border-l-2 border-critical bg-critical-surface p-3 text-sm">
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"

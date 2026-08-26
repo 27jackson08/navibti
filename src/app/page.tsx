@@ -36,7 +36,7 @@ export default function Home() {
         {sessions.map((session) => (
           <li key={session.patient.id} className="bg-ground">
             <Link
-              href={`/${session.patient.id}/today`}
+              href={`/act/${session.patient.id}`}
               className="flex h-full flex-col gap-3 p-5 hover:bg-surface focus-visible:bg-surface"
             >
               <span className="text-2xl">{session.patient.displayName}</span>

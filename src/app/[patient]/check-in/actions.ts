@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { requireActor } from '@/auth/actor';
 import { z } from 'zod';
 import { LOAD_DOMAINS, RED_FLAG_IDS } from '@/data/guidelines';
 import { saveCheckIn } from '@/db/store';
@@ -27,6 +28,9 @@ export type CheckInInput = z.infer<typeof checkInSchema>;
 
 export async function submitCheckIn(input: CheckInInput): Promise<void> {
   const parsed = checkInSchema.parse(input);
+
+  // Before anything is written: is this session actually acting as this patient?
+  await requireActor(parsed.patientId);
 
   const doses: CheckIn['doses'] = { sleepFatigue: parsed.sleepDebtHours };
   for (const domain of LOAD_DOMAINS) {
