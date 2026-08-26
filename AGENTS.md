@@ -40,7 +40,7 @@ Plan: see `PLAN.md`.
 
 ```
 npm run verify           # typecheck + lint + unit
-npm run verify -- --full # ...and 119 e2e across Chromium, Firefox, WebKit
+npm run verify -- --full # ...and the e2e suite across Chromium, Firefox, WebKit
 
 npm test        # unit tests: guideline data, engine, tokens
 npm run e2e     # Playwright: axe on 7 pages x 3 surfaces, journeys, responsive
@@ -63,3 +63,7 @@ the chain's success. `set -e` does not reliably rescue this either. That is what
 **Tests read `seededOn` from the store, never the clock.** The seeded demo
 histories are positioned against the moment the store initialised; a test that
 computes its own "today" disagrees with that once a day, across UTC midnight.
+
+**Counts in prose go stale.** `npm run stats` prints the current test and source
+counts; run it before quoting a number in README.md or docs/devpost.md, which are
+the only two files that should carry one.

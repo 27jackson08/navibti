@@ -70,7 +70,7 @@ mean changing framework, which is not a trade worth making for this.
 
 ## Cross-browser
 
-119 tests pass across Chromium, Firefox and WebKit. Two failures in the first
+The suite passes across Chromium, Firefox and WebKit. Two failures in the first
 run, and neither was a rendering bug.
 
 **One was a test-isolation defect of our own.** The demo store is server state

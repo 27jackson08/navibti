@@ -218,8 +218,9 @@ building the measurement rather than from thinking harder.
 ## What's next
 
 Human validation is the only thing that matters and the only thing we cannot do
-in eleven days. Beyond that: real authentication (share-link scoping is real,
-record ownership is not enforced — that is what keeps this out of production),
+in eleven days. Beyond that: real authentication — every mutation already passes
+through a single `requireActor` gate, so making it production-grade means
+replacing the body of one function rather than auditing every write path — plus
 the Postgres schema wired up, clinician-side intake so restrictions can be
 entered by the person who set them, and a proper screen-reader pass.
 
@@ -228,7 +229,7 @@ entered by the person who set them, and a proper screen-reader pass.
 TypeScript · Next.js · Tailwind · Bayesian inference (conjugate NIG, closed-form)
 · Vitest · Playwright · axe-core · Drizzle
 
-596 unit tests, 39 end-to-end tests, 8,036 lines of source, 2,976 of tests.
+704 unit tests and 126 end-to-end tests across Chromium, Firefox and WebKit.
 
 ## What we are not claiming
 
