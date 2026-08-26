@@ -27,6 +27,7 @@ const BINDING_COPY: Record<DomainRecommendation['binding'], string> = {
   floor: 'Raised to the minimum the guidance supports.',
   environment:
     'Lowered because support this depends on has been reported unavailable.',
+  clinician: 'Set directly by a clinician.',
 };
 
 function format(dose: number, unit: string): string {

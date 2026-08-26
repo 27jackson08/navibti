@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { PROTOCOLS, stepOf } from '@/data/guidelines';
 import type { AccommodationRole } from '@/data/accommodations';
 import { ClinicianSummaryView } from '@/components/packet/ClinicianSummaryView';
+import { ClinicianIntake } from '@/components/packet/ClinicianIntake';
+import { buildSession as buildStageSession } from '@/engine/session';
 import { PacketView } from '@/components/packet/PacketView';
 import { recordAccess, resolveToken } from '@/db/share';
 import {
@@ -41,12 +43,29 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
   const unavailable = unavailableAccommodations(patient.id);
 
   if (link.role === 'clinician') {
+    const stage = buildStageSession(patient, checkIns, today, {
+      unavailableSupports: unavailable,
+    });
+
     return (
       <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-10">
         <ClinicianSummaryView
-          summary={clinicianSummary(patient, checkIns, today)}
+          summary={clinicianSummary(patient, checkIns, today, { unavailableSupports: unavailable })}
           includeRawSymptoms={link.includesRawSymptoms}
         />
+
+        {patient.protocol === 'return-to-sport' && (
+          <div className="mt-10">
+            <ClinicianIntake
+              token={token}
+              patientName={patient.displayName}
+              currentSportStep={stage.stage.step}
+              clearedUpTo={patient.clearance?.coversUpToStep ?? null}
+              clearedBy={patient.clearance?.recordedBy ?? null}
+            />
+          </div>
+        )}
+
         <SharedFooter />
       </main>
     );

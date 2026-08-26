@@ -153,3 +153,119 @@ test('acting as the right patient still works', async ({ page }, testInfo) => {
   await expect(page.locator('li').filter({ hasText: label })).toBeVisible();
   await expect(page.locator('p[role="alert"]')).toHaveCount(0);
 });
+
+test('a recipient can answer, and the plan changes', async ({ page }, testInfo) => {
+  // The coordinator half of the claim, end to end: the workplace says it cannot
+  // do something, and the patient's limits move.
+  const label = `response loop ${testInfo.project.name}`;
+
+  await page.goto('/act/tom');
+  await page.goto('/tom/sharing');
+  await page.getByRole('button', { name: 'Employer' }).click();
+  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
+  await page.getByRole('button', { name: 'Create link' }).click();
+
+  const row = page.locator('li').filter({ hasText: label });
+  const href = await row.getByRole('link').first().getAttribute('href');
+  expect(href).toBeTruthy();
+
+  // What the plan says before anyone answers.
+  await page.goto('/tom/today');
+  const before = await page
+    .locator('article')
+    .filter({ hasText: 'Thinking and concentration' })
+    .locator('.tabular-nums')
+    .first()
+    .textContent();
+
+  // The manager opens the link and reports one adjustment as impossible.
+  await page.goto(href!);
+  await page.getByRole('button', { name: /Confirm we.{1,3}ve received this/ }).click();
+  await expect(page.getByText(/Receipt confirmed/)).toBeVisible();
+
+  const item = page.locator('li').filter({ hasText: 'No back-to-back meetings' });
+  await item.getByRole('button', { name: /We can.{1,3}t do this/ }).click();
+  await item.getByRole('button', { name: 'We do not have the staff to cover it' }).click();
+
+  await expect(page.getByText(/aren.{1,3}t possible/)).toBeVisible();
+
+  // And the patient's plan has moved.
+  await page.goto('/tom/today');
+  await expect(page.getByText('Reported unavailable', { exact: true })).toBeVisible();
+  await expect(page.getByText(/limits have been lowered/)).toBeVisible();
+
+  const after = await page
+    .locator('article')
+    .filter({ hasText: 'Thinking and concentration' })
+    .locator('.tabular-nums')
+    .first()
+    .textContent();
+
+  expect(Number(after)).toBeLessThan(Number(before));
+});
+
+test('a recipient cannot flag an item from someone else’s packet', async ({ page }, testInfo) => {
+  const label = `scope check ${testInfo.project.name}`;
+
+  await page.goto('/act/maya');
+  await page.goto('/maya/sharing');
+  await page.getByRole('button', { name: 'Caregiver' }).click();
+  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
+  await page.getByRole('button', { name: 'Create link' }).click();
+
+  const href = await page
+    .locator('li')
+    .filter({ hasText: label })
+    .getByRole('link')
+    .first()
+    .getAttribute('href');
+
+  await page.goto(href!);
+  // A caregiver packet contains no school accommodations, so none of the school
+  // controls should be reachable from here.
+  await expect(page.locator('li').filter({ hasText: 'Permit sunglasses' })).toHaveCount(0);
+});
+
+test('only a clinician link can record clearance', async ({ page }, testInfo) => {
+  const suffix = testInfo.project.name;
+
+  // An employer link is not a route to unlocking contact sport.
+  await page.goto('/act/maya');
+  await page.goto('/maya/sharing');
+  await page.getByRole('button', { name: 'School' }).click();
+  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(`school link ${suffix}`);
+  await page.getByRole('button', { name: 'Create link' }).click();
+
+  const schoolHref = await page
+    .locator('li')
+    .filter({ hasText: `school link ${suffix}` })
+    .getByRole('link')
+    .first()
+    .getAttribute('href');
+
+  await page.goto(schoolHref!);
+  await expect(page.getByRole('heading', { name: /Record a clearance decision/ })).toHaveCount(0);
+
+  // A clinician link is.
+  await page.goto('/maya/sharing');
+  await page.getByRole('button', { name: 'Clinician' }).click();
+  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(`clinic link ${suffix}`);
+  await page.getByRole('button', { name: 'Create link' }).click();
+
+  const clinicHref = await page
+    .locator('li')
+    .filter({ hasText: `clinic link ${suffix}` })
+    .getByRole('link')
+    .first()
+    .getAttribute('href');
+
+  await page.goto(clinicHref!);
+  await expect(page.getByRole('heading', { name: /Record a clearance decision/ })).toBeVisible();
+
+  await page.getByPlaceholder('Dr Amara Reyes').fill(`Dr Reyes ${suffix}`);
+  await page.getByRole('button', { name: /Step 4/ }).click();
+  await page.getByRole('button', { name: 'Record clearance' }).click();
+
+  await expect(page.getByText(/Currently cleared up to step 4/)).toBeVisible();
+  await expect(page.getByText(`recorded by Dr Reyes ${suffix}`)).toBeVisible();
+});

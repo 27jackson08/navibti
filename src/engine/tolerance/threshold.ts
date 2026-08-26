@@ -31,7 +31,13 @@ import { exceedanceProbability, isPersonalized, predict, type Posterior } from '
 import { stageCap, stageFloor } from './stage-caps';
 import { REFERENCE_DOSES, denormalizeDose, normalizeDose } from './units';
 
-export type BindingConstraint = 'model' | 'ramp' | 'stage' | 'floor' | 'environment';
+export type BindingConstraint =
+  | 'model'
+  | 'ramp'
+  | 'stage'
+  | 'floor'
+  | 'environment'
+  | 'clinician';
 
 export interface DomainRecommendation {
   readonly domain: LoadDomain;
@@ -191,6 +197,12 @@ export interface PlanInput {
    * accommodation library, so the tolerance engine stays independent of both.
    */
   readonly environmentFactor?: Partial<Record<LoadDomain, number>>;
+  /**
+   * Hard ceilings a clinician set for this patient, in natural units. Applied
+   * last and downward only — a clinician can restrict further than the
+   * guideline default, never further than the guideline permits.
+   */
+  readonly clinicianCaps?: Partial<Record<LoadDomain, number>>;
   /** A recent typical day, used to hold the other domains fixed while solving. */
   readonly context: Partial<Record<LoadDomain, number>>;
   readonly yesterday: Partial<Record<LoadDomain, number>>;
@@ -244,7 +256,14 @@ export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRec
       ? 'environment'
       : capped.binding;
 
-  const dose = denormalizeDose(domain, normalized);
+  // A clinician's explicit instruction outranks everything above it, including
+  // the guideline floor: a general default about minimum activity should not
+  // override someone who has examined this particular patient.
+  const clinicianCap = input.clinicianCaps?.[domain];
+  const cappedDose = denormalizeDose(domain, normalized);
+  const dose =
+    clinicianCap !== undefined ? Math.min(cappedDose, clinicianCap) : cappedDose;
+  const clinicianBound = clinicianCap !== undefined && clinicianCap < cappedDose;
 
   return {
     domain,
@@ -253,7 +272,7 @@ export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRec
     modelTolerance: denormalizeDose(domain, model),
     rampCap: denormalizeDose(domain, ramp),
     stageCap: denormalizeDose(domain, stage.cap),
-    binding,
+    binding: clinicianBound ? 'clinician' : binding,
     exceedanceProbability: exceedanceProbability(
       predict(input.posterior, { ...input.context, [domain]: dose }),
       EXACERBATION_POINT_LIMIT.value,

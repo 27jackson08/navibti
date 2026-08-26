@@ -44,6 +44,14 @@ export interface Patient {
   readonly protocol: ProtocolId;
   readonly clearance?: MedicalClearance;
   readonly fullReturnToSchool?: boolean;
+  /**
+   * Hard ceilings a clinician has set directly, in each domain's natural unit.
+   *
+   * These outrank everything, including the guideline floor. A general default
+   * about minimum activity has no business overriding a clinician who has
+   * looked at this particular patient and said otherwise.
+   */
+  readonly clinicianCaps?: Partial<Record<LoadDomain, number>>;
   /** Which packets this patient's situation calls for. */
   readonly roles: readonly ('school' | 'employer' | 'caregiver')[];
 }
@@ -229,6 +237,7 @@ export function buildSession(
         context,
         yesterday: context,
         environmentFactor: environmentFactorFrom(unavailable),
+        clinicianCaps: patient.clinicianCaps,
       });
 
   const attribution =

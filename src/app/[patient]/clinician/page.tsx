@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { ClinicianSummaryView } from '@/components/packet/ClinicianSummaryView';
 import { getCheckIns, getPatient } from '@/db/store';
 import { clinicianSummary } from '@/engine/packet/clinician';
+import { unavailableAccommodations } from '@/db/responses';
 import { isoDay } from '@/engine/session';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,9 @@ export default async function ClinicianPage({ params }: PageProps<'/[patient]/cl
   const patient = getPatient(patientId);
   if (!patient) notFound();
 
-  const summary = clinicianSummary(patient, getCheckIns(patient.id), isoDay(new Date()));
+  const summary = clinicianSummary(patient, getCheckIns(patient.id), isoDay(new Date()), {
+    unavailableSupports: unavailableAccommodations(patient.id),
+  });
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-10">

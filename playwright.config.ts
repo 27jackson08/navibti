@@ -17,10 +17,30 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
   },
+  /*
+   * Cross-browser coverage is for rendering, layout and platform APIs — the
+   * things that actually differ between engines. The journeys exercise
+   * server-side logic that is identical everywhere, and running them three
+   * times over one shared in-memory store had them racing each other: every
+   * browser passed alone, the combined run failed, and the signature looked
+   * like a rendering difference for four rounds before it turned out to be a
+   * race against ourselves.
+   *
+   * So the journeys run once, and the accessibility and layout checks run
+   * everywhere. That is also the split each kind of test was worth.
+   */
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: /accessibility\.spec\.ts/,
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /accessibility\.spec\.ts/,
+    },
   ],
   webServer: {
     command: 'npm run build && npm run start',

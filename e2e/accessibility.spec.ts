@@ -15,7 +15,9 @@ const PAGES = [
   { name: 'school packet', path: '/maya/packet/school' },
   { name: 'caregiver packet', path: '/maya/packet/caregiver' },
   { name: 'clinician summary', path: '/daniel/clinician' },
-  { name: 'sharing', path: '/maya/sharing' },
+  // Amara, not Maya: no mutating test touches her, so this scan sees a page
+  // that does not depend on what else has run.
+  { name: 'sharing', path: '/amara/sharing' },
 ] as const;
 
 const SURFACES = ['calm', 'dim', 'night'] as const;

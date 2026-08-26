@@ -14,6 +14,7 @@
 import { makePatient } from '@/data/synthetic/patient';
 import { simulatePatient } from '@/data/synthetic/simulate';
 import { isoDay, type CheckIn, type Patient } from '@/engine/session';
+import type { LoadDomain } from '@/data/guidelines';
 
 interface Store {
   readonly patients: Map<string, Patient>;
@@ -169,6 +170,38 @@ export function getPatient(id: string): Patient | null {
 
 export function getCheckIns(patientId: string): CheckIn[] {
   return [...(store.checkIns.get(patientId) ?? [])];
+}
+
+/**
+ * Records what a clinician has decided.
+ *
+ * Deliberately the only way clearance enters the system, and deliberately not
+ * something the patient can do to their own record. NaviTBI issues nothing; it
+ * stores what a clinician says they decided, attributed to them by name and
+ * stamped, and the stage machine's refusal to self-clear is unchanged.
+ */
+export function recordClinicianDecision(
+  patientId: string,
+  decision: {
+    readonly clearance?: { readonly recordedBy: string; readonly coversUpToStep: number };
+    readonly clinicianCaps?: Partial<Record<LoadDomain, number>>;
+  },
+): boolean {
+  const patient = store.patients.get(patientId);
+  if (!patient) return false;
+
+  store.patients.set(patientId, {
+    ...patient,
+    clearance: decision.clearance
+      ? {
+          recordedBy: decision.clearance.recordedBy,
+          recordedAt: new Date(),
+          coversUpToStep: decision.clearance.coversUpToStep,
+        }
+      : patient.clearance,
+    clinicianCaps: decision.clinicianCaps ?? patient.clinicianCaps,
+  });
+  return true;
 }
 
 /**

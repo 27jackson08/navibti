@@ -67,3 +67,13 @@ computes its own "today" disagrees with that once a day, across UTC midnight.
 **Counts in prose go stale.** `npm run stats` prints the current test and source
 counts; run it before quoting a number in README.md or docs/devpost.md, which are
 the only two files that should carry one.
+
+**Kill stray servers before running e2e.** `reuseExistingServer` is off, so a
+`next start` left over from another task holds port 3000 and the whole suite
+fails on startup. `pkill -f "next start"` first.
+
+**Journeys run on Chromium only; accessibility runs on all three engines.**
+Cross-browser coverage is for rendering and platform APIs. Running the journeys
+three times over one shared in-memory store had them racing each other, which
+looked like a rendering difference for four rounds before it turned out to be a
+race against ourselves.

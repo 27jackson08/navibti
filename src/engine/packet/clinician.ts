@@ -20,7 +20,9 @@ import {
   type CheckIn,
   type Patient,
   type Session,
+  type SessionOptions,
 } from '@/engine/session';
+import type { UnmetSupport } from './environment';
 import { isPersonalized } from '@/engine/tolerance/posterior';
 import { normalizeDose } from '@/engine/tolerance/units';
 
@@ -68,14 +70,23 @@ export interface ClinicianSummary {
   readonly isPersonalized: boolean;
   readonly escalations: readonly string[];
   readonly openQuestions: readonly string[];
+  /**
+   * Support the school or workplace has reported it cannot provide.
+   *
+   * A clinician looking at a plateau needs to be able to tell "the plan is
+   * wrong" from "the plan was never actually available", and nothing in the
+   * symptom record distinguishes those.
+   */
+  readonly unmetSupports: readonly UnmetSupport[];
 }
 
 export function clinicianSummary(
   patient: Patient,
   checkIns: readonly CheckIn[],
   today: string,
+  options: SessionOptions = {},
 ): ClinicianSummary {
-  const session = buildSession(patient, checkIns, today);
+  const session = buildSession(patient, checkIns, today, options);
   const ordered = session.checkIns;
 
   const trajectory: TrajectoryPoint[] = ordered.map((checkIn, index) => {
@@ -119,6 +130,7 @@ export function clinicianSummary(
     isPersonalized: isPersonalized(session.posterior),
     escalations: session.escalations,
     openQuestions: openQuestions(session),
+    unmetSupports: session.unmetSupports,
   };
 }
 
@@ -200,6 +212,17 @@ function openQuestions(session: Session): string[] {
     questions.push(
       'Two kinds of load have moved together on nearly every day, so their effects cannot be ' +
         'separated from this record alone.',
+    );
+  }
+
+  if (session.unmetSupports.length > 0) {
+    const domains = [...new Set(session.unmetSupports.map((item) => item.domain))].length;
+    questions.push(
+      `The ${session.unmetSupports[0].role} has reported ${session.unmetSupports.length} ` +
+        `accommodation${session.unmetSupports.length === 1 ? '' : 's'} they cannot provide, ` +
+        `affecting ${domains} load domain${domains === 1 ? '' : 's'}. Today's limits have been ` +
+        'lowered accordingly — a plateau here may reflect what was available rather than what ' +
+        'was tolerated.',
     );
   }
 

@@ -136,6 +136,26 @@ export function ClinicianSummaryView({ summary, includeRawSymptoms }: Props) {
         </ul>
       </section>
 
+      {summary.unmetSupports.length > 0 && (
+        <section>
+          <h2 className="text-xl">Reported unavailable</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            Adjustments the school or workplace has said they cannot provide. Today&rsquo;s limits
+            have been lowered to stop assuming them.
+          </p>
+          <ul className="mt-4 flex flex-col gap-2">
+            {summary.unmetSupports.map((item) => (
+              <li key={item.accommodationId} className="border-l-2 border-caution pl-3 text-sm">
+                <span className="font-mono text-[0.66rem] uppercase tracking-[0.1em] text-ink-faint">
+                  {item.role} · {LOAD_DOMAIN_LABELS[item.domain]}
+                </span>
+                <p className="mt-0.5">{item.text.replace(/\{\{\w+\}\}/g, '—')}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {summary.openQuestions.length > 0 && (
         <section>
           <h2 className="text-xl">Worth asking about</h2>

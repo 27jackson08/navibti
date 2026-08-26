@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ACCOMMODATION_LIBRARY } from '@/data/accommodations';
 import { getCheckIns, getPatient, seededOn } from '@/db/store';
 import { buildSession } from '@/engine/session';
+import { clinicianSummary } from './clinician';
 import { composePacket } from './compose';
 import { domainsLeftUnsupported, environmentFactorFrom, unmetSupports } from './environment';
 
@@ -156,5 +157,31 @@ describe('domainsLeftUnsupported', () => {
       (item) => item.role === 'school' && item.domain === 'cognitive',
     );
     expect(domainsLeftUnsupported(items, new Set())).not.toContain('physical');
+  });
+});
+
+describe('the clinician is told what the environment refused', () => {
+  const unavailable = new Set(['school-light-sensitivity']);
+  const summary = clinicianSummary(maya, getCheckIns('maya'), seededOn, {
+    unavailableSupports: unavailable,
+  });
+
+  it('lists the unmet support', () => {
+    expect(summary.unmetSupports.map((item) => item.accommodationId)).toEqual([
+      'school-light-sensitivity',
+    ]);
+  });
+
+  it('raises it as something to ask about', () => {
+    // A clinician looking at a plateau has to be able to tell "the plan is
+    // wrong" from "the plan was never actually available".
+    expect(summary.openQuestions.join(' ')).toMatch(/cannot provide/i);
+    expect(summary.openQuestions.join(' ')).toMatch(/what was available rather than what was tolerated/i);
+  });
+
+  it('says nothing when everything asked for is available', () => {
+    const clean = clinicianSummary(maya, getCheckIns('maya'), seededOn);
+    expect(clean.unmetSupports).toEqual([]);
+    expect(clean.openQuestions.join(' ')).not.toMatch(/cannot provide/i);
   });
 });
