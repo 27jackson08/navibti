@@ -20,7 +20,8 @@
     "verify": "bash scripts/verify.sh",
     "attack": "tsx scripts/eval/attack.ts",
     "stats": "bash scripts/stats.sh",
-    "sweep": "tsx scripts/eval/sweep.ts"
+    "sweep": "tsx scripts/eval/sweep.ts",
+    "readability": "tsx scripts/eval/readability.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSpeech } from '@/hooks/useSpeech';
 import { Choice } from '@/components/check-in/Choice';
 import { Scale } from '@/components/check-in/Scale';
 import {
@@ -49,6 +50,7 @@ export function CheckInFlow({ patientId, patientName }: Props) {
   const [index, setIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const speech = useSpeech();
 
   const rose =
     answers.worstSeverity !== null &&
@@ -58,6 +60,13 @@ export function CheckInFlow({ patientId, patientName }: Props) {
   const steps = buildSteps(answers, rose);
   const current = steps[Math.min(index, steps.length - 1)];
   const isLast = index >= steps.length - 1;
+
+  // Before the red-flag early return, because hooks cannot be called
+  // conditionally and that return sits between here and the render.
+  const prompt = current.help ? `${current.title} ${current.help}` : current.title;
+  useEffect(() => {
+    speech.speak(prompt);
+  }, [prompt, speech]);
 
   if (answers.redFlagIds.length > 0) {
     return (
@@ -121,6 +130,21 @@ export function CheckInFlow({ patientId, patientName }: Props) {
 
   return (
     <>
+      {speech.supported && (
+        <div className="mb-5 flex justify-end">
+          <button
+            type="button"
+            onClick={speech.toggle}
+            aria-pressed={speech.enabled}
+            className={`min-h-0 border px-3 py-1.5 font-mono text-xs ${
+              speech.enabled ? 'border-accent text-accent' : 'border-rule text-ink-soft'
+            }`}
+          >
+            {speech.enabled ? 'Reading aloud — tap to stop' : 'Read questions aloud'}
+          </button>
+        </div>
+      )}
+
       <ol className="flex gap-1" aria-label={`Question ${index + 1} of ${steps.length}`}>
         {steps.map((step, position) => (
           <li

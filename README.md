@@ -140,14 +140,21 @@ holding 11:1 contrast, by lowering ground and ink together rather than greying
 the text. Motion off by default. 56px targets. Stored surface applied before
 first paint. Check-in is one question per screen with no typing.
 
+The check-in can read itself aloud, opt-in and never automatic. That is not a
+novelty feature: a check-in requiring a lit screen is one a photophobic person
+skips on exactly the days worth recording. Reading level is measured too —
+accommodation text averages grade 7, the check-in grade 3.4 — because a letter
+a school has to read twice gets filed unread, and the people that hurts most
+are the ones least able to advocate for themselves.
+
 ## Running it
 
 ```bash
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 744 unit tests
-npm run verify -- --full  # ...and 124 e2e (a11y on three engines)
+npm run verify       # typecheck, lint, 808 unit tests
+npm run verify -- --full  # ...and 126 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives
 npm run trace -- 3   # one patient's day-by-day engine trace

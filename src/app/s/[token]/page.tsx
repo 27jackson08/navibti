@@ -5,6 +5,7 @@ import { ClinicianSummaryView } from '@/components/packet/ClinicianSummaryView';
 import { ClinicianIntake } from '@/components/packet/ClinicianIntake';
 import { buildSession as buildStageSession } from '@/engine/session';
 import { PacketView } from '@/components/packet/PacketView';
+import { PrintButton } from '@/components/packet/PrintButton';
 import { recordAccess, resolveToken } from '@/db/share';
 import {
   acknowledgementsFor,
@@ -66,6 +67,9 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
           </div>
         )}
 
+        <div className="mx-auto mt-8 max-w-[68ch] print:hidden">
+          <PrintButton label="Print or save this summary" />
+        </div>
         <SharedFooter />
       </main>
     );
@@ -124,6 +128,9 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
         stageLine={stageLine}
         respond={{ token, acknowledgedAt, flagged }}
       />
+      <div className="mx-auto mt-8 max-w-[68ch] print:hidden">
+        <PrintButton />
+      </div>
       <SharedFooter />
     </main>
   );

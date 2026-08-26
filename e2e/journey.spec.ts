@@ -310,3 +310,33 @@ test('a patient can see whether they are getting better', async ({ page }) => {
   // And the page is honest that a fall is not necessarily a setback.
   await expect(page.getByText(/not that recovery has reversed/)).toBeVisible();
 });
+
+test('the check-in offers to read itself aloud, and does not start unbidden', async ({ page }) => {
+  await page.goto('/act/amara');
+  await page.goto('/amara/check-in');
+
+  // Speech has to be asked for. Starting unbidden is its own assault on someone
+  // with a headache.
+  const spoken = await page.evaluate(() => window.speechSynthesis?.speaking ?? false);
+  expect(spoken).toBe(false);
+
+  const toggle = page.getByRole('button', { name: 'Read questions aloud' });
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+  await toggle.click();
+  await expect(page.getByRole('button', { name: /Reading aloud/ })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  // And the choice survives leaving the page.
+  await page.goto('/amara/check-in');
+  await expect(page.getByRole('button', { name: /Reading aloud/ })).toBeVisible();
+});
+
+test('packets can be printed', async ({ page }) => {
+  await page.goto('/act/maya');
+  await page.goto('/maya/packet/school');
+  await expect(page.getByRole('button', { name: /Print or save as PDF/ })).toBeVisible();
+});

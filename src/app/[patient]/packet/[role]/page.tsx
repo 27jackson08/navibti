@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { PROTOCOLS, stepOf } from '@/data/guidelines';
 import type { AccommodationRole } from '@/data/accommodations';
 import { PacketView } from '@/components/packet/PacketView';
+import { PrintButton } from '@/components/packet/PrintButton';
 import { getCheckIns, getPatient } from '@/db/store';
 import { composePacket, diffPackets } from '@/engine/packet/compose';
 import { buildSession, isoDay } from '@/engine/session';
@@ -67,7 +68,8 @@ export default async function PacketPage({ params }: PageProps<'/[patient]/packe
         <Link href={`/${patient.id}/today`} className="font-mono text-xs text-ink-faint hover:text-ink">
           ← Back to today
         </Link>
-        <div className="flex gap-3 font-mono text-xs">
+        <div className="flex items-center gap-3 font-mono text-xs">
+          <PrintButton />
           {patient.roles.map((available) => (
             <Link
               key={available}

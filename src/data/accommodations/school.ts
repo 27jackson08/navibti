@@ -144,7 +144,9 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     role: 'school',
     domain: 'cognitive',
     text: 'Provide teacher notes or a peer note-taker so the student does not write and listen at once.',
-    rationale: 'Note-taking is dual-tasking, which is disproportionately hard after concussion.',
+    rationale:
+      'Writing and listening at the same time is much harder after a concussion than doing ' +
+      'either on its own.',
     citation: 'pedsconcussion-2023',
     protocol: 'return-to-learn',
     minStep: 2,
