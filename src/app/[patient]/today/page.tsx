@@ -9,6 +9,7 @@ import { buildSession, deltaPointsOf, isoDay, settingFor } from '@/engine/sessio
 import { replayHistory } from '@/engine/history';
 import { acknowledgementsFor, unavailableAccommodations } from '@/db/responses';
 import { deriveSlots, fillSlots } from '@/engine/packet/slots';
+import { joinWords } from '@/lib/list';
 import { WithdrawUnavailable } from '@/components/plan/WithdrawUnavailable';
 
 // The demo store lives in memory, so these pages must never be prerendered
@@ -155,9 +156,17 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
               {acknowledgements.length > 0 && (
                 <Notice tone="steady" label="They have this">
                   <p>
-                    {acknowledgements
-                      .map((entry) => entry.role)
-                      .join(' and ')}{' '}
+                    {/*
+                      Deduplicated by role, not listed per link. Links expire and
+                      get reissued, so one school acknowledging three of them
+                      otherwise reads "school and school and school confirmed".
+                    */}
+                    <span className="capitalize">
+                      {joinWords(
+                        acknowledgements.map((entry) => entry.role),
+                        'and',
+                      )}
+                    </span>{' '}
                     confirmed receiving {patient.displayName}’s plan.
                   </p>
                 </Notice>

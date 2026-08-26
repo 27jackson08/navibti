@@ -27,6 +27,7 @@ import {
   type Exacerbation,
   type LoadDomain,
 } from '@/data/guidelines';
+import { joinWords } from '@/lib/list';
 import { invertSpd } from '@/engine/tolerance/matrix';
 import { isPersonalized, predict, weightOf, type Posterior } from '@/engine/tolerance/posterior';
 import { FEATURE_ORDER, normalizeDose } from '@/engine/tolerance/units';
@@ -424,9 +425,10 @@ export function sensitivityProfile(posterior: Posterior): SensitivityProfile {
   }
 
   const mechanism = DOMAIN_MECHANISMS[first.domain];
-  const names = mechanism.resembles.map((subtype) => SUBTYPE_LABELS[subtype]);
-  const resembling =
-    names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names.at(-1)}` : names[0];
+  const resembling = joinWords(
+    mechanism.resembles.map((subtype) => SUBTYPE_LABELS[subtype]),
+    'or',
+  );
 
   return {
     leading: first.domain,
