@@ -6,6 +6,13 @@
 # success becomes the chain's success. That happened once. Exit codes are
 # captured explicitly here, and nothing is piped.
 fail=0
+
+# A stray `next start` from another task holds port 3000 and the whole e2e run
+# dies on startup — reuseExistingServer is off deliberately, so there is nothing
+# to fall back to. This has cost three runs now.
+pkill -f "next start" >/dev/null 2>&1 || true
+pkill -f "next-server" >/dev/null 2>&1 || true
+sleep 1
 run() {
   local name="$1"; shift
   if "$@" > /tmp/navitbi-verify.log 2>&1; then

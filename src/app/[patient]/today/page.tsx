@@ -6,6 +6,7 @@ import { Notice } from '@/components/plan/Notice';
 import { StageCard } from '@/components/plan/StageCard';
 import { getCheckIns, getPatient } from '@/db/store';
 import { buildSession, deltaPointsOf, isoDay } from '@/engine/session';
+import { replayHistory } from '@/engine/history';
 import { acknowledgementsFor, unavailableAccommodations } from '@/db/responses';
 import { deriveSlots, fillSlots } from '@/engine/packet/slots';
 
@@ -28,6 +29,9 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
     unavailableSupports: unavailableAccommodations(patient.id),
   });
   const acknowledgements = acknowledgementsFor(patient.id);
+  const yesterday = replayHistory(patient, getCheckIns(patient.id), {
+    unavailableSupports: unavailableAccommodations(patient.id),
+  }).at(-1);
   const latest = session.checkIns.at(-1);
 
   return (
@@ -36,8 +40,16 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
         <Link href="/" className="font-mono text-xs text-ink-faint hover:text-ink">
           ← All patients
         </Link>
-        <span className="font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">
-          Day {session.daysSinceInjury}
+        <span className="flex items-baseline gap-4">
+          <Link
+            href={`/${patient.id}/history`}
+            className="font-mono text-xs text-accent underline-offset-4 hover:underline"
+          >
+            Progress →
+          </Link>
+          <span className="font-mono text-xs uppercase tracking-[0.12em] text-ink-faint">
+            Day {session.daysSinceInjury}
+          </span>
         </span>
       </nav>
 
@@ -176,6 +188,28 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
               ))}
             </div>
           )}
+
+          {yesterday?.adherence !== null &&
+            yesterday !== undefined &&
+            yesterday.adherence !== undefined &&
+            yesterday.adherence > 1.25 && (
+              <section className="mt-8">
+                <Notice tone="neutral" label="About yesterday">
+                  <p className="leading-relaxed">
+                    Yesterday came in around{' '}
+                    <strong>{Math.round((yesterday.adherence - 1) * 100)}% above the plan</strong>.{' '}
+                    {yesterday.exceeded
+                      ? `Symptoms then rose ${yesterday.deltaPoints.toFixed(1)} points and stayed up for ${yesterday.durationMinutes} minutes.`
+                      : 'Symptoms stayed inside the mild range afterwards, which is useful to know.'}{' '}
+                    Today’s limits already account for it.
+                  </p>
+                  <p className="mt-2 text-ink-soft">
+                    This is information, not a telling-off. Days run away from everyone, and a log
+                    that only records the good ones is worth nothing.
+                  </p>
+                </Notice>
+              </section>
+            )}
 
           {session.sensitivity.canDescribe && (
             <section className="mt-8">

@@ -31,7 +31,7 @@ test('a check-in produces a plan and a packet', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/amara\/today$/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Today’s plan');
-  await expect(page.getByText("Today's limits").or(page.getByText('Today’s limits'))).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Today’s limits' })).toBeVisible();
 
   await page.getByRole('link', { name: /Open packet/ }).first().click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('for Amara');
@@ -293,4 +293,20 @@ test('the mechanism page explains every domain and cites it', async ({ page }) =
   // Describes a resemblance, never assigns a subtype.
   // Present on every domain, which is the point — assert at least one.
   await expect(page.getByText(/does not assign anyone a subtype/).first()).toBeVisible();
+});
+
+test('a patient can see whether they are getting better', async ({ page }) => {
+  await page.goto('/act/tom');
+  await page.goto('/tom/today');
+
+  await page.getByRole('link', { name: /Progress/ }).click();
+  await expect(page).toHaveURL(/\/tom\/history$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('recovery so far');
+
+  // Each domain gets its own chart, because they are on different units.
+  await expect(page.getByRole('img', { name: /Thinking and concentration/ })).toBeVisible();
+  await expect(page.getByRole('img', { name: /Screens, motion/ })).toBeVisible();
+
+  // And the page is honest that a fall is not necessarily a setback.
+  await expect(page.getByText(/not that recovery has reversed/)).toBeVisible();
 });
