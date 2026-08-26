@@ -105,10 +105,17 @@ whole document.
 ground-truth coefficients whose sensitivity decays over time, so the model fits
 a moving target rather than a stationary one.
 
-| | NaviTBI | Guideline ceiling alone | Model, guardrails removed |
-|---|---|---|---|
-| Recommendations that would have breached the 2-point limit | **6.0%** | 51.0% | 10.5% |
-| Mean recommended load | 0.27 | 0.60 | 0.33 |
+| | Unsafe recommendations | Mean load |
+|---|---|---|
+| **NaviTBI** | **6.0%** | 0.27 |
+| Guideline ceiling alone, no personalisation | 51.0% | 0.60 |
+| Model alone, guardrails removed | 10.5% | 0.33 |
+| No tool at all — an ordinary day, every day | 47.9% | 0.52 |
+
+Re-run with every prior weight deliberately halved and then doubled, the unsafe
+rate moves only between 4.6% and 8.6%. That matters more than the headline: it
+means the result is a property of the guardrails and the conservative quantile
+rather than of starting beliefs we picked ourselves.
 
 | | |
 |---|---|
@@ -121,6 +128,19 @@ Each day is simulated twice — once at the dose we recommended, once at the dos
 the patient took. The model learns from what they did; safety is measured
 against the recommendation, because a patient who overshoots by 50% has not been
 failed by the plan.
+
+## What we are least happy with
+
+The model over-predicts risk by roughly threefold. Where it expects about a
+fifth of days to breach the limit, under a twentieth do. It is safe, and it is
+safe because it is pessimistic rather than because it is precise — the guideline
+floor, not the model, sets the number on 63% of days.
+
+We know this because we measured it and put it in the results rather than
+reporting only the flattering half. Two of the four demo patients sit on that
+floor for their first fortnight, which is also why a fourth was added: the model
+needs about two weeks of check-ins before it has more to say than the guideline
+already does.
 
 ## Challenges we ran into
 

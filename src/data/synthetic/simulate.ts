@@ -36,11 +36,18 @@ type DoseMap = Partial<Record<LoadDomain, number>>;
  * evaluation can answer "does the model earn its place?" rather than only
  * "is the model safe?".
  *
- *   navitbi     min(model tolerance, ramp cap, stage cap) — the shipped policy
- *   stage-only  the guideline ceiling alone, with no personalization at all
- *   model-only  the model with both guardrails removed
+ *   navitbi           min(model tolerance, ramp cap, stage cap) — the shipped policy
+ *   stage-only        the guideline ceiling alone, with no personalization
+ *   model-only        the model with both guardrails removed
+ *   no-pacing         an ordinary day, every day — what happens with no tool at
+ *                     all, and the honest thing to beat
+ *
+ * The first attempt at that last one repeated yesterday's *actual* load, which
+ * compounds with adherence: a patient who does 20% more than the plan does 20%
+ * more than that tomorrow, and the baseline reached twelve times an ordinary
+ * day by week three. A constant is a fairer comparison and an interpretable one.
  */
-export type Policy = 'navitbi' | 'stage-only' | 'model-only';
+export type Policy = 'navitbi' | 'stage-only' | 'model-only' | 'no-pacing';
 
 export interface SimulatedDay {
   readonly day: number;
@@ -62,6 +69,8 @@ export interface SimulatedDay {
   /** The model believed even no load would breach the limit. */
   readonly needsClinicianReview: boolean;
   readonly zeroToleranceDomains: number;
+  /** What the model said the risk of this whole day was, before it happened. */
+  readonly predictedRisk: number;
   readonly attributionOutcome: AttributionOutcome;
   /** What attribution named, when it was willing to name anything. */
   readonly attributedDomain: LoadDomain | null;
@@ -76,6 +85,17 @@ export interface SimulationResult {
   readonly haltedOn: number | null;
   readonly haltWasDetected: boolean;
 }
+
+/**
+ * An unremarkable day, in reference units — what someone carries on doing when
+ * nothing is pacing them. Not a maximal day; a normal one.
+ */
+const ORDINARY_DAY: Partial<Record<LoadDomain, number>> = {
+  cognitive: 0.6,
+  visualVestibular: 0.6,
+  physical: 0.5,
+  emotionalAutonomic: 0.6,
+};
 
 /** A quiet starting day, before the app knows anything about the patient. */
 const OPENING_CONTEXT: DoseMap = {
@@ -138,7 +158,9 @@ export function simulatePatient(
           ? denormalizeDose(item.domain, stageCap(stage.protocol, stage.step, item.domain).cap)
           : policy === 'model-only'
             ? item.modelTolerance
-            : item.dose;
+            : policy === 'no-pacing'
+              ? denormalizeDose(item.domain, ORDINARY_DAY[item.domain] ?? 0)
+              : item.dose;
 
       recommended[item.domain] = dose;
       binding[item.domain] = item.binding;
@@ -187,6 +209,7 @@ export function simulatePatient(
       floorRescued: plan.floorOverrodeModel,
       needsClinicianReview: plan.needsClinicianReview,
       zeroToleranceDomains: plan.recommendations.filter((item) => item.modelTolerance <= 0).length,
+      predictedRisk: plan.jointExceedanceProbability,
       attributionOutcome: explanation.outcome,
       attributedDomain: explanation.leading[0]?.domain ?? null,
       trueLeadingDomain: trueLeading.points > 0 ? trueLeading.domain : null,
@@ -238,6 +261,19 @@ export interface CohortMetrics {
   readonly provisionalDays: number;
   /** Mean recommended load as a fraction of an ordinary day, across domains. */
   readonly meanRecommendedLoad: number;
+  /**
+   * Predicted risk against observed breach rate, in bins.
+   *
+   * A model that says twenty percent should breach about twenty percent of the
+   * time. Being safe is not the same as being right, and a system that is safe
+   * only because it is uniformly pessimistic has not earned the word
+   * "personalised".
+   */
+  readonly calibration: readonly {
+    readonly predicted: number;
+    readonly observed: number;
+    readonly days: number;
+  }[];
   readonly attributionOutcomes: Record<AttributionOutcome, number>;
   /** Share of named explanations that named the genuinely leading domain. */
   readonly attributionTop1Accuracy: number;
@@ -312,6 +348,7 @@ export function summarize(results: readonly SimulationResult[]): CohortMetrics {
     flareDaysExplained:
       allDays.filter((entry) => entry.attributionOutcome === 'attributed').length /
       (allDays.filter((entry) => entry.attributionOutcome !== 'nothing-to-explain').length || 1),
+    calibration: calibrationBins(allDays),
     meanRecommendedLoad: mean(
       allDays.flatMap((entry) =>
         LOAD_DOMAINS.map((domain) => normalizeDose(domain, entry.recommended[domain] ?? 0)),
@@ -340,6 +377,26 @@ function top1Accuracy(days: readonly SimulatedDay[]): number {
   );
   if (named.length === 0) return Number.NaN;
   return named.filter((day) => day.attributedDomain === day.trueLeadingDomain).length / named.length;
+}
+
+/** Bins days by what the model predicted, and reports what actually happened. */
+function calibrationBins(days: readonly SimulatedDay[]) {
+  const edges = [0, 0.05, 0.1, 0.2, 0.35, 0.6, 1.01];
+  const bins: { predicted: number; observed: number; days: number }[] = [];
+
+  for (let i = 0; i < edges.length - 1; i += 1) {
+    const inBin = days.filter(
+      (day) => day.predictedRisk >= edges[i] && day.predictedRisk < edges[i + 1],
+    );
+    if (inBin.length < 20) continue;
+
+    bins.push({
+      predicted: mean(inBin.map((day) => day.predictedRisk)),
+      observed: inBin.filter((day) => !day.recommendationWasSafe).length / inBin.length,
+      days: inBin.length,
+    });
+  }
+  return bins;
 }
 
 function shareNeedingReview(days: readonly SimulatedDay[]): number {

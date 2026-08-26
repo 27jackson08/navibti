@@ -56,10 +56,16 @@ Evaluated on 200 synthetic patients over 21 days — 4,084 patient-days — gene
 from known ground-truth coefficients whose sensitivity decays over time, so the
 model fits a moving target.
 
-| | NaviTBI | Guideline ceiling alone | Model, guardrails removed |
-|---|---|---|---|
-| Recommendations that would have breached the 2-point limit | **6.0%** | 51.0% | 10.5% |
-| Mean recommended load | 0.27 | 0.60 | 0.33 |
+| | Unsafe recommendations | Mean load |
+|---|---|---|
+| **NaviTBI** | **6.0%** | 0.27 |
+| Guideline ceiling alone, no personalisation | 51.0% | 0.60 |
+| Model alone, guardrails removed | 10.5% | 0.33 |
+| No tool at all — an ordinary day, every day | 47.9% | 0.52 |
+
+Re-run with every prior weight deliberately halved and doubled, the unsafe rate
+moves between 4.6% and 8.6% — so the result is a property of the guardrails and
+the conservative quantile rather than of starting beliefs we chose ourselves.
 
 | | |
 |---|---|
