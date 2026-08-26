@@ -72,7 +72,7 @@ the conservative quantile rather than of starting beliefs we chose ourselves.
 | Estimates that exceeded true tolerance | **0.0%** |
 | Red-flag halt recall | **100%** |
 | Flare attribution, top-1 accuracy | **98.3%** |
-| Accessibility violations (63 axe scans) | **0** |
+| Accessibility violations (72 axe scans) | **0** |
 
 Each day is simulated twice — once at the dose NaviTBI recommended, once at the
 dose the patient took. The model learns from what they did; safety is measured
@@ -159,7 +159,7 @@ are the ones least able to advocate for themselves.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 859 unit tests
+npm run verify       # typecheck, lint, 861 unit tests
 npm run verify -- --full  # ...and 128 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives

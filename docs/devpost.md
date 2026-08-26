@@ -134,7 +134,7 @@ rather than of starting beliefs we picked ourselves.
 | Estimates that exceeded true tolerance | **0.0%** |
 | Red-flag halt recall | **100%** |
 | Flare attribution, top-1 accuracy | **98.3%** |
-| Accessibility violations across 21 axe scans | **0** |
+| Accessibility violations across 72 axe scans | **0** |
 
 Each day is simulated twice — once at the dose we recommended, once at the dose
 the patient took. The model learns from what they did; safety is measured
@@ -143,8 +143,8 @@ failed by the plan.
 
 ## What we are least happy with
 
-The model over-predicts risk by roughly threefold. Where it expects about a
-fifth of days to breach the limit, under a twentieth do. It is safe, and it is
+The model over-predicts risk by roughly threefold. Where it expects 19.3% of
+days to breach the limit, 5.7% do. It is safe, and it is
 safe because it is pessimistic rather than because it is precise — the guideline
 floor, not the model, sets the number on 63% of days.
 
@@ -261,7 +261,7 @@ entered by the person who set them, and a proper screen-reader pass.
 TypeScript · Next.js · Tailwind · Bayesian inference (conjugate NIG, closed-form)
 · Vitest · Playwright · axe-core · Drizzle
 
-859 unit tests and 128 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
+861 unit tests and 128 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
 
 ## What we are not claiming
 
