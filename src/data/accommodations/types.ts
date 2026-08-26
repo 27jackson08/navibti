@@ -57,6 +57,15 @@ export interface Accommodation {
    */
   readonly minAttendanceHours?: number;
   /**
+   * Hours of attendance at or above which this item no longer applies.
+   *
+   * The pair exists so a domain can have a worded variant for the smallest
+   * days and a numeric one for the rest. "Cap live meetings at 0 per day and 10
+   * minutes each" is not an instruction, and a clinician capping concentration
+   * to nothing can produce exactly that.
+   */
+  readonly maxAttendanceHours?: number;
+  /**
    * The load this accommodation is what makes safe.
    *
    * Some adjustments are comfort; others are load-bearing. Forty minutes of

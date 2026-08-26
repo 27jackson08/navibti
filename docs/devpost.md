@@ -45,6 +45,11 @@ NaviTBI closes the loop:
    clinician. This is the part that does not exist anywhere else.
 5. **Scoped share links** the recipient opens without an account, which expire,
    can be revoked instantly, and record every view.
+6. **Replies from the people who received them.** A school or manager can
+   confirm receipt and report an accommodation as impossible — and because some
+   accommodations are what *make* a dose safe, saying so changes the plan.
+7. **A place for the clinician to record what they decided.** Clearance, and
+   hard ceilings that outrank everything NaviTBI would otherwise recommend.
 
 Then tomorrow's check-in updates the estimate, and the packets update only if
 something actually changed.
@@ -70,6 +75,13 @@ about two patients who are genuinely still unwell — and it is the first time
 either of their schools or employers could have known it.
 
 Every sentence comes from a cited library. None of it is generated prose.
+
+**And the loop closes on the other side too.** Tom's manager opens his packet,
+reports that gaps between meetings are not possible, and his concentration
+budget moves from 144 minutes to 115 — with the reason on screen. Forty minutes
+of work is tolerable *because* a break follows it; if the break is not there,
+the forty minutes is not safe any more. The plan adapts to the room the patient
+is actually in.
 
 ## How we built it
 
@@ -249,7 +261,7 @@ entered by the person who set them, and a proper screen-reader pass.
 TypeScript · Next.js · Tailwind · Bayesian inference (conjugate NIG, closed-form)
 · Vitest · Playwright · axe-core · Drizzle
 
-816 unit tests and 128 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
+836 unit tests and 128 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
 
 ## What we are not claiming
 

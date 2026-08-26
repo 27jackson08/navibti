@@ -134,6 +134,9 @@ export function selectAccommodations(session: Session, role: AccommodationRole):
       if (item.minAttendanceHours !== undefined && attendance < item.minAttendanceHours) {
         return false;
       }
+      if (item.maxAttendanceHours !== undefined && attendance >= item.maxAttendanceHours) {
+        return false;
+      }
       return item.bands.includes(bandFor(plan, item.domain));
     })
     .sort((a, b) => a.priority - b.priority);

@@ -442,3 +442,63 @@ describe('a packet with nothing in it', () => {
     expect(composePacket(maya, 'school')!.emptyReason).toBeNull();
   });
 });
+
+describe('no packet ever asks for a quantity of nothing', () => {
+  /**
+   * "Cap live meetings at 0 per day and 10 minutes each" is not an instruction,
+   * and a clinician capping concentration to nothing produced exactly that. The
+   * fix is a worded variant for the smallest days; this is the guard that the
+   * whole class stays fixed.
+   */
+  const NONSENSE = /\b0 (minutes|hours|per day)|\bat 0\b|\bno more than 0\b/i;
+
+  function withCognitive(session: Session, minutes: number): Session {
+    const normalized = minutes / 240;
+    const band =
+      normalized < 0.25
+        ? 'very-low'
+        : normalized < 0.5
+          ? 'low'
+          : normalized < 0.85
+            ? 'moderate'
+            : 'near-full';
+
+    return {
+      ...session,
+      plan: {
+        ...session.plan!,
+        recommendations: session.plan!.recommendations.map((item) =>
+          item.domain === 'cognitive'
+            ? { ...item, dose: minutes, band }
+            : item.domain === 'visualVestibular'
+              ? { ...item, dose: Math.min(item.dose, minutes / 2), band }
+              : item,
+        ),
+      },
+    };
+  }
+
+  it.each([0, 5, 20, 45, 60, 120, 300])(
+    'reads sensibly at %i focused minutes',
+    (minutes) => {
+      for (const role of ['school', 'employer', 'caregiver'] as const) {
+        const packet = composePacket(withCognitive(maya, minutes), role);
+        for (const item of packet?.items ?? []) {
+          expect(NONSENSE.test(item.text), `${role}/${item.id}: "${item.text}"`).toBe(false);
+        }
+      }
+    },
+  );
+
+  it('says it in words when there is no budget for a meeting', () => {
+    const ids = composePacket(withCognitive(daniel, 10), 'employer')!.items.map((i) => i.id);
+    expect(ids).toContain('work-meetings-none');
+    expect(ids).not.toContain('work-meeting-cap');
+  });
+
+  it('uses the numeric version once there is a budget', () => {
+    const ids = composePacket(withCognitive(daniel, 180), 'employer')!.items.map((i) => i.id);
+    expect(ids).toContain('work-meeting-cap');
+    expect(ids).not.toContain('work-meetings-none');
+  });
+});

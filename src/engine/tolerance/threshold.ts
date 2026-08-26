@@ -277,7 +277,10 @@ export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRec
       predict(input.posterior, { ...input.context, [domain]: dose }),
       EXACERBATION_POINT_LIMIT.value,
     ),
-    band: toBand(normalized),
+    // From the dose actually recommended, not from the pre-clinician value. A
+    // clinician capping a domain to nothing should change which accommodations
+    // a packet asks for, and it did not.
+    band: toBand(normalizeDose(domain, dose)),
     isProvisional: !isPersonalized(input.posterior),
     stageCapReadingOf: stage.readingOf,
     solvedContext: { ...input.context, [domain]: 0 },

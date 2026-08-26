@@ -1,31 +1,36 @@
 # Demo video — script and shot list
 
-**Target: 2:45–3:00.** Record at 1440×900 or larger, browser zoom 100%, window
-chrome cropped out. Run `npm run build && npm run start` rather than the dev
-server so nothing recompiles mid-take.
+**Target: 3:00–3:15.** Record at 1440×900 or larger, browser zoom 100%, window
+chrome cropped.
 
-**Before recording**
+## Before recording
 
 ```bash
+pkill -9 -f "next-server"; pkill -9 -f "next start"   # both names — one survives the other
 npm run build && npm run start
 ```
 
 Then open http://localhost:3000, click **Calm**, and reload. Do not record in
-Night — the palette reads as a generic dark dashboard on video, and Calm makes
-the deliberate low-glare choice visible. Have `/maya/today` and
-`/maya/packet/school` pre-warmed in tabs so nothing loads slowly on camera.
+Night: the palette reads as a generic dark dashboard on video, and Calm makes the
+deliberate low-glare choice visible.
 
-**Note on the first click:** the reading-comfort buttons are React-hydrated.
-Give the page a beat after load before clicking them on camera.
+**Two things that will bite you on camera.**
+
+The reading-comfort and check-in buttons are React-hydrated — give each page a
+beat after load before clicking, or the first click does nothing.
+
+The demo store is in memory and accumulates. Restart the server for a clean run,
+and do a full rehearsal first: the flag in §6 changes Tom's plan permanently
+until you restart.
 
 ---
 
-## 0:00 – 0:22 · The problem, not the app
+## 0:00 – 0:20 · The problem, not the app
 
 **On screen:** a plain text card — an email, styled simply. No app yet.
 
 > *"Hi — just checking whether Maya will be back for full days on Monday, since
-> we'll need to plan around the assessment week."*
+> we'll need to plan around assessment week."*
 
 **Say:**
 
@@ -34,165 +39,182 @@ Give the page a beat after load before clicking them on camera.
 > more than an hour.
 >
 > Her school has no idea what that means. Neither does anyone's manager, or
-> anyone's family. The restriction is exact, and it's invisible to every single
-> person who can cause the overload.
+> anyone's family. The restriction is exact, and it's invisible to every person
+> who can cause the overload.
 
-**Why this shot is first:** if a judge sees the app before they see the gap,
-NaviTBI looks like another symptom tracker. Twenty seconds on the email is the
-whole pitch.
+**Why first:** if a judge sees the interface before they see the gap, NaviTBI
+files as another symptom tracker. Twenty seconds on the email is the pitch.
 
 ---
 
-## 0:22 – 0:45 · The check-in
+## 0:20 – 0:40 · The check-in
 
-**Shot:** `/maya/check-in`, full flow, sped up 2× after the first two screens.
+**Shot:** `/maya/check-in`. Show the audio toggle, then the flow at 2× after the
+first two screens.
 
-**Beats to land:**
 - Red flags come **first**, every day, and "None of these" is the biggest target
-  on the page
 - One question per screen, no typing
-- The duration question only appears **because** symptoms rose — the flow adapts
+- The duration question appears **because** symptoms rose — the flow adapts
 
 **Say:**
 
-> Sixty seconds, designed for someone photophobic and exhausted. Red flags
-> first — always, before anything else. One question per screen. No typing.
+> Sixty seconds, for someone photophobic and exhausted. It'll read itself aloud
+> if you ask — because a check-in that needs a lit screen is one you skip on
+> exactly the days worth recording.
 >
-> Notice it just added a question. Symptoms rose, so it needs to know how long
-> that lasted — because the guideline threshold is about magnitude *and*
-> duration.
+> Red flags first, always. And it just added a question: symptoms rose, so it
+> needs to know how long — the threshold is about size *and* duration.
 
 ---
 
-## 0:45 – 1:15 · The plan, and why each number is what it is
+## 0:40 – 1:05 · The plan, and why each number is what it is
 
-**Shot:** `/maya/today`. Scroll to *Today's limits*. Hover a dose card so the
-headroom bar and its tick marks are visible.
+**Shot:** `/tom/today`. Scroll to *Today's limits*. Hover a dose card.
 
 **Say:**
 
-> Five load domains, each with a number and — this is the part that matters —
-> *what set it*.
+> Five kinds of load, each with a number and — this matters — *what set it*.
 >
 > "Based on your own last few days" and "capped by the stage you're at" are
-> completely different instructions to a patient deciding whether to push. So we
-> say which.
+> different instructions to someone deciding whether to push. So we say which.
 >
-> Every recommendation is the smallest of three things: what her own data
-> supports, a gradual step up from yesterday, and the ceiling for the protocol
-> step she's on. And then one thing that can only push it *up* — the guideline's
-> minimum activity. Resting below that isn't safe either.
+> Every number is the smallest of three things: what their data supports, a
+> gradual step up from yesterday, and the ceiling for their stage. Then one
+> thing that can only push it *up* — the guideline's minimum. Resting below that
+> isn't safe either.
 
-**Then scroll up to the two stage cards.**
+**Then Maya, showing both stage cards.**
 
-> She's on both ladders at once. School governs how much thinking is reasonable.
-> Sport governs physical progression — and step 4 of sport can't open until
-> she's back at school full time. The app won't advance her, and it will never
-> issue clearance.
+> She's on both ladders at once. School governs how much thinking is reasonable,
+> sport governs physical progression — and sport step 4 can't open until she's
+> back at school full time.
 
 ---
 
-## 1:15 – 1:35 · The explanation, and the refusal
+## 1:05 – 1:20 · The explanation, and the refusal
 
-**Shot:** the *Yesterday* card on `/maya/today`.
+**Shot:** the *Yesterday* card, then the *What costs you most* note.
 
-**Say:**
-
-> After a bad day it explains what that day is most consistent with, and by how
-> much — with a counterfactual.
+> After a bad day it says what that day is most consistent with, with a
+> counterfactual. And when it can't tell, it says so — if two kinds of load moved
+> together every day, no method separates them, so it refuses to name one.
 >
-> And when it can't tell, it says so. If two kinds of load moved together on
-> every logged day, no method can separate them, so it refuses to name one. On
-> our synthetic cohort it declines about two thirds of the time, and when it
-> does name a driver it's right 98% of the time.
+> Across all check-ins it'll also name what costs this person most, and what that
+> pattern resembles clinically. It describes a resemblance. It never assigns
+> anyone a subtype — that's a judgement made with an examination, and this is
+> self-reported minutes.
 
 ---
 
-## 1:35 – 2:15 · The packet — *slow down here*
+## 1:20 – 1:50 · The packet — *slow down*
 
-This is the novelty claim. Give it the most screen time of any shot.
-
-**Shot:** click through to `/maya/packet/school`. Scroll slowly, top to bottom,
-through the numbered items, the red-flag card, the sources, the disclaimer.
-
-**Say:**
+**Shot:** `/maya/packet/school`, scrolled top to bottom: numbered items,
+red-flag card, sources, disclaimer. Then `/tom/packet/employer`.
 
 > Here's what nothing else does. The same tolerance, written for the person who
 > has to act on it.
 >
 > One hour of class, in the morning. A fifteen-minute break every twenty minutes,
-> scheduled — not requested, because a break you have to ask for in front of your
-> class is a break you skip. Printed materials instead of screens. No timed
-> tests.
+> *scheduled* — not requested, because a break you have to ask for in front of
+> your class is a break you skip. Printed materials. No timed tests.
 >
-> Every sentence comes from a cited library. None of it is generated prose — a
-> language model here can rephrase, but it cannot invent a number, drop a limit,
-> or stray into diagnosis or clearance. If it tries, we ship the template.
-
-**Then switch to `/daniel/packet/employer`** — different person, same engine.
-
-> Same engine, different audience. One meeting a day, twenty minutes, fifteen
-> minutes between any two, camera off by default.
-
-**Then `/maya/packet/caregiver`, scroll to the red-flag card.**
-
-> And for family: the two ways to get this wrong — pushing too hard, and letting
-> someone rest in a dark room for a week. Plus the emergency list, because
-> they're the ones who'll be in the room.
+> Every sentence comes from a cited library. No language model writes packet
+> text — that's the guarantee, not a validator.
+>
+> Same engine, different audience: one meeting a day, twenty minutes, camera off
+> by default.
 
 ---
 
-## 2:15 – 2:32 · Sharing
+## 1:50 – 2:20 · The loop closes — **the strongest shot in the demo**
 
-**Shot:** `/maya/sharing`. Point at the disabled checkbox. Create a link, open
-it, come back, revoke it, reload to the 404.
+**Shot:** `/tom/sharing` → create an employer link → open it → flag *"No
+back-to-back meetings"* → back to `/tom/today`.
 
 **Say:**
 
-> The recipient won't make an account, so the link is the whole security
-> boundary. Scoped to one audience. Expires. Revocable in one click. Every view
-> logged and shown back to the patient.
+> Every other tool stops at the document. This is the part that makes it
+> coordination.
 >
-> And a school link *cannot* carry her daily symptom scores. They need to know
-> what she can manage — not her headache ratings.
+> Tom's manager opens the link. No account. And she can tell us something back —
+> not free text, a fixed set of reasons. She says they can't do gaps between
+> meetings.
+
+**On `/tom/today`, point at the number.**
+
+> His concentration budget just moved from 144 minutes to 115, and it says why.
+> Some accommodations aren't comfort — they're what *makes* a dose safe. Forty
+> minutes of class is tolerable *because* a break follows it. If the break isn't
+> there, the forty minutes isn't safe any more.
+>
+> The plan adapts to the room the patient is actually in.
 
 ---
 
-## 2:32 – 3:00 · What we measured, and what we didn't
+## 2:20 – 2:35 · The clinician
 
-**Shot:** `results/evaluation.md` rendered, or the comparison table as a slide.
+**Shot:** create a clinician link, open it, record clearance for Maya.
 
-**Say:**
-
-> We evaluated on four thousand synthetic patient-days with known ground truth.
-> Six percent of our recommendations would have breached the guideline limit.
-> A fixed guideline ceiling with no personalisation: fifty-one percent. And it
-> never once over-estimated what someone could handle.
+> The clinician gets the record, not instructions — trajectory, adherence, and
+> what the workplace said it couldn't provide, because a plateau might be a plan
+> that was never actually available.
 >
-> Our own harness told us the first version was sixty percent unsafe, and the
-> second version quietly recommended nothing at all — forever. Both were found
-> by measuring, not by thinking harder.
+> And clearance is recorded here, only here. A patient can't clear themselves.
+> NaviTBI still decides nothing — it records that a named person decided it.
+
+---
+
+## 2:35 – 2:50 · Progress
+
+**Shot:** `/tom/history`.
+
+> The person doing the work is usually the last to see it's working. Every day
+> replayed from only what was known at the time — no hindsight.
 >
-> It is not validated in humans. It does not diagnose. It never clears anyone
-> for sport. It is a translator — and right now, nothing is doing that job.
+> And when a number has gone down, it says that usually means the model learned
+> something costs more than it assumed, not that recovery reversed.
+
+---
+
+## 2:50 – 3:15 · What we measured, and what we didn't
+
+**Shot:** `results/evaluation.md` or the comparison table as a slide.
+
+> Four thousand synthetic patient-days with known ground truth. Six percent of
+> our recommendations would have breached the limit. A fixed guideline ceiling:
+> fifty-one percent. No tool at all: forty-eight. And it never once
+> over-estimated what someone could handle.
+>
+> Halve every starting assumption, then double them — the safety rate moves
+> between four and nine percent. So that's the guardrails, not priors we picked.
+>
+> It is *not* well calibrated. It over-predicts risk about threefold. It's safe
+> because it's pessimistic, not because it's precise, and that's in our results
+> because you should hear it from us.
+>
+> Not validated in humans. Doesn't diagnose. Never clears anyone for sport. It's
+> a translator — and right now, nothing is doing that job.
 
 ---
 
 ## Shot checklist
 
-- [ ] Email card (0:00)
-- [ ] Check-in: red flags screen, one scale screen, the added duration question
-- [ ] Today: dose cards with binding labels; both stage cards
-- [ ] Yesterday card with attribution
-- [ ] School packet, scrolled fully, incl. sources + disclaimer
+- [ ] Email card
+- [ ] Check-in: audio toggle, red flags, a scale, the added duration question
+- [ ] Today: dose cards with binding labels; Maya's two stage cards
+- [ ] Yesterday attribution + "what costs you most"
+- [ ] School packet scrolled fully, incl. sources and disclaimer
 - [ ] Employer packet
-- [ ] Caregiver packet red-flag card
-- [ ] Sharing: disabled checkbox, create, open, revoke, 404
+- [ ] **Sharing → open link → flag an item → plan changes** (rehearse this)
+- [ ] Clinician link: summary, record clearance
+- [ ] History page
 - [ ] Results table
+- [ ] Optional: `/how-it-works` if you have 10 spare seconds
 
-## Things to avoid saying
+## Do not say
 
 - "Predicts recovery time" — it does not.
 - "Clears" or "approves" anything.
 - "First personalised pacing app" — MyBrainPacer and Parkwood have that.
+- "Diagnoses a subtype" — it describes a resemblance.
 - "Clinically validated", "proven", or any causal claim about a flare.

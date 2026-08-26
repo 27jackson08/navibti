@@ -14,6 +14,7 @@ import {
 const MUTUALLY_EXCLUSIVE: readonly (readonly [string, string])[] = [
   ['school-screen-minimal', 'school-screen-cap'],
   ['school-screen-minimal', 'school-print-over-screen'],
+  ['work-meetings-none', 'work-meeting-cap'],
 ];
 
 function coOccurs(items: readonly Accommodation[], a: string, b: string): boolean {
@@ -25,7 +26,17 @@ function coOccurs(items: readonly Accommodation[], a: string, b: string): boolea
     (band) => first.bands.includes(band) && second.bands.includes(band),
   );
   const sharesStep = first.minStep <= second.maxStep && second.minStep <= first.maxStep;
-  return sharesBand && sharesStep;
+
+  // A pair split by attendance can share every band and still never co-occur,
+  // which is exactly how work-meetings-none and work-meeting-cap are separated.
+  const overlapLow = Math.max(first.minAttendanceHours ?? 0, second.minAttendanceHours ?? 0);
+  const overlapHigh = Math.min(
+    first.maxAttendanceHours ?? Number.POSITIVE_INFINITY,
+    second.maxAttendanceHours ?? Number.POSITIVE_INFINITY,
+  );
+  const sharesAttendance = overlapLow < overlapHigh;
+
+  return sharesBand && sharesStep && sharesAttendance;
 }
 
 describe('no two items say the same thing', () => {

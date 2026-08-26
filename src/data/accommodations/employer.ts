@@ -25,6 +25,26 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
     priority: 1,
   },
   {
+    // Below an hour of concentration the meeting budget rounds to none, and the
+    // numeric version of this item becomes "at 0 per day and 10 minutes each".
+    id: 'work-meetings-none',
+    role: 'employer',
+    domain: 'cognitive',
+    text:
+      'No live meetings for now. Put decisions in writing; if something genuinely needs a ' +
+      'conversation, keep it short and in the morning.',
+    rationale:
+      'A live meeting means listening, keeping track, and answering all at once, with no way to ' +
+      'pause. There is not enough concentration to spend on one today.',
+    citation: 'onf-living-adults',
+    protocol: 'return-to-learn',
+    minStep: 2,
+    maxStep: 3,
+    bands: ['very-low', 'low', 'moderate'],
+    priority: 2,
+    maxAttendanceHours: 1,
+  },
+  {
     id: 'work-meeting-cap',
     role: 'employer',
     domain: 'cognitive',
@@ -40,6 +60,8 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 2,
+    // Only where the budget actually allows a meeting; see work-meetings-none.
+    minAttendanceHours: 1,
   },
   {
     id: 'work-no-back-to-back',
@@ -103,6 +125,9 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 6,
+    // Below an hour of concentration there is no deep-work budget to allocate,
+    // and the template would read "budget at most 0 minutes".
+    minAttendanceHours: 1,
   },
   {
     id: 'work-defer-high-stakes',
