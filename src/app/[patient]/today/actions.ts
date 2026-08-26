@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { requireActor } from '@/auth/actor';
 import { getPatient } from '@/db/store';
 import { withdrawFlag } from '@/db/responses';
 
@@ -26,6 +27,13 @@ export async function withdrawUnavailable(input: z.infer<typeof schema>): Promis
   const { patientId, accommodationId } = schema.parse(input);
 
   if (!getPatient(patientId)) throw new Error('No such patient.');
+
+  // Every mutation scoped to a patient passes through here. This one did not
+  // when it was written, which meant a crafted request could withdraw somebody
+  // else's unavailability report and raise their limits — the exact hole the
+  // actor seam exists to close, reopened by the newest thing to use it.
+  await requireActor(patientId);
+
   withdrawFlag(patientId, accommodationId);
 
   revalidatePath(`/${patientId}/today`);
