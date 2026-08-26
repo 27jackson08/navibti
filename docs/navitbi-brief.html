@@ -287,7 +287,7 @@
 
 <header class="masthead">
   <strong>NaviTBI</strong>
-  <span class="countdown">Built &middot; 861 unit &middot; 131 e2e</span>
+  <span class="countdown">Built &middot; 872 unit &middot; 131 e2e</span>
 </header>
 
 <div class="wrap">
@@ -468,7 +468,7 @@
     <div class="sec-head"><span class="sec-num">04</span><h2>The packets — and the constraint that makes them safe</h2></div>
     <div class="col">
       <p>Accommodations come from a curated library, not free generation. Each item is a record carrying its domain, dose band, applicable stage range, target role, and citation. Composition is a deterministic query. An LLM may rephrase for tone, behind a validator that rejects any output introducing a recommendation absent from the selected set.</p>
-      <p><strong>No language model writes packet text at all.</strong> That, rather than any validator, is the guarantee. A validator exists so that adding a tone pass later is a bounded change &mdash; it blocks added sentences, invented figures, dropped limits, introduced negations and named clinical territory. It cannot verify that a rephrasing still <em>means</em> the same thing: &ldquo;cap meetings at 1 per day&rdquo; rewritten as &ldquo;require at least 1 per day&rdquo; survives every check. That limit is asserted in the tests rather than left implicit &mdash; we found it by attacking our own claim.</p>
+      <p><strong>No language model writes packet text at all.</strong> That, rather than any validator, is the guarantee. A validator exists so that adding a tone pass later is a bounded change &mdash; it blocks added sentences, invented figures, dropped limits, introduced negations, introduced hedging and named clinical territory. It cannot verify that a rephrasing still <em>means</em> the same thing: &ldquo;cap meetings at 1 per day&rdquo; rewritten as &ldquo;require at least 1 per day&rdquo; survives every check. That limit is asserted in the tests rather than left implicit &mdash; we found it by attacking our own claim.</p>
 
       <div class="scroller">
         <table>

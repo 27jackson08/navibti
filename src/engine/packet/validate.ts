@@ -26,7 +26,8 @@ export type ViolationKind =
   | 'excessive-length'
   | 'added-sentence'
   | 'lost-subject'
-  | 'introduced-negation';
+  | 'introduced-negation'
+  | 'introduced-hedge';
 
 export interface Violation {
   readonly kind: ViolationKind;
@@ -76,6 +77,27 @@ const STOPWORDS = new Set([
  */
 const NEGATIONS = /\b(not|no|never|cannot|avoid|without|refrain|instead of|rather than)\b|n't\b/gi;
 
+/**
+ * Words that turn an instruction into a suggestion.
+ *
+ * Distinct from negation and worth its own check, because softening is the one
+ * thing a tone pass is actually *for*. Asked to make a packet friendlier, a
+ * model produces "Where convenient, consider capping live meetings at 1 per
+ * day" — which keeps every number, every subject word and the sentence count,
+ * introduces no negation, and quietly makes a limit optional. Our own attack
+ * suite found exactly that.
+ *
+ * Unlike the inversion hole below it, this one is lexical, so it can be closed.
+ * Counted rather than forbidden: one library item already says "ideally", and
+ * the rule is that a rewrite may not add hedging the source did not have.
+ */
+const HEDGES =
+  /\b(consider|considering|ideally|preferably|optional|optionally|discretion|suggest\w*|encourage\w*)\b|\b(if|where|wherever|when|whenever)\s+(possible|convenient|practical|practicable|you can|needed|helpful)\b|\bfeel free\b|\b(may|might|could)\s+(wish|want|like|prefer)\b|\bas\s+(far|much)\s+as\s+possible\b|\btry\s+to\b|\bwhere\s+it\s+helps\b/gi;
+
+function hedgeCount(text: string): number {
+  return text.match(HEDGES)?.length ?? 0;
+}
+
 function negationCount(text: string): number {
   return (text.match(NEGATIONS) ?? []).length;
 }
@@ -102,9 +124,10 @@ const MAX_LENGTH_RATIO = 1.6;
  * Checks one rewritten item against the template it came from.
  *
  * What this provably blocks: added sentences, invented figures, dropped limits,
- * introduced negations, loss of the item's subject, and named clinical
- * territory — diagnosis, clearance, medication, imaging, declaring recovery,
- * declaring support unnecessary, and attributing a claim to a clinician.
+ * introduced negations, introduced hedging, loss of the item's subject, and
+ * named clinical territory — diagnosis, clearance, medication, imaging,
+ * declaring recovery, declaring support unnecessary, and attributing a claim to
+ * a clinician.
  *
  * What it cannot do is verify that a rephrasing still *means* the same thing.
  * "Cap live meetings at 1 per day" rewritten to "Require at least live meetings
@@ -190,6 +213,15 @@ export function validateRewrite(original: PacketItem, rewrittenText: string): Vi
       kind: 'introduced-negation',
       itemId: original.id,
       detail: 'rewrite introduces a negation the source did not have, which can invert the instruction',
+    });
+  }
+
+  if (hedgeCount(rewrittenText) > hedgeCount(original.text)) {
+    violations.push({
+      kind: 'introduced-hedge',
+      itemId: original.id,
+      detail:
+        'rewrite adds hedging the source did not have, which turns a limit into a suggestion',
     });
   }
 

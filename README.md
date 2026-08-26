@@ -122,12 +122,18 @@ and `/how-it-works` says so rather than leaving the gap implied.
   cited library, verbatim. No language model writes packet text. That, rather
   than any validator, is the guarantee.
 - **A bounded path to adding a tone pass.** `engine/packet/validate.ts` blocks
-  added sentences, invented figures, dropped limits, introduced negations, loss
-  of the item's subject, and named clinical territory — diagnosis, clearance,
-  medication, imaging, declaring recovery, attributing a claim to a clinician.
+  added sentences, invented figures, dropped limits, introduced negations,
+  introduced hedging, loss of the item's subject, and named clinical territory —
+  diagnosis, clearance, medication, imaging, declaring recovery, attributing a
+  claim to a clinician.
   It **cannot** verify that a rephrasing still means the same thing: rewriting
   "Cap live meetings at 1 per day" to "Require at least 1 per day" survives every
-  check. That limit is asserted in the tests rather than left implicit.
+  check, and so do "Set a minimum of", "Aim for at least" and "Schedule at
+  least". That limit is asserted in the tests rather than left implicit.
+  Hedging used to sit on that list too — `npm run attack` found that "Where
+  convenient, consider capping…" turned a limit into a suggestion while keeping
+  every number, subject word and sentence. Softening is what a tone pass is
+  *for*, so that one was worth closing, and unlike inversion it is lexical.
 - **Refuses to guess.** Attribution declines to name a cause when there is too
   little data, when the day does not match the pattern, or when two loads cannot
   be told apart.
@@ -166,7 +172,7 @@ are the ones least able to advocate for themselves.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 861 unit tests
+npm run verify       # typecheck, lint, 872 unit tests
 npm run verify -- --full  # ...and 131 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives

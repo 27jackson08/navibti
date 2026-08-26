@@ -220,6 +220,13 @@ invented clinician endorsement, an appended instruction, and a flat "no
 restrictions are necessary" — all by appending a sentence. Those are blocked
 now, along with introduced negations and loss of the item's subject.
 
+Running that attack script again later found a fifth, and a more likely one:
+"Where convenient, consider capping live meetings at 1 per day" keeps every
+number, every subject word and the sentence count, introduces no negation, and
+quietly turns a limit into a suggestion. Softening is precisely what a tone pass
+would be added to do. That one is blocked now too — unlike the next paragraph's,
+it is lexical, so it could be closed rather than only documented.
+
 But an instruction can still be reversed without a negation: "Cap live meetings
 at 1 per day" becomes "Require at least 1 per day" and survives every check. A
 lexical validator has no access to meaning. So the claim is now the narrower true
@@ -271,7 +278,7 @@ entered by the person who set them, and a proper screen-reader pass.
 TypeScript · Next.js · Tailwind · Bayesian inference (conjugate NIG, closed-form)
 · Vitest · Playwright · axe-core · Drizzle
 
-861 unit tests and 131 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
+872 unit tests and 131 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
 
 ## What we are not claiming
 
