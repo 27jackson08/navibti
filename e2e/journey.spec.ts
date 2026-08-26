@@ -202,6 +202,37 @@ test('a recipient can answer, and the plan changes', async ({ page }, testInfo) 
     .textContent();
 
   expect(Number(after)).toBeLessThan(Number(before));
+
+  // Now revoke the link, which is what actually happens: links last days and a
+  // term lasts months. The manager's own undo goes through their token, so from
+  // here it is unreachable — and the report is still holding the plan down.
+  await page.goto('/tom/sharing');
+  const shareRow = page.locator('li').filter({ hasText: label });
+  await shareRow.getByRole('button', { name: 'Revoke' }).click();
+  await shareRow.getByRole('button', { name: 'Confirm' }).click();
+  await expect(shareRow.getByText('no longer active')).toBeVisible();
+
+  const dead = await page.goto(href!);
+  expect(dead?.status()).toBe(404);
+
+  // The patient can still withdraw it, because it is their plan.
+  await page.goto('/tom/today');
+  await page
+    .locator('li')
+    .filter({ hasText: 'No back-to-back meetings' })
+    .getByRole('button', { name: /This is available again/ })
+    .click();
+
+  await expect(page.getByText('Reported unavailable', { exact: true })).toBeHidden();
+
+  const restored = await page
+    .locator('article')
+    .filter({ hasText: 'Thinking and concentration' })
+    .locator('.tabular-nums')
+    .first()
+    .textContent();
+
+  expect(Number(restored)).toBe(Number(before));
 });
 
 test('a recipient cannot flag an item from someone else’s packet', async ({ page }, testInfo) => {

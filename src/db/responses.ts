@@ -95,6 +95,29 @@ export function flagAccommodation(
   else store.responses.push(response);
 }
 
+/**
+ * Withdraws a report on the patient's behalf, whichever link filed it.
+ *
+ * A recipient can only take back what they said while their link is alive, and
+ * links expire in days while a term lasts months. Without this, a school
+ * reporting in September that it has no quiet room keeps the plan lowered in
+ * June — after the link expired, after the room opened, with nobody able to
+ * withdraw it. Over-restriction is not the safe side of this error; prolonging
+ * unnecessary restriction is the specific thing the modern guidance moved away
+ * from.
+ *
+ * So the patient can withdraw one too. It is their plan, and the report is
+ * about the room they are sitting in.
+ */
+export function withdrawFlag(patientId: string, accommodationId: string): boolean {
+  const index = store.responses.findIndex(
+    (entry) => entry.patientId === patientId && entry.accommodationId === accommodationId,
+  );
+  if (index < 0) return false;
+  store.responses.splice(index, 1);
+  return true;
+}
+
 export function clearFlag(linkId: string, accommodationId: string): void {
   const index = store.responses.findIndex(
     (entry) => entry.linkId === linkId && entry.accommodationId === accommodationId,

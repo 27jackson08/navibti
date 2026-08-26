@@ -9,6 +9,7 @@ import { buildSession, deltaPointsOf, isoDay, settingFor } from '@/engine/sessio
 import { replayHistory } from '@/engine/history';
 import { acknowledgementsFor, unavailableAccommodations } from '@/db/responses';
 import { deriveSlots, fillSlots } from '@/engine/packet/slots';
+import { WithdrawUnavailable } from '@/components/plan/WithdrawUnavailable';
 
 // The demo store lives in memory, so these pages must never be prerendered
 // at build time -- a static snapshot would show the seeded history forever.
@@ -166,15 +167,26 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
                 <Notice tone="caution" label="Reported unavailable">
                   <p>
                     Some support {patient.displayName}’s plan assumed is not available, so today’s
-                    limits have been lowered to stop counting on it.
+                    limits have been lowered to stop counting on it. If that changes, say so here —
+                    the link they replied on will have expired long before the term does.
                   </p>
                   <ul className="mt-2 list-disc space-y-1 pl-5">
-                    {session.unmetSupports.map((item) => (
-                      <li key={item.accommodationId}>
-                        <span className="capitalize">{item.role}</span>:{' '}
-                        {session.plan ? fillSlots(item.text, deriveSlots(session.plan)) : item.text}
-                      </li>
-                    ))}
+                    {session.unmetSupports.map((item) => {
+                      const text = session.plan
+                        ? fillSlots(item.text, deriveSlots(session.plan))
+                        : item.text;
+                      return (
+                        <li key={item.accommodationId}>
+                          <span className="capitalize">{item.role}</span>: {text}
+                          <br />
+                          <WithdrawUnavailable
+                            patientId={patient.id}
+                            accommodationId={item.accommodationId}
+                            label={text}
+                          />
+                        </li>
+                      );
+                    })}
                   </ul>
                 </Notice>
               )}
