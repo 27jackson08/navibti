@@ -6,6 +6,7 @@ import { PacketView } from '@/components/packet/PacketView';
 import { getCheckIns, getPatient } from '@/db/store';
 import { composePacket, diffPackets } from '@/engine/packet/compose';
 import { buildSession, isoDay } from '@/engine/session';
+import { unavailableAccommodations } from '@/db/responses';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,8 @@ export default async function PacketPage({ params }: PageProps<'/[patient]/packe
 
   const today = isoDay(new Date());
   const checkIns = getCheckIns(patient.id);
-  const session = buildSession(patient, checkIns, today);
+  const unavailable = unavailableAccommodations(patient.id);
+  const session = buildSession(patient, checkIns, today, { unavailableSupports: unavailable });
   const packet = composePacket(session, role as AccommodationRole);
 
   if (!packet) {
@@ -47,7 +49,9 @@ export default async function PacketPage({ params }: PageProps<'/[patient]/packe
   const previous =
     checkIns.length > 1
       ? composePacket(
-          buildSession(patient, checkIns.slice(0, -1), checkIns.at(-2)!.day),
+          buildSession(patient, checkIns.slice(0, -1), checkIns.at(-2)!.day, {
+            unavailableSupports: unavailable,
+          }),
           role as AccommodationRole,
         )
       : null;

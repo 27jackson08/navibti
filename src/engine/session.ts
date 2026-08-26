@@ -31,6 +31,7 @@ import {
 } from '@/engine/tolerance/threshold';
 import { TOLERANCE_EXCEEDANCE_QUANTILE } from '@/data/guidelines';
 import { normalizeDose } from '@/engine/tolerance/units';
+import { environmentFactorFrom, unmetSupports, type UnmetSupport } from '@/engine/packet/environment';
 
 export type DoseMap = Partial<Record<LoadDomain, number>>;
 
@@ -94,6 +95,9 @@ export interface Session {
   readonly attribution: Attribution | null;
   readonly underExposure: readonly UnderExposure[];
   readonly escalations: readonly string[];
+  /** Accommodations a recipient has reported they cannot provide. */
+  readonly unavailableSupports: ReadonlySet<string>;
+  readonly unmetSupports: readonly UnmetSupport[];
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -117,11 +121,21 @@ export function daysSinceInjury(injuryDate: string, today: string): number {
   return Math.max(0, daysBetween(injuryDate, today));
 }
 
+export interface SessionOptions {
+  /**
+   * Accommodation ids a recipient has reported unavailable. Passed in rather
+   * than read from storage, so the session stays a pure function of its inputs.
+   */
+  readonly unavailableSupports?: ReadonlySet<string>;
+}
+
 export function buildSession(
   patient: Patient,
   checkIns: readonly CheckIn[],
   today: string,
+  options: SessionOptions = {},
 ): Session {
+  const unavailable = options.unavailableSupports ?? new Set<string>();
   const ordered = [...checkIns].sort((a, b) => a.day.localeCompare(b.day));
   const latest = ordered.at(-1) ?? null;
 
@@ -214,6 +228,7 @@ export function buildSession(
         learnStep: learnStage.step,
         context,
         yesterday: context,
+        environmentFactor: environmentFactorFrom(unavailable),
       });
 
   const attribution =
@@ -258,6 +273,8 @@ export function buildSession(
         )
       : [],
     escalations: collectEscalations(patient, ordered, floorRiskHistory, today),
+    unavailableSupports: unavailable,
+    unmetSupports: unmetSupports(unavailable),
   };
 }
 

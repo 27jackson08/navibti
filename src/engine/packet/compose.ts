@@ -28,6 +28,7 @@ import {
 } from '@/data/guidelines';
 import type { Session } from '@/engine/session';
 import type { DayPlan } from '@/engine/tolerance/threshold';
+import { domainsLeftUnsupported } from './environment';
 import { attendanceHours, deriveSlots, fillSlots, type SlotValues } from './slots';
 
 export interface PacketItem {
@@ -68,6 +69,11 @@ export interface Packet {
    * day one, when the patient is in relative rest and not at school at all.
    */
   readonly emptyReason: string | null;
+  /**
+   * Load domains this packet wanted to support and now cannot, because the
+   * recipient reported every option unavailable.
+   */
+  readonly unsupportedDomains: readonly LoadDomain[];
 }
 
 const TITLES: Record<AccommodationRole, string> = {
@@ -117,6 +123,10 @@ export function selectAccommodations(session: Session, role: AccommodationRole):
 
   return ACCOMMODATIONS_BY_ROLE[role]
     .filter((item) => {
+      // Repeating a request a recipient has already said they cannot meet is
+      // how a document stops being read.
+      if (session.unavailableSupports.has(item.id)) return false;
+
       const step = stepFor(session, item);
       if (step < item.minStep || step > item.maxStep) return false;
       // An item that presupposes a longer day than the plan supports would
@@ -159,6 +169,13 @@ export function composePacket(session: Session, role: AccommodationRole): Packet
     redFlags:
       role === 'caregiver' ? { instruction: RED_FLAG_INSTRUCTION, items: RED_FLAGS } : null,
     emptyReason: items.length === 0 ? emptyReasonFor(session, role) : null,
+    unsupportedDomains: domainsLeftUnsupported(
+      ACCOMMODATIONS_BY_ROLE[role].filter((item) => {
+        const step = stepFor(session, item);
+        return step >= item.minStep && step <= item.maxStep;
+      }),
+      session.unavailableSupports,
+    ),
   };
 }
 

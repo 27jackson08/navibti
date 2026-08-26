@@ -55,6 +55,8 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
     bands: ['very-low', 'low', 'moderate'],
     priority: 3,
     minAttendanceHours: 1.5,
+    // Recovery between meetings is what keeps a symptom rise brief.
+    supportsLoad: { domain: 'cognitive', withoutIt: 0.8 },
   },
   {
     id: 'work-camera-off',
@@ -84,6 +86,8 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 5,
+    // Scheduled breaks are what make sustained screen work tolerable.
+    supportsLoad: { domain: 'visualVestibular', withoutIt: 0.75 },
   },
   {
     id: 'work-deep-focus-budget',
@@ -144,6 +148,8 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 9,
+    // Open-plan noise is a continuous load with no natural breaks.
+    supportsLoad: { domain: 'emotionalAutonomic', withoutIt: 0.8 },
   },
   {
     id: 'work-flexible-start',

@@ -1,11 +1,27 @@
-import { CITATIONS } from '@/data/guidelines';
-import type { Packet } from '@/engine/packet/compose';
-import type { PacketDiff } from '@/engine/packet/compose';
+import { CITATIONS, LOAD_DOMAIN_LABELS } from '@/data/guidelines';
+import { FLAG_REASON_LABELS, type FlagReason } from '@/db/responses';
+import type { Packet, PacketDiff } from '@/engine/packet/compose';
+import { AcknowledgeButton, FlagControl, UnflagButton } from './RecipientControls';
+
+export type FlaggedItem = {
+  id: string;
+  text: string;
+  reason: FlagReason;
+};
 
 type Props = {
   packet: Packet;
   diff: PacketDiff | null;
   stageLine: string;
+  /**
+   * Present only on the shared view. The recipient can respond; the patient
+   * looking at their own copy cannot answer on their school's behalf.
+   */
+  respond?: {
+    token: string;
+    acknowledgedAt: string | null;
+    flagged: readonly FlaggedItem[];
+  };
 };
 
 /**
@@ -14,7 +30,7 @@ type Props = {
  * letter, carries its own date and sources, and prints without the app
  * furniture around it.
  */
-export function PacketView({ packet, diff, stageLine }: Props) {
+export function PacketView({ packet, diff, stageLine, respond }: Props) {
   return (
     <article className="mx-auto w-full max-w-[68ch]">
       <header className="border-b border-rule pb-6">
@@ -60,6 +76,20 @@ export function PacketView({ packet, diff, stageLine }: Props) {
         </section>
       )}
 
+      {respond && (
+        <section className="mt-8 border border-rule bg-surface p-5 print:hidden">
+          <h2 className="text-lg">Can you do these?</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            Confirming receipt lets {packet.patientName} know this arrived. If something here is
+            not possible for you, say so — some of these adjustments are what make the day safe,
+            so the plan is adjusted rather than left assuming support that is not there.
+          </p>
+          <div className="mt-4">
+            <AcknowledgeButton token={respond.token} acknowledgedAt={respond.acknowledgedAt} />
+          </div>
+        </section>
+      )}
+
       <ol className="mt-8 flex flex-col gap-6">
         {packet.items.map((item, index) => (
           <li key={item.id} className="grid grid-cols-[2.5rem_1fr] gap-4">
@@ -69,10 +99,50 @@ export function PacketView({ packet, diff, stageLine }: Props) {
             <div>
               <p className="text-lg leading-relaxed">{item.text}</p>
               <p className="mt-1.5 text-sm text-ink-soft">{item.rationale}</p>
+              {respond && (
+                <div className="mt-2 print:hidden">
+                  <FlagControl token={respond.token} accommodationId={item.id} />
+                </div>
+              )}
             </div>
           </li>
         ))}
       </ol>
+
+      {respond && respond.flagged.length > 0 && (
+        <section className="mt-10 border-l-2 border-caution bg-caution-surface p-5 print:hidden">
+          <h2 className="text-lg">You’ve told us these aren’t possible</h2>
+          <p className="mt-2 text-sm text-ink-soft">
+            {packet.patientName}’s plan has been adjusted to stop assuming them.
+          </p>
+          <ul className="mt-4 flex flex-col gap-3">
+            {respond.flagged.map((item) => (
+              <li key={item.id} className="text-sm">
+                <p className="line-through decoration-1">{item.text}</p>
+                <p className="mt-1 flex flex-wrap items-baseline gap-3 text-ink-soft">
+                  <span>{FLAG_REASON_LABELS[item.reason]}</span>
+                  <UnflagButton token={respond.token} accommodationId={item.id} />
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {packet.unsupportedDomains.length > 0 && (
+        <section className="mt-8 border-l-2 border-critical bg-critical-surface p-5">
+          <h2 className="text-lg">Nothing here now covers</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+            {packet.unsupportedDomains.map((domain) => (
+              <li key={domain}>{LOAD_DOMAIN_LABELS[domain]}</li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm leading-relaxed">
+            Every option for this has been reported unavailable, so {packet.patientName} has no
+            support for it at all. This is worth raising with their clinician.
+          </p>
+        </section>
+      )}
 
       {packet.redFlags && (
         <section className="mt-10 border-2 border-critical p-5">

@@ -4,6 +4,13 @@ import type { AccommodationRole } from '@/data/accommodations';
 import { ClinicianSummaryView } from '@/components/packet/ClinicianSummaryView';
 import { PacketView } from '@/components/packet/PacketView';
 import { recordAccess, resolveToken } from '@/db/share';
+import {
+  acknowledgementsFor,
+  responsesForLink,
+  unavailableAccommodations,
+} from '@/db/responses';
+import { ACCOMMODATION_LIBRARY } from '@/data/accommodations';
+import type { FlaggedItem } from '@/components/packet/PacketView';
 import { getCheckIns, getPatient } from '@/db/store';
 import { clinicianSummary } from '@/engine/packet/clinician';
 import { composePacket, diffPackets } from '@/engine/packet/compose';
@@ -31,6 +38,7 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
 
   const today = isoDay(new Date());
   const checkIns = getCheckIns(patient.id);
+  const unavailable = unavailableAccommodations(patient.id);
 
   if (link.role === 'clinician') {
     return (
@@ -44,7 +52,7 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
     );
   }
 
-  const session = buildSession(patient, checkIns, today);
+  const session = buildSession(patient, checkIns, today, { unavailableSupports: unavailable });
   const packet = composePacket(session, link.role as AccommodationRole);
   if (!packet) {
     return (
@@ -63,10 +71,26 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
   const previous =
     checkIns.length > 1
       ? composePacket(
-          buildSession(patient, checkIns.slice(0, -1), checkIns.at(-2)!.day),
+          buildSession(patient, checkIns.slice(0, -1), checkIns.at(-2)!.day, {
+            unavailableSupports: unavailable,
+          }),
           link.role as AccommodationRole,
         )
       : null;
+
+  // What this recipient has already told us, so they can see and undo it.
+  const flagged: FlaggedItem[] = responsesForLink(link.id)
+    .filter((entry) => entry.accommodationId !== null && entry.reason !== null)
+    .map((entry) => ({
+      id: entry.accommodationId!,
+      reason: entry.reason!,
+      text:
+        ACCOMMODATION_LIBRARY.find((item) => item.id === entry.accommodationId)?.text ??
+        entry.accommodationId!,
+    }));
+
+  const acknowledgedAt =
+    acknowledgementsFor(patient.id).find((entry) => entry.linkId === link.id)?.at ?? null;
 
   const protocol = PROTOCOLS[session.learnStage.protocol];
   const stageLine =
@@ -75,7 +99,12 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-5 py-10">
-      <PacketView packet={packet} diff={diffPackets(previous, packet)} stageLine={stageLine} />
+      <PacketView
+        packet={packet}
+        diff={diffPackets(previous, packet)}
+        stageLine={stageLine}
+        respond={{ token, acknowledgedAt, flagged }}
+      />
       <SharedFooter />
     </main>
   );

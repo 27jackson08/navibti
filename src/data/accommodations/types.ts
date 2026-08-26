@@ -56,4 +56,22 @@ export interface Accommodation {
    * boilerplate nobody checked.
    */
   readonly minAttendanceHours?: number;
+  /**
+   * The load this accommodation is what makes safe.
+   *
+   * Some adjustments are comfort; others are load-bearing. Forty minutes of
+   * class is tolerable *because* there is a break after it, and if the school
+   * reports it cannot provide the break, the forty minutes stops being a safe
+   * recommendation. `withoutIt` is the multiplier applied to that domain when a
+   * recipient has reported this support unavailable.
+   *
+   * This is what turns a recipient's reply into coordination rather than a
+   * comment box: the plan adapts to what the environment can actually deliver.
+   * Product defaults, all of them — no guideline quantifies the cost of a
+   * missing accommodation.
+   */
+  readonly supportsLoad?: {
+    readonly domain: LoadDomain;
+    readonly withoutIt: number;
+  };
 }

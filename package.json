@@ -19,7 +19,8 @@
     "read-packet": "tsx scripts/eval/read-packet.ts",
     "verify": "bash scripts/verify.sh",
     "attack": "tsx scripts/eval/attack.ts",
-    "stats": "bash scripts/stats.sh"
+    "stats": "bash scripts/stats.sh",
+    "sweep": "tsx scripts/eval/sweep.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

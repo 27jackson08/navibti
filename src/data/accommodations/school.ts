@@ -38,6 +38,8 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 2,
+    // Sustained class time is tolerable because a break follows it.
+    supportsLoad: { domain: 'cognitive', withoutIt: 0.7 },
   },
   {
     // Separate from the numeric cap because at the lowest band that cap reads
@@ -56,6 +58,8 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low'],
     priority: 3,
+    // Printed alternatives are what keep screen exposure down.
+    supportsLoad: { domain: 'visualVestibular', withoutIt: 0.75 },
   },
   {
     id: 'school-screen-cap',
@@ -86,6 +90,8 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     // says it better. Two items making the same request reads as padding.
     bands: ['low', 'moderate'],
     priority: 4,
+    // Printed alternatives are what keep screen exposure down.
+    supportsLoad: { domain: 'visualVestibular', withoutIt: 0.75 },
   },
   {
     id: 'school-no-timed-tests',
@@ -189,6 +195,8 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     maxStep: 3,
     bands: ['very-low', 'low', 'moderate'],
     priority: 11,
+    // Seating and shading are what make a lit classroom survivable.
+    supportsLoad: { domain: 'visualVestibular', withoutIt: 0.85 },
   },
   {
     id: 'school-quiet-lunch',
@@ -203,6 +211,8 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     bands: ['very-low', 'low', 'moderate'],
     priority: 12,
     minAttendanceHours: 2.5,
+    // Without somewhere quiet, the loudest hour of the day is unavoidable.
+    supportsLoad: { domain: 'emotionalAutonomic', withoutIt: 0.8 },
   },
   {
     id: 'school-rest-period',
@@ -217,6 +227,8 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
     bands: ['very-low', 'low', 'moderate'],
     priority: 13,
     minAttendanceHours: 2,
+    // A mid-day reset is part of what makes the afternoon possible.
+    supportsLoad: { domain: 'cognitive', withoutIt: 0.85 },
   },
   {
     id: 'school-late-start',

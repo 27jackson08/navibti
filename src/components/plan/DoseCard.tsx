@@ -25,6 +25,8 @@ const BINDING_COPY: Record<DomainRecommendation['binding'], string> = {
   ramp: 'Held back to a gradual step up from yesterday.',
   stage: 'Capped by the stage you are at.',
   floor: 'Raised to the minimum the guidance supports.',
+  environment:
+    'Lowered because support this depends on has been reported unavailable.',
 };
 
 function format(dose: number, unit: string): string {

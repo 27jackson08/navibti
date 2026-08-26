@@ -263,7 +263,7 @@ export function summarize(results: readonly SimulationResult[]): CohortMetrics {
     errorByDay.push(mean(errors));
   }
 
-  const bindingCounts: Record<BindingConstraint, number> = { model: 0, ramp: 0, stage: 0, floor: 0 };
+  const bindingCounts: Record<BindingConstraint, number> = { model: 0, ramp: 0, stage: 0, floor: 0, environment: 0 };
   for (const entry of allDays) {
     for (const domain of LOAD_DOMAINS) bindingCounts[entry.binding[domain]] += 1;
   }
@@ -288,6 +288,7 @@ export function summarize(results: readonly SimulationResult[]): CohortMetrics {
       ramp: bindingCounts.ramp / bindingTotal,
       stage: bindingCounts.stage / bindingTotal,
       floor: bindingCounts.floor / bindingTotal,
+      environment: bindingCounts.environment / bindingTotal,
     },
     overEstimationRate: signedErrors.filter((error) => error > 0).length / (signedErrors.length || 1),
     meanSignedError: mean(signedErrors),

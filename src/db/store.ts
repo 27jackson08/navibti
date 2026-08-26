@@ -41,6 +41,11 @@ const PERSONAS: readonly {
   seed: number;
   historyDays: number;
   fullReturnToSchool?: boolean;
+  /**
+   * Overrides the generated adherence. Above 1 means this patient consistently
+   * does more than the plan asks.
+   */
+  adherence?: number;
 }[] = [
   {
     id: 'maya',
@@ -61,6 +66,21 @@ const PERSONAS: readonly {
     historyDays: 11,
   },
   {
+    // Well into recovery, and the only persona whose plan the model is actually
+    // driving. That is not a property of this patient — Maya and Daniel look the
+    // same way at eighteen days. It is a property of the model, which needs
+    // roughly two weeks of check-ins before it has more to say than the
+    // guideline floor does. A demo without someone at this stage shows only the
+    // floor, and the environment feedback has nothing to act on.
+    id: 'tom',
+    displayName: 'Tom',
+    isMinor: false,
+    protocol: 'return-to-learn',
+    roles: ['employer'],
+    seed: 11,
+    historyDays: 15,
+  },
+  {
     id: 'amara',
     displayName: 'Amara',
     isMinor: true,
@@ -71,8 +91,17 @@ const PERSONAS: readonly {
   },
 ];
 
-function seedHistory(seed: number, days: number, injuryDate: string): CheckIn[] {
-  const synthetic = { ...makePatient(seed), redFlagDay: null };
+function seedHistory(
+  seed: number,
+  days: number,
+  injuryDate: string,
+  adherence?: number,
+): CheckIn[] {
+  const synthetic = {
+    ...makePatient(seed),
+    redFlagDay: null,
+    ...(adherence === undefined ? {} : { adherence }),
+  };
   const { days: simulated } = simulatePatient(synthetic, days);
 
   return simulated.map((day) => {
@@ -110,7 +139,10 @@ function createStore(): Store {
       roles: persona.roles,
       fullReturnToSchool: persona.fullReturnToSchool,
     });
-    checkIns.set(persona.id, seedHistory(persona.seed, persona.historyDays, injuryDate));
+    checkIns.set(
+      persona.id,
+      seedHistory(persona.seed, persona.historyDays, injuryDate, persona.adherence),
+    );
   }
 
   return { patients, checkIns, seededOn };

@@ -6,6 +6,8 @@ import { Notice } from '@/components/plan/Notice';
 import { StageCard } from '@/components/plan/StageCard';
 import { getCheckIns, getPatient } from '@/db/store';
 import { buildSession, deltaPointsOf, isoDay } from '@/engine/session';
+import { acknowledgementsFor, unavailableAccommodations } from '@/db/responses';
+import { deriveSlots, fillSlots } from '@/engine/packet/slots';
 
 // The demo store lives in memory, so these pages must never be prerendered
 // at build time -- a static snapshot would show the seeded history forever.
@@ -22,7 +24,10 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
   const patient = getPatient(patientId);
   if (!patient) notFound();
 
-  const session = buildSession(patient, getCheckIns(patient.id), isoDay(new Date()));
+  const session = buildSession(patient, getCheckIns(patient.id), isoDay(new Date()), {
+    unavailableSupports: unavailableAccommodations(patient.id),
+  });
+  const acknowledgements = acknowledgementsFor(patient.id);
   const latest = session.checkIns.at(-1);
 
   return (
@@ -127,6 +132,38 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
               </section>
             )}
           </div>
+
+          {(session.unmetSupports.length > 0 || acknowledgements.length > 0) && (
+            <section className="mt-8 flex flex-col gap-3">
+              {acknowledgements.length > 0 && (
+                <Notice tone="steady" label="They have this">
+                  <p>
+                    {acknowledgements
+                      .map((entry) => entry.role)
+                      .join(' and ')}{' '}
+                    confirmed receiving {patient.displayName}’s plan.
+                  </p>
+                </Notice>
+              )}
+
+              {session.unmetSupports.length > 0 && (
+                <Notice tone="caution" label="Reported unavailable">
+                  <p>
+                    Some support {patient.displayName}’s plan assumed is not available, so today’s
+                    limits have been lowered to stop counting on it.
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {session.unmetSupports.map((item) => (
+                      <li key={item.accommodationId}>
+                        <span className="capitalize">{item.role}</span>:{' '}
+                        {session.plan ? fillSlots(item.text, deriveSlots(session.plan)) : item.text}
+                      </li>
+                    ))}
+                  </ul>
+                </Notice>
+              )}
+            </section>
+          )}
 
           {session.underExposure.length > 0 && (
             <div className="mt-6 flex flex-col gap-3">

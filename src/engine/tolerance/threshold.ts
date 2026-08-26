@@ -31,7 +31,7 @@ import { exceedanceProbability, isPersonalized, predict, type Posterior } from '
 import { stageCap, stageFloor } from './stage-caps';
 import { REFERENCE_DOSES, denormalizeDose, normalizeDose } from './units';
 
-export type BindingConstraint = 'model' | 'ramp' | 'stage' | 'floor';
+export type BindingConstraint = 'model' | 'ramp' | 'stage' | 'floor' | 'environment';
 
 export interface DomainRecommendation {
   readonly domain: LoadDomain;
@@ -62,6 +62,14 @@ export interface DomainRecommendation {
    */
   readonly belowModelTolerance: boolean;
   readonly floorReadingOf: string;
+  /** Below 1 when a recipient has reported a load-bearing support unavailable. */
+  readonly environmentFactor: number;
+  /**
+   * True when the guideline's minimum activity exceeds what the environment can
+   * currently support. Surfaced rather than resolved: that is a conversation
+   * between the patient, the school and the clinician, not a number to pick.
+   */
+  readonly environmentConflict: boolean;
 }
 
 /** See MAX_RECOMMENDED_LOAD — held in the provenance system, not as a literal here. */
@@ -87,6 +95,30 @@ export function solveTolerance(
   const limit = EXACERBATION_POINT_LIMIT.value;
   const target = TOLERANCE_EXCEEDANCE_QUANTILE.value;
 
+  /*
+   * Judged on the absolute predicted rise, not on the rise attributable to
+   * activity alone — which is not the obvious choice, so here is the measurement.
+   *
+   * The guideline threshold is a rise *during activity*, and the intercept of
+   * this model absorbs whatever happens on a near-rest day: baseline
+   * instability, a bad night, the natural course of the injury. Counting that
+   * toward an activity limit looks like a mistake, and telling a patient with an
+   * unstable baseline to do nothing is exactly the over-restriction this product
+   * exists to avoid. So the alternative was implemented and swept
+   * (npm run sweep), on one cohort, both framings:
+   *
+   *   framing        alpha  unsafe  over-estimated  load  floor-rescued
+   *   absolute       0.20     6.5%            0.0%  0.27           63%
+   *   attributable   0.05     6.0%            1.4%  0.24           89%
+   *   attributable   0.07     8.0%            2.8%  0.28           75%
+   *
+   * The absolute framing dominates: at matched safety it permits more load with
+   * no over-estimation, and at matched load it is safer. The intercept is not
+   * only noise — it carries real information about how fragile this patient is
+   * right now, and discarding it loses more signal than the baseline-instability
+   * concern costs. Baseline instability is handled where it belongs instead, by
+   * the clinician escalation on floor-day risk.
+   */
   const riskAt = (normalized: number): number => {
     const doses = { ...context, [domain]: denormalizeDose(domain, normalized) };
     return exceedanceProbability(predict(posterior, doses), limit);
@@ -151,6 +183,14 @@ export interface PlanInput {
    * Return-to-Learn alone.
    */
   readonly learnStep?: number;
+  /**
+   * Per-domain multiplier reflecting support the environment has reported it
+   * cannot provide. 1 means everything asked for is available.
+   *
+   * Computed outside this module, from recipient responses and the
+   * accommodation library, so the tolerance engine stays independent of both.
+   */
+  readonly environmentFactor?: Partial<Record<LoadDomain, number>>;
   /** A recent typical day, used to hold the other domains fixed while solving. */
   readonly context: Partial<Record<LoadDomain, number>>;
   readonly yesterday: Partial<Record<LoadDomain, number>>;
@@ -190,9 +230,19 @@ export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRec
   // The floor is the one constraint that raises rather than lowers. It applies
   // last so it can override a model that has talked itself into recommending
   // nothing at all.
-  const belowFloor = capped.value < floor.floor;
-  const normalized = belowFloor ? floor.floor : capped.value;
-  const binding: BindingConstraint = belowFloor ? 'floor' : capped.binding;
+  // What the environment can actually deliver. An accommodation that is what
+  // makes a dose safe, reported unavailable, lowers that dose — the plan adapts
+  // to the room the patient is actually in.
+  const environmentFactor = input.environmentFactor?.[domain] ?? 1;
+  const afterEnvironment = capped.value * environmentFactor;
+
+  const belowFloor = afterEnvironment < floor.floor;
+  const normalized = belowFloor ? floor.floor : afterEnvironment;
+  const binding: BindingConstraint = belowFloor
+    ? 'floor'
+    : environmentFactor < 1 && afterEnvironment < capped.value
+      ? 'environment'
+      : capped.binding;
 
   const dose = denormalizeDose(domain, normalized);
 
@@ -214,6 +264,8 @@ export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRec
     solvedContext: { ...input.context, [domain]: 0 },
     belowModelTolerance: belowFloor && floor.floor > model,
     floorReadingOf: floor.readingOf,
+    environmentFactor,
+    environmentConflict: belowFloor && environmentFactor < 1,
   };
 }
 

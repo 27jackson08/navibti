@@ -22,8 +22,8 @@ function ordinary(overrides: Partial<CheckIn> = {}): CheckIn {
 }
 
 describe('the demo store', () => {
-  it('seeds three patients with histories', () => {
-    expect(listPatients()).toHaveLength(3);
+  it('seeds four patients with histories', () => {
+    expect(listPatients()).toHaveLength(4);
     for (const patient of listPatients()) {
       expect(getCheckIns(patient.id).length).toBeGreaterThan(0);
     }
