@@ -17,7 +17,7 @@ import type { FlaggedItem } from '@/components/packet/PacketView';
 import { getCheckIns, getPatient } from '@/db/store';
 import { clinicianSummary } from '@/engine/packet/clinician';
 import { composePacket, diffPackets } from '@/engine/packet/compose';
-import { buildSession, isoDay } from '@/engine/session';
+import { buildSession, isoDay, settingFor } from '@/engine/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +55,7 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
           includeRawSymptoms={link.includesRawSymptoms}
         />
 
-        {patient.protocol === 'return-to-sport' && (
+        {(
           <div className="mt-10">
             <ClinicianIntake
               token={token}
@@ -63,6 +63,8 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
               currentSportStep={stage.stage.step}
               clearedUpTo={patient.clearance?.coversUpToStep ?? null}
               clearedBy={patient.clearance?.recordedBy ?? null}
+              currentCaps={patient.clinicianCaps ?? {}}
+              showClearance={patient.protocol === 'return-to-sport'}
             />
           </div>
         )}
@@ -116,8 +118,9 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
     acknowledgementsFor(patient.id).find((entry) => entry.linkId === link.id)?.at ?? null;
 
   const protocol = PROTOCOLS[session.learnStage.protocol];
+  const ladder = settingFor(patient) === 'work' ? 'Returning to work' : 'Returning to school';
   const stageLine =
-    `${protocol.name}, step ${session.learnStage.step} of ${protocol.steps.length} — ` +
+    `${ladder}, step ${session.learnStage.step} of ${protocol.steps.length} — ` +
     `${stepOf(protocol, session.learnStage.step).title}. Day ${session.daysSinceInjury} since injury.`;
 
   return (

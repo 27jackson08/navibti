@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { PROTOCOLS, stepOf } from '@/data/guidelines';
-import { recordClearance } from '@/app/s/[token]/clinician-actions';
+import { LOAD_DOMAINS, LOAD_DOMAIN_LABELS, type LoadDomain } from '@/data/guidelines';
+import { recordCaps, recordClearance } from '@/app/s/[token]/clinician-actions';
 
 type Props = {
   token: string;
@@ -11,6 +12,46 @@ type Props = {
   currentSportStep: number;
   clearedUpTo: number | null;
   clearedBy: string | null;
+  currentCaps: Partial<Record<LoadDomain, number>>;
+  /**
+   * Only a patient on the sport ladder has a clearance gate. Return-to-Learn
+   * needs no clearance at any step, and offering to record one there would
+   * contradict the thing this product is most careful to say.
+   */
+  showClearance: boolean;
+};
+
+/**
+ * Caps offered per domain, in that domain's own unit. A short list rather than
+ * a free number: the common clinical instructions are "none at all" and "keep
+ * it short", and a text field invites a typo into a hard constraint.
+ */
+const CAP_OPTIONS: Record<LoadDomain, readonly { label: string; value: number }[]> = {
+  cognitive: [
+    { label: 'None', value: 0 },
+    { label: '30 min', value: 30 },
+    { label: '1 hour', value: 60 },
+    { label: '2 hours', value: 120 },
+  ],
+  visualVestibular: [
+    { label: 'None', value: 0 },
+    { label: '15 min', value: 15 },
+    { label: '30 min', value: 30 },
+    { label: '1 hour', value: 60 },
+  ],
+  physical: [
+    { label: 'None', value: 0 },
+    { label: '10 min', value: 10 },
+    { label: '20 min', value: 20 },
+    { label: '45 min', value: 45 },
+  ],
+  emotionalAutonomic: [
+    { label: 'None', value: 0 },
+    { label: '30 min', value: 30 },
+    { label: '1 hour', value: 60 },
+    { label: '2 hours', value: 120 },
+  ],
+  sleepFatigue: [],
 };
 
 /**
@@ -27,6 +68,8 @@ export function ClinicianIntake({
   currentSportStep,
   clearedUpTo,
   clearedBy,
+  currentCaps,
+  showClearance,
 }: Props) {
   const router = useRouter();
   const protocol = PROTOCOLS['return-to-sport'];
@@ -34,9 +77,15 @@ export function ClinicianIntake({
   const [step, setStep] = useState(Math.min(6, Math.max(4, currentSportStep + 1)));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [caps, setCaps] = useState<Partial<Record<LoadDomain, number>>>(currentCaps);
+  const [capsBusy, setCapsBusy] = useState(false);
+
+  const cappable = LOAD_DOMAINS.filter((domain) => CAP_OPTIONS[domain].length > 0);
 
   return (
     <section className="border border-rule bg-surface p-5 print:hidden">
+      {showClearance ? (
+        <>
       <h2 className="text-xl">Record a clearance decision</h2>
       <p className="mt-2 max-w-[62ch] text-sm leading-relaxed text-ink-soft">
         {patientName} is at step {currentSportStep} of {protocol.steps.length}. Steps 4 and above
@@ -118,6 +167,88 @@ export function ClinicianIntake({
           past a step until they have also tolerated the one before it, and a full return to school
           is required before step 4 regardless of clearance.
         </p>
+      </div>
+        </>
+      ) : (
+        <>
+          <h2 className="text-xl">Recording your decisions</h2>
+          <p className="mt-2 max-w-[62ch] text-sm leading-relaxed text-ink-soft">
+            {patientName} is on the return-to-learn ladder, which needs no medical clearance at
+            any step — the guidance is explicit about that, and NaviTBI will not ask for one. What
+            you can do here is set limits that override what it would otherwise recommend.
+          </p>
+        </>
+      )}
+
+      <div className={`${showClearance ? 'mt-10 border-t border-rule pt-6' : 'mt-6'}`}>
+        <h3 className="text-lg">Set a hard limit</h3>
+        <p className="mt-2 max-w-[62ch] text-sm leading-relaxed text-ink-soft">
+          If you want {patientName} kept below a specific ceiling, set it here. These outrank
+          everything NaviTBI would otherwise recommend, including the minimum activity the
+          guideline suggests — a general default has no business overriding you. They restrict
+          only: a ceiling above what the plan already allows changes nothing.
+        </p>
+
+        <ul className="mt-5 flex flex-col gap-3">
+          {cappable.map((domain) => (
+            <li key={domain} className="flex flex-wrap items-center gap-2">
+              <span className="min-w-[14rem] text-sm">{LOAD_DOMAIN_LABELS[domain]}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  setCaps((prev) => {
+                    const next = { ...prev };
+                    delete next[domain];
+                    return next;
+                  })
+                }
+                aria-pressed={caps[domain] === undefined}
+                className={`min-h-0 border px-3 py-1.5 font-mono text-xs ${
+                  caps[domain] === undefined
+                    ? 'border-accent text-accent'
+                    : 'border-rule text-ink-soft'
+                }`}
+              >
+                No limit
+              </button>
+              {CAP_OPTIONS[domain].map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => setCaps((prev) => ({ ...prev, [domain]: option.value }))}
+                  aria-pressed={caps[domain] === option.value}
+                  className={`min-h-0 border px-3 py-1.5 font-mono text-xs ${
+                    caps[domain] === option.value
+                      ? 'border-accent bg-accent text-ground'
+                      : 'border-rule text-ink-soft'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </li>
+          ))}
+        </ul>
+
+        <button
+          type="button"
+          disabled={capsBusy}
+          onClick={async () => {
+            setCapsBusy(true);
+            setError(null);
+            try {
+              await recordCaps({ token, caps: caps as Record<string, number> });
+              router.refresh();
+            } catch {
+              setError('Could not record those limits. This link may no longer be active.');
+            } finally {
+              setCapsBusy(false);
+            }
+          }}
+          className="mt-5 border border-accent bg-accent px-6 py-3 font-medium text-ground disabled:opacity-40"
+        >
+          {capsBusy ? 'Recording…' : 'Record these limits'}
+        </button>
       </div>
     </section>
   );

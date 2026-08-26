@@ -214,15 +214,25 @@ export function applyDecision(
 }
 
 /**
- * How long the patient has been out of school, and whether that has passed the
- * point the guideline warns about. Separate from step progression because a
- * student can be at step 2 and still not physically attending.
+ * How long the patient has been away, and whether that has passed the point the
+ * guideline warns about. Separate from step progression because someone can be
+ * at step 2 and still not physically attending.
+ *
+ * The guideline states this about school. Applying the same reasoning to work
+ * is our extension, so the wording changes with the audience while the
+ * threshold does not.
  */
-export function schoolAbsenceWarning(daysAbsent: number): string | null {
+export function schoolAbsenceWarning(
+  daysAbsent: number,
+  setting: 'school' | 'work' = 'school',
+): string | null {
   if (daysAbsent <= MAX_SCHOOL_ABSENCE_DAYS.value) return null;
-  return (
-    `${daysAbsent} days out of school. ` +
-    'A complete absence from the school environment for more than one week is not generally ' +
-    'recommended — adapt the school day rather than extending time away.'
-  );
+
+  return setting === 'school'
+    ? `${daysAbsent} days out of school. A complete absence from the school environment for ` +
+        'more than one week is not generally recommended — adapt the school day rather than ' +
+        'extending time away.'
+    : `${daysAbsent} days away from work. The guidance is written about school, where more than ` +
+        'a week away is not generally recommended; the reasoning carries over. Adapting the ' +
+        'working day tends to beat extending the time away from it.';
 }

@@ -340,3 +340,69 @@ test('packets can be printed', async ({ page }) => {
   await page.goto('/maya/packet/school');
   await expect(page.getByRole('button', { name: /Print or save as PDF/ })).toBeVisible();
 });
+
+test('an adult is not told about classrooms', async ({ page }) => {
+  await page.goto('/act/tom');
+  await page.goto('/tom/today');
+
+  await expect(page.getByText('Returning to work')).toBeVisible();
+  await expect(page.getByText('Return to School / Learn')).toHaveCount(0);
+
+  // The guideline text is still shown verbatim, with the mapping marked as ours.
+  await expect(page.getByText(/mapping is ours, not the guideline/)).toBeVisible();
+
+  // And a student still sees the ladder named for them.
+  await page.goto('/act/maya');
+  await page.goto('/maya/today');
+  await expect(page.getByText('Returning to school')).toBeVisible();
+});
+
+test('a clinician can set a hard limit, and it overrides the plan', async ({ page }, testInfo) => {
+  const label = `caps ${testInfo.project.name}`;
+
+  await page.goto('/act/tom');
+  await page.goto('/tom/today');
+  const before = await page
+    .locator('article')
+    .filter({ hasText: 'Physical activity' })
+    .locator('.tabular-nums')
+    .first()
+    .textContent();
+  expect(Number(before)).toBeGreaterThan(10);
+
+  await page.goto('/tom/sharing');
+  await page.getByRole('button', { name: 'Clinician' }).click();
+  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
+  await page.getByRole('button', { name: 'Create link' }).click();
+
+  const href = await page
+    .locator('li')
+    .filter({ hasText: label })
+    .getByRole('link')
+    .first()
+    .getAttribute('href');
+
+  await page.goto(href!);
+
+  // Tom is on return-to-learn, which needs no clearance at any step — so he is
+  // not offered one.
+  await expect(page.getByRole('heading', { name: /Record a clearance decision/ })).toHaveCount(0);
+  await expect(page.getByText(/needs no medical clearance at any step/)).toBeVisible();
+
+  const row = page.locator('li').filter({ hasText: 'Physical activity' });
+  await row.getByRole('button', { name: '10 min', exact: true }).click();
+  await page.getByRole('button', { name: 'Record these limits' }).click();
+
+  await page.goto('/tom/today');
+  const after = await page
+    .locator('article')
+    .filter({ hasText: 'Physical activity' })
+    .locator('.tabular-nums')
+    .first()
+    .textContent();
+
+  expect(Number(after)).toBe(10);
+  await expect(
+    page.locator('article').filter({ hasText: 'Physical activity' }).getByText(/Set directly by a clinician/),
+  ).toBeVisible();
+});

@@ -6,7 +6,7 @@ import { PacketView } from '@/components/packet/PacketView';
 import { PrintButton } from '@/components/packet/PrintButton';
 import { getCheckIns, getPatient } from '@/db/store';
 import { composePacket, diffPackets } from '@/engine/packet/compose';
-import { buildSession, isoDay } from '@/engine/session';
+import { buildSession, isoDay, settingFor } from '@/engine/session';
 import { unavailableAccommodations } from '@/db/responses';
 
 export const dynamic = 'force-dynamic';
@@ -58,8 +58,9 @@ export default async function PacketPage({ params }: PageProps<'/[patient]/packe
       : null;
 
   const protocol = PROTOCOLS[session.learnStage.protocol];
+  const ladder = settingFor(patient) === 'work' ? 'Returning to work' : 'Returning to school';
   const stageLine =
-    `${protocol.name}, step ${session.learnStage.step} of ${protocol.steps.length} — ` +
+    `${ladder}, step ${session.learnStage.step} of ${protocol.steps.length} — ` +
     `${stepOf(protocol, session.learnStage.step).title}. Day ${session.daysSinceInjury} since injury.`;
 
   return (

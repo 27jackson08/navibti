@@ -1,8 +1,12 @@
-# Final week — what to build, and why
+# Final week — what was built
 
-Seven build days (Aug 26 → Sep 2), submitting two days early. Ordered by how much
-each closes a gap between what NaviTBI *claims* and what it *does* — which is
-where a judge's scepticism will land first.
+> Written on 26 August as a plan; annotated afterwards with what actually
+> happened. Kept rather than deleted because the gaps it names are the reason
+> the last week's work exists.
+
+**All seven gaps are closed**, apart from new-patient onboarding, which was
+cut-list item one and stayed cut. What follows is the original plan; each gap
+now carries what shipped.
 
 ---
 
@@ -33,7 +37,14 @@ NaviTBI never learns whether they received it, acted on it, or could not.
 This is the single largest divergence between claim and product, and it is also
 the most defensible feature nobody else has.
 
-**Build: recipient response on the share page.**
+**Shipped.** Recipients can confirm receipt and report an accommodation as
+impossible, from five fixed reasons. Load-bearing accommodations declare the
+load they carry, so flagging one lowers the dose that depended on it — flagging
+"no back-to-back meetings" moves Tom's concentration budget from 144 minutes to
+115. Where every option covering a domain is refused, the packet says that
+domain now has no support at all.
+
+**The original plan:**
 
 - **Acknowledge.** One button. "We've received this." Timestamped, shown back to
   the patient and in the clinician summary.
@@ -61,7 +72,13 @@ clearance, `StageState.clearance` exists, and **no interface can set it**. A
 judge who clicks through the sport ladder hits a wall with no explanation of how
 a real patient would pass it.
 
-**Build: a clinician intake surface.**
+**Shipped.** Clearance is recorded from a clinician share link and only from
+there — a patient cannot record it on their own record. Clinicians can also set
+hard per-domain ceilings that outrank everything including the guideline floor.
+A return-to-learn patient is not offered clearance at all, because that ladder
+needs none.
+
+**The original plan:**
 
 - Record clearance: who recorded it, when, which step it covers.
 - Record the confirmed injury date and starting stage, rather than inferring both.
@@ -83,7 +100,12 @@ The five load domains are the neuroscience content, and they appear nowhere
 except as labels. Nothing explains why *these* five, or what mechanism each
 tracks. This is the criterion most likely to be scored on what a judge can see.
 
-**Build: mechanism, made visible and cited.**
+**Shipped.** `/how-it-works` explains each domain's mechanism, cited to Giza &
+Hovda 2014 and Lumba-Brown et al. 2020, and states what is *not* modelled. The
+sensitivity profile names the load a patient is most sensitive to and refuses
+when two cannot be told apart.
+
+**The original plan:**
 
 - A short, cited explanation per domain — what it loads, why concussion
   narrows it, and what the guidance says about re-exposure. Surfaced where the
@@ -107,7 +129,8 @@ The clinician gets a trajectory. The patient gets today. Recovery is long,
 non-linear and demoralising, and "you tolerated 40 minutes three weeks ago and
 110 today" is genuine clinical value, not decoration.
 
-**Build:** a patient history view — tolerance by domain over time, stage
+**Shipped** at `/[patient]/history`, replayed from only what was known on each
+day. **The original plan:** a patient history view — tolerance by domain over time, stage
 transitions marked, flare days marked, and the honest shape of a recovery rather
 than a smoothed line.
 
@@ -118,7 +141,7 @@ than a smoothed line.
 The original concept said the loop dials back when a plan is exceeded. Adherence
 is computed for the clinician; the patient is never told they went over.
 
-**Build:** a short, non-judgemental note when yesterday's load exceeded the plan
+**Shipped.** **The original plan:** a short, non-judgemental note when yesterday's load exceeded the plan
 — what was exceeded, what followed, and what today's plan does about it. Worded
 so it never reads as blame, because blame is how someone stops logging honestly.
 
@@ -154,7 +177,19 @@ Currently one synthetic scenario. Three additions, in order of value:
 
 ---
 
-## Schedule
+## What actually happened, day by day
+
+| Day | Built |
+|---|---|
+| Aug 26 | Recipient response loop; the plan reacting to a flag |
+| Aug 27 | Clinician summary surfaces what the environment refused |
+| Aug 28 | Clinician intake: clearance, hard ceilings |
+| Aug 29 | Neuroscience: mechanism per domain, subtype mapping, `/how-it-works` |
+| Aug 30 | Patient history; adherence feedback |
+| Aug 31 | Audio check-in; print; reading level; error hunt |
+| Sep 1 | Evaluation: prior sensitivity, calibration, no-tool baseline |
+
+## Original schedule
 
 | Day | Build |
 |---|---|

@@ -82,6 +82,20 @@ export interface CheckIn {
  * points would be told they had breached it. The clinician table displayed
  * "2.0" next to "within limit: no", which is how this was found.
  */
+export type Setting = 'school' | 'work';
+
+/**
+ * Whether this patient's day is school or work.
+ *
+ * The Return-to-Learn ladder is the right ladder for both — cognitive load is
+ * cognitive load — but the guideline's own wording is written for students,
+ * and showing a thirty-four-year-old a step described in terms of classrooms
+ * and school days reads as a system that has not noticed who is using it.
+ */
+export function settingFor(patient: Patient): Setting {
+  return patient.roles.includes('school') ? 'school' : 'work';
+}
+
 export function deltaPointsOf(checkIn: CheckIn): number {
   const raw = Math.max(0, checkIn.worstSeverity - checkIn.preActivitySeverity);
   return Math.round(raw * 100) / 100;
@@ -347,7 +361,7 @@ function collectEscalations(
     );
   }
 
-  const absence = schoolAbsenceWarning(consecutiveAbsentDays(checkIns));
+  const absence = schoolAbsenceWarning(consecutiveAbsentDays(checkIns), settingFor(patient));
   if (absence) escalations.push(absence);
 
   return escalations;

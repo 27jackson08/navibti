@@ -6,7 +6,7 @@ import { Notice } from '@/components/plan/Notice';
 import { unavailableAccommodations } from '@/db/responses';
 import { getCheckIns, getPatient } from '@/db/store';
 import { domainTrends, replayHistory } from '@/engine/history';
-import { buildSession, isoDay } from '@/engine/session';
+import { buildSession, isoDay, settingFor } from '@/engine/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,7 +105,8 @@ export default async function HistoryPage({ params }: PageProps<'/[patient]/hist
         <div className="border border-rule bg-surface p-5">
           <h2 className="text-lg">Stage</h2>
           <p className="mt-2 text-sm text-ink-soft">
-            {PROTOCOLS['return-to-learn'].name}, now step {session.learnStage.step} —{' '}
+            {settingFor(patient) === 'work' ? 'Returning to work' : 'Returning to school'}, now
+            step {session.learnStage.step} —{' '}
             {stepOf(PROTOCOLS['return-to-learn'], session.learnStage.step).title}.
           </p>
           {stageChanges.length > 0 ? (

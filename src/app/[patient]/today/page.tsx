@@ -5,7 +5,7 @@ import { DoseCard } from '@/components/plan/DoseCard';
 import { Notice } from '@/components/plan/Notice';
 import { StageCard } from '@/components/plan/StageCard';
 import { getCheckIns, getPatient } from '@/db/store';
-import { buildSession, deltaPointsOf, isoDay } from '@/engine/session';
+import { buildSession, deltaPointsOf, isoDay, settingFor } from '@/engine/session';
 import { replayHistory } from '@/engine/history';
 import { acknowledgementsFor, unavailableAccommodations } from '@/db/responses';
 import { deriveSlots, fillSlots } from '@/engine/packet/slots';
@@ -99,7 +99,11 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
 
           <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
             <div className="flex flex-col gap-6">
-              <StageCard stage={session.stage} decision={session.lastDecision} />
+              <StageCard
+                stage={session.stage}
+                decision={session.lastDecision}
+                setting={settingFor(patient)}
+              />
               {session.patient.protocol === 'return-to-sport' && (
                 <>
                   <p className="max-w-[52ch] text-sm text-ink-soft">
@@ -107,7 +111,7 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
                     time is reasonable; sport governs physical progression — and step 4 of sport
                     cannot open until school is back to full time.
                   </p>
-                  <StageCard stage={session.learnStage} decision={null} />
+                  <StageCard stage={session.learnStage} decision={null} setting={settingFor(patient)} />
                 </>
               )}
             </div>
