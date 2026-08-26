@@ -65,6 +65,30 @@ export const CITATIONS = {
     appliesTo:
       'Identification of suspected concussion by non-medically-trained people. Explicitly NOT a diagnostic instrument.',
   },
+  'giza-hovda-2014': {
+    id: 'giza-hovda-2014',
+    shortLabel: 'Giza & Hovda 2014 — neurometabolic cascade',
+    authors: 'Giza CC, Hovda DA.',
+    title: 'The New Neurometabolic Cascade of Concussion',
+    source: 'Neurosurgery 2014;75(Suppl 4):S24-S33',
+    year: 2014,
+    doi: '10.1227/NEU.0000000000000505',
+    appliesTo:
+      'Mechanism. Why an injured brain has less capacity than usual, and why that capacity is a ' +
+      'metabolic budget rather than a matter of willpower.',
+  },
+  'lumba-brown-2020': {
+    id: 'lumba-brown-2020',
+    shortLabel: 'Concussion Guidelines Step 2 — subtypes',
+    authors: 'Lumba-Brown A, Teramoto M, Bloom OJ, et al.',
+    title: 'Concussion Guidelines Step 2: Evidence for Subtype Classification',
+    source: 'Neurosurgery 2020;86(1):2-13',
+    year: 2020,
+    appliesTo:
+      'Clinical subtypes — cognitive, ocular-motor, headache/migraine, vestibular, anxiety/mood — ' +
+      'and the associated conditions of cervical strain and sleep disturbance. A framework for ' +
+      'describing presentations, not a diagnostic instrument for an app to apply.',
+  },
 } as const satisfies Record<string, Citation>;
 
 export type CitationId = keyof typeof CITATIONS;

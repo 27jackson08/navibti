@@ -77,6 +77,33 @@ Full detail, including the limitations, in
 [`results/evaluation.md`](results/evaluation.md) and
 [`results/frontend-audit.md`](results/frontend-audit.md).
 
+## The five load domains
+
+Not an arbitrary split. After concussion the brain is in a period of raised
+energy demand with a reduced ability to meet it, so capacity is a metabolic
+budget rather than a matter of effort — which is why exceeding it produces
+symptoms without producing damage, and why sub-threshold activity is the
+treatment rather than a reward for recovering.
+
+The five are tracked separately because they draw on different systems, recover
+at different rates, and are accommodated in completely different ways by a
+school or a workplace. Averaging them loses the thing that makes the output
+actionable.
+
+| Domain | What it loads | Resembles |
+|---|---|---|
+| Thinking and concentration | Classes, meetings, reading for meaning | cognitive |
+| Screens, motion, busy spaces | Oculomotor and vestibular work | ocular-motor, vestibular |
+| Physical activity | Exertion, autonomic regulation | vestibular |
+| Sleep and fatigue | Shortfall against their own usual night | sleep disturbance |
+| Stress, noise, social load | Continuous sensory and social demand | anxiety/mood |
+
+"Resembles" is doing real work there. NaviTBI describes what a pattern looks
+like and points at a conversation; it never assigns a subtype, which is a
+clinical judgement made with an examination rather than from self-reported
+minutes. Headache/migraine and cervical strain are not tracked as loads at all,
+and `/how-it-works` says so rather than leaving the gap implied.
+
 ## Safety
 
 - **Red flags halt everything.** Any CRT6 red flag produces no plan, no dose and
@@ -119,8 +146,8 @@ first paint. Check-in is one question per screen with no typing.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 729 unit tests
-npm run verify -- --full  # ...and 113 e2e (a11y on three engines)
+npm run verify       # typecheck, lint, 735 unit tests
+npm run verify -- --full  # ...and 123 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives
 npm run trace -- 3   # one patient's day-by-day engine trace

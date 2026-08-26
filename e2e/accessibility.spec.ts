@@ -10,6 +10,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const PAGES = [
   { name: 'home', path: '/' },
+  { name: 'how it works', path: '/how-it-works' },
   { name: 'today', path: '/maya/today' },
   { name: 'check-in', path: '/maya/check-in' },
   { name: 'school packet', path: '/maya/packet/school' },

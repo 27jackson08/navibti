@@ -269,3 +269,28 @@ test('only a clinician link can record clearance', async ({ page }, testInfo) =>
   await expect(page.getByText(/Currently cleared up to step 4/)).toBeVisible();
   await expect(page.getByText(`recorded by Dr Reyes ${suffix}`)).toBeVisible();
 });
+
+test('the mechanism page explains every domain and cites it', async ({ page }) => {
+  await page.goto('/how-it-works');
+
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('budget');
+
+  for (const domain of [
+    'Thinking and concentration',
+    'Screens, motion and busy spaces',
+    'Physical activity',
+    'Sleep and fatigue',
+    'Stress, noise and social load',
+  ]) {
+    await expect(page.getByRole('heading', { name: domain })).toBeVisible();
+  }
+
+  // The gaps are stated rather than left implied.
+  await expect(page.getByRole('heading', { name: /What this does not track/ })).toBeVisible();
+  await expect(page.getByText(/Giza CC, Hovda DA/)).toBeVisible();
+  await expect(page.getByText(/Lumba-Brown A/)).toBeVisible();
+
+  // Describes a resemblance, never assigns a subtype.
+  // Present on every domain, which is the point — assert at least one.
+  await expect(page.getByText(/does not assign anyone a subtype/).first()).toBeVisible();
+});

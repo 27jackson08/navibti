@@ -10,6 +10,7 @@ export * from './citations';
 export * from './types';
 export * from './thresholds';
 export * from './red-flags';
+export * from './mechanism';
 export { RETURN_TO_LEARN } from './return-to-learn';
 export { RETURN_TO_SPORT } from './return-to-sport';
 

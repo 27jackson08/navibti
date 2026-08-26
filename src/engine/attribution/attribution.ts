@@ -18,9 +18,12 @@
  */
 
 import {
+  DOMAIN_MECHANISMS,
   EXACERBATION_POINT_LIMIT,
   LOAD_DOMAINS,
   LOAD_DOMAIN_LABELS,
+  SUBTYPE_LABELS,
+  type ClinicalSubtype,
   type Exacerbation,
   type LoadDomain,
 } from '@/data/guidelines';
@@ -348,3 +351,93 @@ export const FORBIDDEN_ATTRIBUTION_LANGUAGE: readonly RegExp[] = [
   /\byou must\b/i,
   /\bproves?\b/i,
 ];
+
+/**
+ * Which kind of load this patient is most sensitive to, across everything
+ * logged so far.
+ *
+ * Distinct from attributing a single bad day. This is the standing pattern: not
+ * "today was screens" but "screens are consistently what costs you most". It is
+ * the closest this product comes to the clinical subtyping literature, and it
+ * stops well short of it — subtyping is a judgement made by a clinician with an
+ * examination in front of them, and this is self-reported minutes.
+ *
+ * So the output describes a resemblance and points at a conversation. It never
+ * assigns a subtype, and it refuses entirely when the leading weight cannot be
+ * told apart from the next one.
+ */
+export interface SensitivityProfile {
+  readonly leading: LoadDomain | null;
+  readonly runnerUp: LoadDomain | null;
+  /** Standard errors separating the two leading weights. */
+  readonly separation: number;
+  readonly resembles: readonly ClinicalSubtype[];
+  readonly summary: string;
+  readonly canDescribe: boolean;
+}
+
+/** How many standard errors apart two weights must be to name one over the other. */
+const PROFILE_SEPARATION = 1.5;
+
+export function sensitivityProfile(posterior: Posterior): SensitivityProfile {
+  const none: SensitivityProfile = {
+    leading: null,
+    runnerUp: null,
+    separation: 0,
+    resembles: [],
+    canDescribe: false,
+    summary:
+      'There are not enough check-ins yet to say which kind of load costs you most. This builds ' +
+      'up over a couple of weeks.',
+  };
+
+  if (!isPersonalized(posterior)) return none;
+
+  // Ranked by sensitivity per unit of load, not by what today happened to
+  // contain — the question is what this person is fragile to, not what they did.
+  const ranked = LOAD_DOMAINS.filter((domain) => domain !== 'sleepFatigue')
+    .map((domain) => ({ domain, weight: weightOf(posterior, domain) }))
+    .sort((a, b) => b.weight - a.weight);
+
+  const [first, second] = ranked;
+  if (!first || first.weight <= 0) return none;
+
+  const covariance = invertSpd(posterior.precision).map((row) =>
+    row.map((value) => (posterior.rate / posterior.shape) * value),
+  );
+  const i = FEATURE_ORDER.indexOf(first.domain);
+  const j = FEATURE_ORDER.indexOf(second.domain);
+  const variance = covariance[i][i] + covariance[j][j] - 2 * covariance[i][j];
+  const separation = variance > 0 ? (first.weight - second.weight) / Math.sqrt(variance) : 0;
+
+  if (separation < PROFILE_SEPARATION) {
+    return {
+      ...none,
+      leading: null,
+      runnerUp: null,
+      separation,
+      summary:
+        `${LOAD_DOMAIN_LABELS[first.domain].toLowerCase()} and ` +
+        `${LOAD_DOMAIN_LABELS[second.domain].toLowerCase()} cost you about the same so far, so ` +
+        'there is no single pattern to point at yet.',
+    };
+  }
+
+  const mechanism = DOMAIN_MECHANISMS[first.domain];
+  const names = mechanism.resembles.map((subtype) => SUBTYPE_LABELS[subtype]);
+  const resembling =
+    names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names.at(-1)}` : names[0];
+
+  return {
+    leading: first.domain,
+    runnerUp: second.domain,
+    separation,
+    resembles: mechanism.resembles,
+    canDescribe: true,
+    summary:
+      `Across your check-ins, ${LOAD_DOMAIN_LABELS[first.domain].toLowerCase()} costs you more ` +
+      `than anything else you log. Patterns concentrated there are often described as a ` +
+      `${resembling} presentation, which has specific treatments — worth raising at your next ` +
+      'appointment rather than acting on here.',
+  };
+}

@@ -18,7 +18,12 @@ import {
   type LoadDomain,
   type ProtocolId,
 } from '@/data/guidelines';
-import { attribute, type Attribution } from '@/engine/attribution/attribution';
+import {
+  attribute,
+  sensitivityProfile,
+  type Attribution,
+  type SensitivityProfile,
+} from '@/engine/attribution/attribution';
 import { applyDecision, evaluate, schoolAbsenceWarning } from '@/engine/stage/machine';
 import type { MedicalClearance, StageDecision, StageState } from '@/engine/stage/types';
 import { observe, priorPosterior, type Posterior } from '@/engine/tolerance/posterior';
@@ -101,6 +106,8 @@ export interface Session {
   readonly redFlag: { readonly ids: readonly string[]; readonly instruction: string } | null;
   readonly plan: DayPlan | null;
   readonly attribution: Attribution | null;
+  /** The standing pattern across every check-in, not just the most recent day. */
+  readonly sensitivity: SensitivityProfile;
   readonly underExposure: readonly UnderExposure[];
   readonly escalations: readonly string[];
   /** Accommodations a recipient has reported they cannot provide. */
@@ -273,6 +280,7 @@ export function buildSession(
       : null,
     plan,
     attribution,
+    sensitivity: sensitivityProfile(posterior),
     underExposure: tolerances
       ? detectUnderExposure(
           ordered

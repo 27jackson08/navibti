@@ -177,6 +177,14 @@ export default async function TodayPage({ params }: PageProps<'/[patient]/today'
             </div>
           )}
 
+          {session.sensitivity.canDescribe && (
+            <section className="mt-8">
+              <Notice tone="neutral" label="What costs you most">
+                <p className="text-base leading-relaxed">{session.sensitivity.summary}</p>
+              </Notice>
+            </section>
+          )}
+
           {session.plan && (
             <section className="mt-10">
               <h2 className="border-t border-rule pt-5 text-xl">Today’s limits</h2>
