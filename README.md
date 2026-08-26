@@ -134,6 +134,13 @@ and `/how-it-works` says so rather than leaving the gap implied.
 - **Provenance on every number.** Values from the literature carry a verbatim
   quote; our own engineering choices carry a rationale. The test suite enforces
   the distinction.
+- **The share surface is treated as the attack surface.** Tokens are 192 bits
+  from a CSPRNG, compared in constant time, and expired, revoked and unknown all
+  return the same 404. Pages are served under a per-request nonce CSP with
+  `frame-ancestors 'none'`, so a share link cannot be framed and clickjacked
+  into flagging an accommodation — that click lowers a real patient's limits.
+  Share URLs are served `no-referrer`, because the token in the path *is* the
+  credential.
 
 ## Accessibility
 

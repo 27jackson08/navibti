@@ -233,6 +233,16 @@ implicit.
 photophobia mode emitting ~38% less light than the default while holding 11:1
 contrast.
 
+**We treated the share link as the attack surface, not a feature.** A packet is
+only useful once it reaches someone with no account, which makes the URL the
+entire access control. So tokens are 192 bits from a CSPRNG and compared in
+constant time; expired, revoked and never-existed are one indistinguishable 404;
+raw symptom scores are refused for a school link whatever the patient ticks; and
+every page is served under a per-request nonce CSP with `frame-ancestors 'none'`
+so a portal cannot embed a packet in an iframe and trick a recipient into
+clicking "we cannot provide this" — which lowers a real patient's limits. Share
+URLs are sent `no-referrer`, because a token in a path is a credential.
+
 ## What we learned
 
 The lesson that kept recurring: **a light day producing no symptoms is not good

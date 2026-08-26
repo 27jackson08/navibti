@@ -55,19 +55,17 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
           includeRawSymptoms={link.includesRawSymptoms}
         />
 
-        {(
-          <div className="mt-10">
-            <ClinicianIntake
-              token={token}
-              patientName={patient.displayName}
-              currentSportStep={stage.stage.step}
-              clearedUpTo={patient.clearance?.coversUpToStep ?? null}
-              clearedBy={patient.clearance?.recordedBy ?? null}
-              currentCaps={patient.clinicianCaps ?? {}}
-              showClearance={patient.protocol === 'return-to-sport'}
-            />
-          </div>
-        )}
+        <div className="mt-10">
+          <ClinicianIntake
+            token={token}
+            patientName={patient.displayName}
+            currentSportStep={stage.stage.step}
+            clearedUpTo={patient.clearance?.coversUpToStep ?? null}
+            clearedBy={patient.clearance?.recordedBy ?? null}
+            currentCaps={patient.clinicianCaps ?? {}}
+            showClearance={patient.protocol === 'return-to-sport'}
+          />
+        </div>
 
         <div className="mx-auto mt-8 max-w-[68ch] print:hidden">
           <PrintButton label="Print or save this summary" />

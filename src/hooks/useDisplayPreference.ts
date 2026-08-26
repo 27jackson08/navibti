@@ -66,5 +66,9 @@ try {
   if (s) document.documentElement.setAttribute('data-surface', s);
   var t = localStorage.getItem('${TEXT_KEY}');
   if (t && t !== 'default') document.documentElement.setAttribute('data-text', t);
-} catch (e) {}
+} catch (e) {
+  // localStorage throws outright when cookies are blocked or the page is
+  // partitioned. Falling through to the default surface is the correct
+  // outcome, and there is nowhere to report to this early anyway.
+}
 `.trim();
