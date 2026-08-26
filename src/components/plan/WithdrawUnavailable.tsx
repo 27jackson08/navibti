@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { withdrawUnavailable } from '@/app/[patient]/today/actions';
+import { useAnnounce } from '@/components/ui/Announcer';
 
 type Props = {
   patientId: string;
@@ -21,6 +22,7 @@ type Props = {
  * it; the room really was unavailable. What changed is the room.
  */
 export function WithdrawUnavailable({ patientId, accommodationId, label }: Props) {
+  const announce = useAnnounce();
   const [pending, start] = useTransition();
   const [failed, setFailed] = useState(false);
 
@@ -35,6 +37,7 @@ export function WithdrawUnavailable({ patientId, accommodationId, label }: Props
             try {
               setFailed(false);
               await withdrawUnavailable({ patientId, accommodationId });
+              announce(`Restored: ${label}. Today's limits have gone back up.`);
             } catch {
               setFailed(true);
             }

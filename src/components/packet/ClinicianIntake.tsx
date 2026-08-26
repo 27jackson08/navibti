@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { PROTOCOLS, stepOf } from '@/data/guidelines';
 import { LOAD_DOMAINS, LOAD_DOMAIN_LABELS, type LoadDomain } from '@/data/guidelines';
 import { recordCaps, recordClearance } from '@/app/s/[token]/clinician-actions';
+import { useAnnounce } from '@/components/ui/Announcer';
 
 type Props = {
   token: string;
@@ -72,6 +73,7 @@ export function ClinicianIntake({
   showClearance,
 }: Props) {
   const router = useRouter();
+  const announce = useAnnounce();
   const protocol = PROTOCOLS['return-to-sport'];
   const [name, setName] = useState('');
   const [step, setStep] = useState(Math.min(6, Math.max(4, currentSportStep + 1)));
@@ -149,6 +151,9 @@ export function ClinicianIntake({
             setError(null);
             try {
               await recordClearance({ token, recordedBy: name.trim(), coversUpToStep: step });
+              announce(
+                `Recorded: ${patientName} cleared up to step ${step}, attributed to ${name.trim()}.`,
+              );
               setName('');
               router.refresh();
             } catch {
@@ -238,6 +243,12 @@ export function ClinicianIntake({
             setError(null);
             try {
               await recordCaps({ token, caps: caps as Record<string, number> });
+              const set = Object.keys(caps).length;
+              announce(
+                set === 0
+                  ? `Limits cleared. ${patientName}'s plan is back to what the guideline allows.`
+                  : `Recorded ${set} hard limit${set === 1 ? '' : 's'} for ${patientName}.`,
+              );
               router.refresh();
             } catch {
               setError('Could not record those limits. This link may no longer be active.');

@@ -99,8 +99,8 @@ test('a revoked share link stops working immediately', async ({ page }, testInfo
 
   await page.goto('/maya/sharing');
   const sameRow = page.locator('li').filter({ hasText: label });
-  await sameRow.getByRole('button', { name: 'Revoke' }).click();
-  await sameRow.getByRole('button', { name: 'Confirm' }).click();
+  await sameRow.getByRole('button', { name: /^Revoke the link/ }).click();
+  await sameRow.getByRole('button', { name: /^Confirm revoking/ }).click();
   await expect(sameRow.getByText('no longer active')).toBeVisible();
 
   const response = await page.goto(href!);
@@ -181,13 +181,13 @@ test('a recipient can answer, and the plan changes', async ({ page }, testInfo) 
   // The manager opens the link and reports one adjustment as impossible.
   await page.goto(href!);
   await page.getByRole('button', { name: /Confirm we.{1,3}ve received this/ }).click();
-  await expect(page.getByText(/Receipt confirmed/)).toBeVisible();
+  await expect(page.locator('main').getByText(/Receipt confirmed/)).toBeVisible();
 
   const item = page.locator('li').filter({ hasText: 'No back-to-back meetings' });
   await item.getByRole('button', { name: /We can.{1,3}t do this/ }).click();
   await item.getByRole('button', { name: 'We do not have the staff to cover it' }).click();
 
-  await expect(page.getByText(/aren.{1,3}t possible/)).toBeVisible();
+  await expect(page.locator('main').getByText(/aren.{1,3}t possible/)).toBeVisible();
 
   // And the patient's plan has moved.
   await page.goto('/tom/today');
@@ -208,8 +208,8 @@ test('a recipient can answer, and the plan changes', async ({ page }, testInfo) 
   // here it is unreachable — and the report is still holding the plan down.
   await page.goto('/tom/sharing');
   const shareRow = page.locator('li').filter({ hasText: label });
-  await shareRow.getByRole('button', { name: 'Revoke' }).click();
-  await shareRow.getByRole('button', { name: 'Confirm' }).click();
+  await shareRow.getByRole('button', { name: /^Revoke the link/ }).click();
+  await shareRow.getByRole('button', { name: /^Confirm revoking/ }).click();
   await expect(shareRow.getByText('no longer active')).toBeVisible();
 
   const dead = await page.goto(href!);
@@ -478,4 +478,79 @@ test('a share URL never travels in a Referer header', async ({ page }) => {
   // The token in the path is the entire access control for that document.
   const response = await page.goto('/s/not-a-real-token');
   expect(response!.headers()['referrer-policy']).toBe('no-referrer');
+});
+
+test('a change made by a control is announced, and focus survives it', async ({ page }, testInfo) => {
+  // Both of these are invisible to axe, which scans a static snapshot. The
+  // whole packet re-renders on the server after a response, so the control the
+  // user just pressed stops existing — focus lands on <body> and a screen
+  // reader user is told nothing at all about what their click did.
+  //
+  // Lives with the journeys rather than the a11y suite because it mutates the
+  // shared store, and that suite runs three times over one server.
+  //
+  // Maya, not Daniel: the red-flag journey records a red flag against Daniel,
+  // and the store carries red flags forward on purpose, so from that point on
+  // he has no packet at all and there is nothing here to acknowledge. Not Tom
+  // either — the response-loop test owns him. Whatever this one flags, it
+  // unflags before it finishes.
+  const label = `announce check ${testInfo.project.name}`;
+
+  await page.goto('/act/maya');
+  await page.goto('/maya/sharing');
+  await page.getByRole('button', { name: 'Caregiver' }).click();
+  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
+  await page.getByRole('button', { name: 'Create link' }).click();
+
+  const status = page.locator('[role="status"]');
+  await expect(status, 'nothing announced the new link').toContainText(/link created/i);
+
+  const href = await page
+    .locator('li')
+    .filter({ hasText: label })
+    .getByRole('link')
+    .first()
+    .getAttribute('href');
+
+  await page.goto(href!);
+  await page.getByRole('button', { name: /Confirm we.{1,3}ve received this/ }).click();
+  await expect(status, 'nothing announced the receipt').toContainText(/receipt confirmed/i);
+
+  // Addressed by position, not by a filter on the control itself: that button
+  // replaces itself with the reason panel on click, so a locator defined as
+  // "the item that has one" stops matching the item it just acted on and
+  // quietly slides to the next accommodation.
+  const flagButtons = page.getByRole('button', { name: /^We can.{1,3}t do this/ });
+  const itemText = (await flagButtons.first().getAttribute('aria-label'))!.replace(
+    /^We can.{1,3}t do this: /,
+    '',
+  );
+
+  await flagButtons.first().click();
+  // Only one panel is ever open, so this is unambiguous at page scope.
+  await page.getByRole('button', { name: 'We do not have the staff to cover it' }).click();
+
+  await expect(status, 'nothing announced the report').toContainText(/reported as not possible/i);
+
+  // Not merely "not body": focus must be on the confirmation itself, which is
+  // the only thing still on the page describing what just happened.
+  const landed = await page.evaluate(() => document.activeElement?.getAttribute('role') ?? 'none');
+  expect(landed, 'focus fell off the page after the item re-rendered').toBe('status');
+
+  // And it clears when the user moves on, rather than sitting over the page
+  // for the rest of the session.
+  await page.locator('h1').first().click();
+  await expect(status).toBeHidden();
+
+  // No template placeholder survives to the page. Reading the library entry
+  // straight for this echo-back put "{{hours}}" in front of a recipient, in the
+  // one document the whole slot machinery exists to keep clean.
+  expect(await page.locator('body').innerText()).not.toContain('{{');
+
+  // Put Maya back, so the next test sees the plan this one found. Exactly one
+  // item is flagged, and its undo names the same filled text the flag did.
+  const undo = page.getByRole('button', { name: /^Actually, we can:/ });
+  await expect(undo).toHaveAttribute('aria-label', `Actually, we can: ${itemText}`);
+  await undo.click();
+  await expect(page.locator('main').getByText(/aren.{1,3}t possible/)).toBeHidden();
 });

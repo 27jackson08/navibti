@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { IBM_Plex_Mono, Newsreader, Public_Sans } from 'next/font/google';
+import { Announcer } from '@/components/ui/Announcer';
 import { SurfaceControls } from '@/components/ui/SurfaceControls';
 import { PREFERENCE_BOOTSTRAP } from '@/hooks/useDisplayPreference';
 import './globals.css';
@@ -42,8 +43,10 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: PREFERENCE_BOOTSTRAP }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <SurfaceControls />
-        {children}
+        <Announcer>
+          <SurfaceControls />
+          {children}
+        </Announcer>
       </body>
     </html>
   );

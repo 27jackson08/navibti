@@ -18,6 +18,7 @@ import { getCheckIns, getPatient } from '@/db/store';
 import { clinicianSummary } from '@/engine/packet/clinician';
 import { composePacket, diffPackets } from '@/engine/packet/compose';
 import { buildSession, isoDay, settingFor } from '@/engine/session';
+import { deriveSlots, fillSlots } from '@/engine/packet/slots';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,15 +103,30 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
       : null;
 
   // What this recipient has already told us, so they can see and undo it.
+  //
+  // Filled through deriveSlots like every other rendered line. Reading the
+  // library entry straight put the raw template on the page — a recipient who
+  // flagged "Phase hours back in: 2 hours per day" saw it echoed back as
+  // "Phase hours back in: {{hours}} per day", which is the exact thing
+  // fillSlots exists to keep out of a document that goes to a school.
+  const slots = session.plan ? deriveSlots(session.plan) : null;
   const flagged: FlaggedItem[] = responsesForLink(link.id)
     .filter((entry) => entry.accommodationId !== null && entry.reason !== null)
-    .map((entry) => ({
-      id: entry.accommodationId!,
-      reason: entry.reason!,
-      text:
-        ACCOMMODATION_LIBRARY.find((item) => item.id === entry.accommodationId)?.text ??
-        entry.accommodationId!,
-    }));
+    .map((entry) => {
+      const template = ACCOMMODATION_LIBRARY.find(
+        (item) => item.id === entry.accommodationId,
+      )?.text;
+      return {
+        id: entry.accommodationId!,
+        reason: entry.reason!,
+        text:
+          template === undefined
+            ? entry.accommodationId!
+            : slots
+              ? fillSlots(template, slots)
+              : template,
+      };
+    });
 
   const acknowledgedAt =
     acknowledgementsFor(patient.id).find((entry) => entry.linkId === link.id)?.at ?? null;

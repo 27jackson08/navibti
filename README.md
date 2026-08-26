@@ -167,7 +167,7 @@ npm install
 npm run dev          # http://localhost:3000
 
 npm run verify       # typecheck, lint, 861 unit tests
-npm run verify -- --full  # ...and 130 e2e (a11y on three engines)
+npm run verify -- --full  # ...and 131 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives
 npm run trace -- 3   # one patient's day-by-day engine trace

@@ -101,7 +101,11 @@ export function PacketView({ packet, diff, stageLine, respond }: Props) {
               <p className="mt-1.5 text-sm text-ink-soft">{item.rationale}</p>
               {respond && (
                 <div className="mt-2 print:hidden">
-                  <FlagControl token={respond.token} accommodationId={item.id} />
+                  <FlagControl
+                    token={respond.token}
+                    accommodationId={item.id}
+                    itemText={item.text}
+                  />
                 </div>
               )}
             </div>
@@ -121,7 +125,11 @@ export function PacketView({ packet, diff, stageLine, respond }: Props) {
                 <p className="line-through decoration-1">{item.text}</p>
                 <p className="mt-1 flex flex-wrap items-baseline gap-3 text-ink-soft">
                   <span>{FLAG_REASON_LABELS[item.reason]}</span>
-                  <UnflagButton token={respond.token} accommodationId={item.id} />
+                  <UnflagButton
+                    token={respond.token}
+                    accommodationId={item.id}
+                    itemText={item.text}
+                  />
                 </p>
               </li>
             ))}

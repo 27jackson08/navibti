@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { canShareRawSymptoms, type ShareRole } from '@/db/share';
+import { useAnnounce } from '@/components/ui/Announcer';
 import { createLink } from './actions';
 
 type Props = {
@@ -20,6 +21,7 @@ export function ShareForm({ patientId, patientName, roles }: Props) {
   const [expiresInDays, setExpiresInDays] = useState<(typeof EXPIRY_OPTIONS)[number]>(14);
   const [includesRawSymptoms, setIncludesRawSymptoms] = useState(false);
   const [busy, setBusy] = useState(false);
+  const announce = useAnnounce();
   const [error, setError] = useState<string | null>(null);
 
   const rawAllowed = canShareRawSymptoms(role);
@@ -39,6 +41,7 @@ export function ShareForm({ patientId, patientName, roles }: Props) {
             expiresInDays,
             label: label.trim() || `${role} link`,
           });
+          announce(`Link created for ${role}. Copy it from the list below.`);
           setLabel('');
           router.refresh();
         } catch {

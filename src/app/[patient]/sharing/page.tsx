@@ -65,7 +65,13 @@ export default async function SharingPage({ params }: PageProps<'/[patient]/shar
                         {link.includesRawSymptoms && ' · includes symptom scores'}
                       </p>
                     </div>
-                    {live && <RevokeButton patientId={patient.id} linkId={link.id} />}
+                    {live && (
+                      <RevokeButton
+                        patientId={patient.id}
+                        linkId={link.id}
+                        linkLabel={link.label}
+                      />
+                    )}
                   </div>
 
                   {live && (
