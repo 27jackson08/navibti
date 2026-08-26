@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { IBM_Plex_Mono, Newsreader, Public_Sans } from 'next/font/google';
 import { SurfaceControls } from '@/components/ui/SurfaceControls';
 import { PREFERENCE_BOOTSTRAP } from '@/hooks/useDisplayPreference';
@@ -25,7 +26,10 @@ export const metadata: Metadata = {
     'Turns a concussion patient’s daily tolerance into accommodations their school, workplace and family can actually act on.',
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  // Set per request by middleware.ts, which also names it in the CSP.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     <html
       lang="en"
@@ -35,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <head>
         {/* Applies the stored surface before first paint. Without this, a user
             who chose the dim surface gets one frame of the bright one. */}
-        <script dangerouslySetInnerHTML={{ __html: PREFERENCE_BOOTSTRAP }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: PREFERENCE_BOOTSTRAP }} />
       </head>
       <body className="min-h-full flex flex-col">
         <SurfaceControls />

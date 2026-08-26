@@ -437,3 +437,45 @@ test('a clinician can set a hard limit, and it overrides the plan', async ({ pag
     page.locator('article').filter({ hasText: 'Physical activity' }).getByText(/Set directly by a clinician/),
   ).toBeVisible();
 });
+
+test('the response carries a real content security policy', async ({ page }) => {
+  // Asserting the middleware file exists would prove nothing: 'strict-dynamic'
+  // breaks Next outright if the nonce is not propagated to its own hydration
+  // scripts, and the page would render blank while every unit test stayed
+  // green. So this reads the served headers and the served HTML.
+  const response = await page.goto('/maya/today');
+  const headers = response!.headers();
+
+  const csp = headers['content-security-policy'];
+  expect(csp, 'no CSP header').toBeTruthy();
+  expect(csp).toContain("frame-ancestors 'none'");
+  expect(csp).toContain("object-src 'none'");
+  expect(csp).not.toContain("'unsafe-inline'; script-src");
+  expect(csp, 'production must not allow eval').not.toContain("'unsafe-eval'");
+
+  expect(headers['x-content-type-options']).toBe('nosniff');
+  expect(headers['x-frame-options']).toBe('DENY');
+  expect(headers['strict-transport-security']).toContain('max-age=');
+
+  // The nonce in the policy has to be the one the document actually used, or
+  // the browser drops every script and the page is dead.
+  //
+  // Read from the raw body, not the DOM: browsers deliberately hide the nonce
+  // attribute from getAttribute and from selectors so that a CSS-based
+  // injection cannot read it back out. A `script[nonce="..."]` locator matches
+  // nothing even when the attribute was served.
+  const nonce = /'nonce-([a-zA-Z0-9]+)'/.exec(csp)?.[1];
+  expect(nonce, 'CSP names no nonce').toBeTruthy();
+  expect(await response!.text(), 'no script carries the nonce the CSP names').toContain(
+    `nonce="${nonce}"`,
+  );
+
+  // And the page is alive, which is the thing a broken policy would take away.
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+});
+
+test('a share URL never travels in a Referer header', async ({ page }) => {
+  // The token in the path is the entire access control for that document.
+  const response = await page.goto('/s/not-a-real-token');
+  expect(response!.headers()['referrer-policy']).toBe('no-referrer');
+});
