@@ -89,6 +89,30 @@ export function normalizeDose(domain: LoadDomain, dose: number): number {
   return dose / REFERENCE_DOSES[domain].reference;
 }
 
+/**
+ * The largest value a check-in may report for each domain.
+ *
+ * Not a clinical threshold — nothing here influences a dose. It is the boundary
+ * check that stops an impossible number from reaching the posterior, and it has
+ * to be per-domain because the domains are not in the same unit. A single
+ * 0–1440 bound reads as "minutes in a day" and is right for four of them; for
+ * sleep debt, measured in hours against a reference of 3, it permits 480 times
+ * the reference dose and would wreck the model with one request.
+ *
+ * The rule is one waking day: sixteen hours of any minute-measured load, and
+ * twelve hours of sleep debt, which is more than a full night's sleep lost.
+ * Every real value is far below these; they exist to reject the absurd.
+ */
+const WAKING_MINUTES = 16 * 60;
+
+export const MAX_REPORTABLE_DOSE: Record<LoadDomain, number> = {
+  cognitive: WAKING_MINUTES,
+  visualVestibular: WAKING_MINUTES,
+  physical: WAKING_MINUTES,
+  emotionalAutonomic: WAKING_MINUTES,
+  sleepFatigue: 12,
+};
+
 export function denormalizeDose(domain: LoadDomain, normalized: number): number {
   return normalized * REFERENCE_DOSES[domain].reference;
 }

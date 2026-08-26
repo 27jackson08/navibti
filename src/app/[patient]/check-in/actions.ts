@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { LOAD_DOMAINS, RED_FLAG_IDS } from '@/data/guidelines';
 import { saveCheckIn } from '@/db/store';
 import { isoDay, type CheckIn } from '@/engine/session';
+import { MAX_REPORTABLE_DOSE } from '@/engine/tolerance/units';
 
 /**
  * Validated at the boundary rather than trusted. A check-in is the only input
@@ -20,7 +21,10 @@ const checkInSchema = z.object({
   sleepDebtHours: z.number().min(0).max(12),
   // Validated as a loose map and then narrowed to known domains below, so an
   // unexpected key is dropped rather than becoming a feature the model fits.
-  doses: z.record(z.string(), z.number().min(0).max(1440)),
+  // The ceiling is per-domain because the domains are not in the same unit: a
+  // flat 1440 is "minutes in a day" and is wrong for sleep debt, which is in
+  // hours against a reference of 3.
+  doses: z.record(z.string(), z.number().min(0).max(MAX_REPORTABLE_DOSE.cognitive)),
   redFlagIds: z.array(z.enum(RED_FLAG_IDS as [string, ...string[]])),
 });
 
@@ -34,8 +38,17 @@ export async function submitCheckIn(input: CheckInInput): Promise<void> {
 
   const doses: CheckIn['doses'] = { sleepFatigue: parsed.sleepDebtHours };
   for (const domain of LOAD_DOMAINS) {
+    // Sleep has its own field, with its own bound. Reading it from the generic
+    // map as well let a crafted request past that bound entirely — the map's
+    // ceiling is in minutes and sleep debt is in hours.
+    if (domain === 'sleepFatigue') continue;
+
     const dose = parsed.doses[domain];
-    if (dose !== undefined) doses[domain] = dose;
+    if (dose === undefined) continue;
+    if (dose > MAX_REPORTABLE_DOSE[domain]) {
+      throw new Error(`${domain} dose exceeds what a day can contain`);
+    }
+    doses[domain] = dose;
   }
 
   const checkIn: CheckIn = {
