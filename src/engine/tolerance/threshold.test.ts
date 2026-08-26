@@ -4,6 +4,7 @@ import { gaussian, seededRng } from '@/data/synthetic/random';
 import { exceedanceProbability, predict, priorPosterior, updateAll } from './posterior';
 import {
   detectUnderExposure,
+  minimumDay,
   planDay,
   rampCap,
   recommendDomain,
@@ -287,6 +288,85 @@ describe('the day as a whole', () => {
       Array.from({ length: 20 }, () => ({ doses: { cognitive: 5 }, deltaPoints: 7 })),
     );
     expect(planDay(input({ posterior: catastrophizing, step: 3 })).floorOverrodeModel).toBe(true);
+  });
+});
+
+describe('what the guideline floor means once a clinician has set a ceiling', () => {
+  /**
+   * Everything here is one defect: signals that describe the floor being the
+   * number on the page kept saying so after a clinician had capped below it.
+   * The floor was not being shown; their number was.
+   */
+  const catastrophizing = () =>
+    updateAll(
+      priorPosterior(),
+      Array.from({ length: 20 }, () => ({ doses: { cognitive: 5 }, deltaPoints: 7 })),
+    );
+
+  const capped = { cognitive: 0, visualVestibular: 0, physical: 0, emotionalAutonomic: 0 };
+
+  it('stops claiming the minimum is being shown when it is not', () => {
+    const posterior = catastrophizing();
+    expect(planDay(input({ posterior, step: 3 })).floorOverrodeModel).toBe(true);
+    expect(
+      planDay(input({ posterior, step: 3, clinicianCaps: capped })).floorOverrodeModel,
+    ).toBe(false);
+  });
+
+  it('counts the ceiling as part of the lightest available day', () => {
+    // The escalation exists because there is no smaller number the guidance
+    // supports. Once a clinician has named one there is — theirs — so the day
+    // being judged has to be that one, not the guideline's.
+    const plain = minimumDay(input({ step: 3 }));
+    const withCeiling = minimumDay(input({ step: 3, clinicianCaps: { physical: 0 } }));
+
+    expect(plain.physical).toBeGreaterThan(0);
+    expect(withCeiling.physical).toBe(0);
+    expect(withCeiling.cognitive).toBe(plain.cognitive);
+  });
+
+  it('does not raise a minimum to meet a ceiling set above it', () => {
+    const plain = minimumDay(input({ step: 3 }));
+    const roomy = minimumDay(input({ step: 3, clinicianCaps: { physical: 100_000 } }));
+    expect(roomy.physical).toBe(plain.physical);
+  });
+
+  it('still escalates when even a zeroed day is predicted to flare', () => {
+    // Sleep is the one load nobody can prescribe, so a ceiling on everything
+    // else does not make this question go away — and it should not.
+    expect(
+      planDay(input({ posterior: catastrophizing(), step: 3, clinicianCaps: capped }))
+        .needsClinicianReview,
+    ).toBe(true);
+  });
+
+  it('still lets the floor speak where the clinician set no ceiling', () => {
+    const posterior = catastrophizing();
+    const plan = planDay(input({ posterior, step: 3, clinicianCaps: { cognitive: 0 } }));
+    const physical = plan.recommendations.find((r) => r.domain === 'physical');
+
+    expect(physical?.binding).toBe('floor');
+    expect(physical?.dose).toBeGreaterThan(0);
+    expect(plan.floorOverrodeModel).toBe(true);
+  });
+
+  it('names the clinician as the binding constraint, not the floor', () => {
+    const plan = planDay(
+      input({ posterior: catastrophizing(), step: 3, clinicianCaps: { physical: 0 } }),
+    );
+    const physical = plan.recommendations.find((r) => r.domain === 'physical');
+
+    expect(physical?.binding).toBe('clinician');
+    expect(physical?.dose).toBe(0);
+  });
+
+  it('leaves a ceiling above the plan making no difference', () => {
+    const posterior = settledPosterior();
+    const plain = planDay(input({ posterior, step: 3 }));
+    const roomy = planDay(input({ posterior, step: 3, clinicianCaps: { cognitive: 100_000 } }));
+
+    expect(roomy.doses).toEqual(plain.doses);
+    expect(roomy.needsClinicianReview).toBe(plain.needsClinicianReview);
   });
 });
 

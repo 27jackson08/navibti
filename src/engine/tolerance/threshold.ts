@@ -284,10 +284,15 @@ export function recommendDomain(input: PlanInput, domain: LoadDomain): DomainRec
     isProvisional: !isPersonalized(input.posterior),
     stageCapReadingOf: stage.readingOf,
     solvedContext: { ...input.context, [domain]: 0 },
-    belowModelTolerance: belowFloor && floor.floor > model,
+    // Both of these describe the guideline floor being the number on the page.
+    // When a clinician has capped below it, it is not — their number is — and
+    // reporting otherwise puts a false statement into the clinician's own
+    // document: "the minimum is being shown instead", to the person who decided
+    // it would not be.
+    belowModelTolerance: belowFloor && floor.floor > model && !clinicianBound,
     floorReadingOf: floor.readingOf,
     environmentFactor,
-    environmentConflict: belowFloor && environmentFactor < 1,
+    environmentConflict: belowFloor && environmentFactor < 1 && !clinicianBound,
   };
 }
 
@@ -328,18 +333,23 @@ const NOT_ALLOCATED: readonly LoadDomain[] = ['sleepFatigue'];
  * does leave less room for meetings, and the plan should say so.
  */
 /**
- * A day built entirely from guideline minimums, with sleep left as it actually
- * is because no plan can prescribe it.
+ * The lightest day this patient could be given: guideline minimums, lowered
+ * further by any clinician ceiling, with sleep left as it actually is because
+ * no plan can prescribe it.
  */
 export function minimumDay(input: PlanInput): Partial<Record<LoadDomain, number>> {
   return Object.fromEntries(
     LOAD_DOMAINS.map((domain) => {
       if (domain === 'sleepFatigue') return [domain, input.context[domain] ?? 0];
       const ladder = ladderFor(input, domain);
-      return [
-        domain,
-        denormalizeDose(domain, stageFloor(ladder.protocol, ladder.step, domain).floor),
-      ];
+      const floorDose = denormalizeDose(domain, stageFloor(ladder.protocol, ladder.step, domain).floor);
+
+      // A clinician's ceiling is part of what "minimum" means for this patient.
+      // Without it, the escalation that fires when even a minimal day looks
+      // risky is measuring a day heavier than the one being prescribed — and
+      // telling the patient to raise it with the clinician who already acted.
+      const cap = input.clinicianCaps?.[domain];
+      return [domain, cap === undefined ? floorDose : Math.min(floorDose, cap)];
     }),
   );
 }

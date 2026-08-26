@@ -261,7 +261,7 @@ entered by the person who set them, and a proper screen-reader pass.
 TypeScript · Next.js · Tailwind · Bayesian inference (conjugate NIG, closed-form)
 · Vitest · Playwright · axe-core · Drizzle
 
-845 unit tests and 128 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
+852 unit tests and 128 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
 
 ## What we are not claiming
 
