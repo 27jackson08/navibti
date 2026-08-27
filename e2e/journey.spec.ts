@@ -571,3 +571,36 @@ test('every clinical output says where it comes from', async ({ page }) => {
     await expect(listed.first()).toContainText(/\d{4}/);
   }
 });
+
+test('a packet prints as a letter, not as a screenshot of an app', async ({ page }) => {
+  // A school packet exists to be printed and filed. The print stylesheet said
+  // it stripped "the app furniture" and stripped only the palette — every
+  // printed letter carried the reading-comfort toolbar across the top.
+  await page.goto('/maya/packet/school');
+  await page.emulateMedia({ media: 'print' });
+
+  await expect(page.getByText('Reading comfort')).toBeHidden();
+  await expect(page.getByRole('button', { name: /^Print/ })).toBeHidden();
+  await expect(page.getByRole('link', { name: /Back to today/ })).toBeHidden();
+
+  // The document itself survives, including what makes it a document.
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Where this comes from' })).toBeVisible();
+
+  // Tinted panels go white on paper, so nothing depends on a colour a school
+  // printer will not reproduce. Resolved to rendered pixels rather than to the
+  // token string: the browser normalises #ffffff to #fff, and comparing the
+  // declared text would have failed on a correct page.
+  const painted = await page.evaluate(() => {
+    const probe = document.createElement('div');
+    document.body.append(probe);
+    const read = (tone: string) => {
+      probe.style.background = `var(--nv-${tone})`;
+      return getComputedStyle(probe).backgroundColor;
+    };
+    const values = ['caution-surface', 'critical-surface', 'steady-surface', 'ground'].map(read);
+    probe.remove();
+    return values;
+  });
+  for (const value of painted) expect(value).toBe('rgb(255, 255, 255)');
+});

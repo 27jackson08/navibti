@@ -33,7 +33,10 @@ export function SurfaceControls() {
   const textSize = useDisplayPreference(TEXT_KEY) ?? 'default';
 
   return (
-    <div className="border-b border-rule">
+    // Never on paper. The print block strips the palette to ink-on-white; this
+    // is the "app furniture" half of that same intent, which was described in
+    // the stylesheet comment and never actually implemented.
+    <div className="border-b border-rule print:hidden">
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-2">
         <span className="font-mono text-xs uppercase tracking-[0.14em] text-ink-faint">
           Reading comfort

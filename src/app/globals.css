@@ -73,12 +73,27 @@ h1, h2, h3, .display {
   :root {
     --nv-ground: #ffffff;
     --nv-surface: #ffffff;
+    --nv-surface-sunken: #ffffff;
     --nv-ink: #111111;
     --nv-ink-soft: #333333;
     --nv-ink-faint: #555555;
     --nv-rule: #cccccc;
     --nv-accent: #000000;
+
+    /* Every tinted surface, not just the caution one. A caregiver packet's
+       red-flag panel is bg-critical-surface, and leaving it tinted made the one
+       section that must stay legible on a fridge door the one that came out of
+       a mono printer as grey on grey. The border keeps the severity visible
+       without relying on fill. */
     --nv-caution-surface: #ffffff;
+    --nv-critical-surface: #ffffff;
+    --nv-steady-surface: #ffffff;
+
+    /* Severity borders stay black rather than tinted: colour is unreliable on
+       a school printer, and these already carry a text label beside them. */
+    --nv-critical: #000000;
+    --nv-caution: #000000;
+    --nv-steady: #000000;
   }
 
   body {
