@@ -161,10 +161,15 @@ first paint. Check-in is one question per screen with no typing.
 
 The check-in can read itself aloud, opt-in and never automatic. That is not a
 novelty feature: a check-in requiring a lit screen is one a photophobic person
-skips on exactly the days worth recording. Reading level is measured too —
-accommodation text averages grade 7, the check-in grade 3.4 — because a letter
-a school has to read twice gets filed unread, and the people that hurts most
-are the ones least able to advocate for themselves.
+skips on exactly the days worth recording.
+
+Reading level is enforced, not just measured. The check-in — the one surface
+used daily by someone with active symptoms — is held at grade 7 or below and
+currently averages 3.4; accommodation text is held at 14 and averages 7. A
+letter a school has to read twice gets filed unread, and the people that hurts
+most are the ones least able to advocate for themselves. Red-flag wording is
+exempt and deliberately so: it is verbatim CRT6, and paraphrasing a transcribed
+guideline to score better on a readability metric is the wrong trade.
 
 ## Running it
 
@@ -172,7 +177,7 @@ are the ones least able to advocate for themselves.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 895 unit tests
+npm run verify       # typecheck, lint, 937 unit tests
 npm run verify -- --full  # ...and 133 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives
