@@ -75,6 +75,57 @@ export const CAREGIVER_ACCOMMODATIONS: readonly Accommodation[] = [
     priority: 4,
   },
   {
+    id: 'care-daily-walk',
+    role: 'caregiver',
+    domain: 'physical',
+    text:
+      'Get out for a short walk most days, at a pace that lets you hold a conversation. Stop if ' +
+      'symptoms climb more than slightly, and go again tomorrow rather than pushing today.',
+    rationale:
+      'Light aerobic activity below the symptom threshold is part of the treatment now, not a ' +
+      'reward for having recovered. A walk is the easiest version of it to actually do.',
+    citation: 'amsterdam-2023',
+    protocol: 'return-to-learn',
+    minStep: 1,
+    maxStep: 4,
+    bands: ['very-low', 'low', 'moderate', 'near-full'],
+    priority: 2,
+  },
+  {
+    id: 'care-quiet-home',
+    role: 'caregiver',
+    domain: 'visualVestibular',
+    text:
+      'Keep the household quieter and dimmer than usual for now — lamps rather than overhead ' +
+      'lights, television off unless someone is actually watching it.',
+    rationale:
+      'Home is the one environment nobody else can adjust. Background screens and light are load ' +
+      'even when they are not being attended to.',
+    citation: 'pedsconcussion-2023',
+    protocol: 'return-to-learn',
+    minStep: 1,
+    maxStep: 3,
+    bands: ['very-low', 'low', 'moderate'],
+    priority: 3,
+  },
+  {
+    id: 'care-busy-places',
+    role: 'caregiver',
+    domain: 'visualVestibular',
+    text:
+      'Leave the supermarket, the shopping centre and the car journeys that can wait until later ' +
+      'in recovery. If one is unavoidable, go at the quietest hour and keep it short.',
+    rationale:
+      'Busy visual environments and passive motion draw on the same systems as screen time, and ' +
+      'an hour in a supermarket can cost more than an hour of homework.',
+    citation: 'lumba-brown-2020',
+    protocol: 'return-to-learn',
+    minStep: 1,
+    maxStep: 2,
+    bands: ['very-low', 'low'],
+    priority: 4,
+  },
+  {
     id: 'care-protect-sleep',
     role: 'caregiver',
     domain: 'sleepFatigue',

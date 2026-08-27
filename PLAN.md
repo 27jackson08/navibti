@@ -5,7 +5,7 @@ tolerance into role-specific, shareable accommodations for schools, employers,
 caregivers, and clinicians.
 
 Hackathon: Hack for Humanity Summer '26, Concussion track (Concussion Alliance +
-Synapse). **Submissions close Sept 4, 2026 — 11 days from Aug 24, not 2 weeks.**
+Synapse). **Submissions close Sept 4, 2026.** Target: submit Sept 2.
 
 ---
 
