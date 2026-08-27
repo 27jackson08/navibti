@@ -45,8 +45,54 @@ export const patients = pgTable('patients', {
   /** Drives which escalation window applies. Not used for anything else. */
   isMinor: boolean('is_minor').notNull().default(false),
   injuryDate: date('injury_date').notNull(),
+  /** Which ladder this patient is on. Everyone has return-to-learn; only some
+      also have return-to-sport, and only that one has a clearance gate. */
+  protocol: protocolEnum('protocol').notNull().default('return-to-learn'),
+  /** Which packets this patient's situation calls for. Never 'clinician' — a
+      clinician summary is generated for anyone, not requested per patient. */
+  roles: roleEnum('roles').array().notNull().default(['school']),
+  /**
+   * A precondition on Return-to-Sport step 4, and separate from clearance
+   * because it is not a medical decision — it is an observed fact about whether
+   * the patient is managing full days.
+   */
+  fullReturnToSchool: boolean('full_return_to_school').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * What a clinician has decided, and who they said they were.
+ *
+ * Append-only rather than columns on `patients`, because the point of this
+ * table is the record: NaviTBI issues nothing, it stores that a named person
+ * decided something on a date. Overwriting a row would lose exactly the part
+ * that makes it a clinical record rather than a setting. The current decision
+ * is the latest row.
+ */
+export const clinicianDecisions = pgTable(
+  'clinician_decisions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    patientId: uuid('patient_id')
+      .notNull()
+      .references(() => patients.id, { onDelete: 'cascade' }),
+    /** The share link it arrived on, so a decision can be traced to its route. */
+    shareLinkId: uuid('share_link_id').references(() => shareLinks.id, {
+      onDelete: 'set null',
+    }),
+    /** Self-attested. There is no registry check, and the UI says so. */
+    recordedBy: text('recorded_by'),
+    /** Null when the decision set only ceilings and cleared nothing. */
+    clearsUpToStep: integer('clears_up_to_step'),
+    /**
+     * Hard ceilings per domain, in each domain's natural unit. Keyed by the
+     * same load_domain enum the model uses; absent keys mean no ceiling.
+     */
+    caps: jsonb('caps').$type<Partial<Record<string, number>>>(),
+    recordedAt: timestamp('recorded_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('clinician_decisions_patient').on(table.patientId, table.recordedAt)],
+);
 
 /**
  * One row per day. `deltaPoints` and `deltaDurationMinutes` are the two fields
@@ -207,4 +253,38 @@ export const accessLog = pgTable(
     accessedAt: timestamp('accessed_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index('access_log_link').on(table.shareLinkId, table.accessedAt)],
+);
+
+/**
+ * What the people receiving a packet sent back.
+ *
+ * A row with a null accommodation is an acknowledgement of the whole document;
+ * a row with one is a report that this specific adjustment cannot be provided.
+ * The unique index is the rule that a recipient has one standing answer per
+ * accommodation rather than a stack of opinions — changing their mind replaces
+ * the row.
+ *
+ * `reason` matters as much as the fact: "already in place" is not an unmet
+ * need and must not lower the plan, while every other reason does.
+ */
+export const recipientResponses = pgTable(
+  'recipient_responses',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    patientId: uuid('patient_id')
+      .notNull()
+      .references(() => patients.id, { onDelete: 'cascade' }),
+    shareLinkId: uuid('share_link_id')
+      .notNull()
+      .references(() => shareLinks.id, { onDelete: 'cascade' }),
+    role: roleEnum('role').notNull(),
+    /** Null for an acknowledgement of the packet as a whole. */
+    accommodationId: text('accommodation_id'),
+    reason: text('reason'),
+    respondedAt: timestamp('responded_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index('recipient_responses_patient').on(table.patientId, table.respondedAt),
+    uniqueIndex('recipient_responses_one_per_item').on(table.shareLinkId, table.accommodationId),
+  ],
 );

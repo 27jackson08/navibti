@@ -5,10 +5,17 @@
  * harness uses, so the demo personas behave like the cohort we measured rather
  * than like hand-picked happy paths.
  *
- * The Drizzle schema in ./schema.ts is the real target and the shapes here match
- * it. Swapping this for Postgres means replacing the four functions at the
- * bottom of this file; nothing above the storage boundary knows the difference,
- * because session state is replayed from the check-in log rather than stored.
+ * The Drizzle schema in ./schema.ts is the real target, and `schema.test.ts`
+ * keeps the two in step — that claim used to be a comment, and the comment went
+ * stale: the schema had no home for a patient's protocol, roles, clinician
+ * ceilings or clearance, and no table at all for the recipient responses that
+ * make this a coordinator rather than a generator. Nothing failed, because
+ * nothing runs the schema.
+ *
+ * Swapping this for Postgres means replacing the accessors at the bottom of
+ * this file and the equivalents in ./share.ts and ./responses.ts. Nothing above
+ * the storage boundary knows the difference, because session state is replayed
+ * from the check-in log rather than stored.
  */
 
 import { makePatient } from '@/data/synthetic/patient';
