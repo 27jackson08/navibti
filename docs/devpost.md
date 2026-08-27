@@ -134,7 +134,7 @@ rather than of starting beliefs we picked ourselves.
 | Estimates that exceeded true tolerance | **0.0%** |
 | Red-flag halt recall | **100%** |
 | Flare attribution, top-1 accuracy | **98.3%** |
-| Accessibility violations across 72 axe scans | **0** |
+| Accessibility violations across 81 axe scans | **0** |
 
 Each day is simulated twice — once at the dose we recommended, once at the dose
 the patient took. The model learns from what they did; safety is measured
@@ -278,7 +278,7 @@ entered by the person who set them, and a proper screen-reader pass.
 TypeScript · Next.js · Tailwind · Bayesian inference (conjugate NIG, closed-form)
 · Vitest · Playwright · axe-core · Drizzle
 
-986 unit tests and 133 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
+986 unit tests and 143 end-to-end tests, with the accessibility suite running on Chromium, Firefox and WebKit.
 
 ## What we are not claiming
 

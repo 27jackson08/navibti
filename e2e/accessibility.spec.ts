@@ -19,6 +19,11 @@ const PAGES = [
   // Amara, not Maya: no mutating test touches her, so this scan sees a page
   // that does not depend on what else has run.
   { name: 'sharing', path: '/amara/sharing' },
+  // A dead share link is a designed path, not an edge case — links expire on a
+  // date the patient sets — so the page a recipient lands on is scanned like
+  // any other. Any token works here: unknown, expired and revoked are
+  // deliberately indistinguishable.
+  { name: 'dead share link', path: '/s/not-a-real-token' },
 ] as const;
 
 const SURFACES = ['calm', 'dim', 'night'] as const;

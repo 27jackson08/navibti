@@ -1,4 +1,17 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+/**
+ * The audience picker on the sharing form.
+ *
+ * Scoped to its fieldset rather than addressed at page level. Playwright matches
+ * an accessible name by substring, so once a link exists whose default label is
+ * "school link", a bare `getByRole('button', { name: 'School' })` also matches
+ * "Revoke the link: school link" — an ambiguity that appears only after another
+ * test has created a link, which is the worst kind to debug.
+ */
+function audience(page: Page, role: 'School' | 'Employer' | 'Caregiver' | 'Clinician') {
+  return page.getByRole('group', { name: 'Who is this for' }).getByRole('button', { name: role });
+}
 
 /**
  * The critical flows. Two of these exist because getting them wrong is the
@@ -84,7 +97,7 @@ test('a revoked share link stops working immediately', async ({ page }, testInfo
 
   await page.goto('/act/maya');
   await page.goto('/maya/sharing');
-  await page.getByRole('button', { name: 'School' }).click();
+  await audience(page, 'School').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
   await page.getByRole('button', { name: 'Create link' }).click();
 
@@ -109,7 +122,7 @@ test('a revoked share link stops working immediately', async ({ page }, testInfo
 
 test('a school link never carries raw symptom scores', async ({ page }) => {
   await page.goto('/maya/sharing');
-  await page.getByRole('button', { name: 'School' }).click();
+  await audience(page, 'School').click();
 
   const checkbox = page.getByRole('checkbox');
   await expect(checkbox).toBeDisabled();
@@ -129,7 +142,7 @@ test('a session cannot change a patient it is not acting as', async ({ page }, t
   // store, and they are creating links for Daniel at the same moment.
   const label = `cross-patient attempt ${testInfo.project.name}`;
 
-  await page.getByRole('button', { name: 'Employer' }).click();
+  await audience(page, 'Employer').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
   await page.getByRole('button', { name: 'Create link' }).click();
 
@@ -146,7 +159,7 @@ test('acting as the right patient still works', async ({ page }, testInfo) => {
   await page.goto('/daniel/sharing');
 
   const label = `same-patient control ${testInfo.project.name}`;
-  await page.getByRole('button', { name: 'Employer' }).click();
+  await audience(page, 'Employer').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
   await page.getByRole('button', { name: 'Create link' }).click();
 
@@ -161,7 +174,7 @@ test('a recipient can answer, and the plan changes', async ({ page }, testInfo) 
 
   await page.goto('/act/tom');
   await page.goto('/tom/sharing');
-  await page.getByRole('button', { name: 'Employer' }).click();
+  await audience(page, 'Employer').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
   await page.getByRole('button', { name: 'Create link' }).click();
 
@@ -240,7 +253,7 @@ test('a recipient cannot flag an item from someone else’s packet', async ({ pa
 
   await page.goto('/act/maya');
   await page.goto('/maya/sharing');
-  await page.getByRole('button', { name: 'Caregiver' }).click();
+  await audience(page, 'Caregiver').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
   await page.getByRole('button', { name: 'Create link' }).click();
 
@@ -263,7 +276,7 @@ test('only a clinician link can record clearance', async ({ page }, testInfo) =>
   // An employer link is not a route to unlocking contact sport.
   await page.goto('/act/maya');
   await page.goto('/maya/sharing');
-  await page.getByRole('button', { name: 'School' }).click();
+  await audience(page, 'School').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(`school link ${suffix}`);
   await page.getByRole('button', { name: 'Create link' }).click();
 
@@ -279,7 +292,7 @@ test('only a clinician link can record clearance', async ({ page }, testInfo) =>
 
   // A clinician link is.
   await page.goto('/maya/sharing');
-  await page.getByRole('button', { name: 'Clinician' }).click();
+  await audience(page, 'Clinician').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(`clinic link ${suffix}`);
   await page.getByRole('button', { name: 'Create link' }).click();
 
@@ -402,7 +415,7 @@ test('a clinician can set a hard limit, and it overrides the plan', async ({ pag
   expect(Number(before)).toBeGreaterThan(10);
 
   await page.goto('/tom/sharing');
-  await page.getByRole('button', { name: 'Clinician' }).click();
+  await audience(page, 'Clinician').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
   await page.getByRole('button', { name: 'Create link' }).click();
 
@@ -474,6 +487,43 @@ test('the response carries a real content security policy', async ({ page }) => 
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
 
+test('a dead link explains itself without giving anything away', async ({ page }, testInfo) => {
+  // Links expire on a date the patient sets and can be revoked in one click, so
+  // this is a designed path, not an edge case — and it used to be Next's stock
+  // "404 | This page could not be found", in front of a school office.
+  const label = `dead link check ${testInfo.project.name}`;
+
+  await page.goto('/act/maya');
+  await page.goto('/maya/sharing');
+  await audience(page, 'School').click();
+  await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
+  await page.getByRole('button', { name: 'Create link' }).click();
+
+  const row = page.locator('li').filter({ hasText: label });
+  const href = (await row.getByRole('link').first().getAttribute('href'))!;
+
+  await row.getByRole('button', { name: /^Revoke the link/ }).click();
+  await row.getByRole('button', { name: /^Confirm revoking/ }).click();
+  await expect(row.getByText('no longer active')).toBeVisible();
+
+  const revoked = await page.goto(href);
+  expect(revoked?.status()).toBe(404);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(/link isn.{1,3}t active/i);
+
+  // The red-flag instruction survives every dead end. It is one of the things
+  // this product does not withhold, and a recipient who reached here may have
+  // come looking because they are worried about someone.
+  await expect(page.getByText(/urgent medical care/i)).toBeVisible();
+
+  const revokedBody = await page.locator('main').innerText();
+
+  // Revoked, expired and never-existed must be indistinguishable: resolveToken
+  // deliberately cannot tell them apart, and saying "this was revoked" would
+  // hand the holder of a dead token a fact about the patient.
+  await page.goto('/s/a-token-that-never-existed-at-all');
+  expect(await page.locator('main').innerText()).toBe(revokedBody);
+});
+
 test('a share URL never travels in a Referer header', async ({ page }) => {
   // The token in the path is the entire access control for that document.
   const response = await page.goto('/s/not-a-real-token');
@@ -498,7 +548,7 @@ test('a change made by a control is announced, and focus survives it', async ({ 
 
   await page.goto('/act/maya');
   await page.goto('/maya/sharing');
-  await page.getByRole('button', { name: 'Caregiver' }).click();
+  await audience(page, 'Caregiver').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
   await page.getByRole('button', { name: 'Create link' }).click();
 

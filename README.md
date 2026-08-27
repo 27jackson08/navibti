@@ -72,7 +72,7 @@ the conservative quantile rather than of starting beliefs we chose ourselves.
 | Estimates that exceeded true tolerance | **0.0%** |
 | Red-flag halt recall | **100%** |
 | Flare attribution, top-1 accuracy | **98.3%** |
-| Accessibility violations (72 axe scans) | **0** |
+| Accessibility violations (81 axe scans) | **0** |
 
 Each day is simulated twice — once at the dose NaviTBI recommended, once at the
 dose the patient took. The model learns from what they did; safety is measured
@@ -140,6 +140,12 @@ and `/how-it-works` says so rather than leaving the gap implied.
 - **Provenance on every number.** Values from the literature carry a verbatim
   quote; our own engineering choices carry a rationale. The test suite enforces
   the distinction.
+- **Dead ends still say the important thing.** A share link that has expired or
+  been revoked lands on a page that explains what happened and carries the
+  urgent-care instruction, rather than a stock 404 — and the wording is
+  identical for revoked, expired, mistyped and never-existed, because saying
+  which would hand the holder of a dead token a fact about the patient. The
+  error boundary does the same.
 - **The share surface is treated as the attack surface.** Tokens are 192 bits
   from a CSPRNG, compared in constant time, and expired, revoked and unknown all
   return the same 404. Pages are served under a per-request nonce CSP with
@@ -178,7 +184,7 @@ npm install
 npm run dev          # http://localhost:3000
 
 npm run verify       # typecheck, lint, 986 unit tests
-npm run verify -- --full  # ...and 133 e2e (a11y on three engines)
+npm run verify -- --full  # ...and 143 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives
 npm run trace -- 3   # one patient's day-by-day engine trace
