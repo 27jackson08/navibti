@@ -100,8 +100,24 @@ export interface DomainTrend {
   readonly domain: LoadDomain;
   readonly first: number;
   readonly latest: number;
+  /**
+   * The difference between the two figures *as displayed*, not between the
+   * underlying values.
+   *
+   * These are shown rounded to whole reference units, so deriving the change
+   * from the raw numbers lets the caption contradict the pair beside it: 30.4
+   * to 30.6 renders as "30 → 30" and captions it "up 0". The page has one
+   * source for both.
+   */
   readonly change: number;
   readonly improving: boolean;
+  /**
+   * Three states, not two. `improving` is `latest > first`, which makes an
+   * unchanged domain "not improving" and captioned it "down 0" — read as a
+   * decline, and coloured as one, when nothing had moved. A domain held at the
+   * guideline floor for the whole window does exactly that.
+   */
+  readonly direction: 'up' | 'down' | 'unchanged';
 }
 
 /**
@@ -123,7 +139,16 @@ export function domainTrends(history: readonly HistoryDay[]): DomainTrend[] {
     .map((domain) => {
       const from = first.recommended[domain] ?? 0;
       const to = latest.recommended[domain] ?? 0;
-      return { domain, first: from, latest: to, change: to - from, improving: to > from };
+      const change = Math.round(to) - Math.round(from);
+
+      return {
+        domain,
+        first: from,
+        latest: to,
+        change,
+        improving: change > 0,
+        direction: change > 0 ? 'up' : change < 0 ? 'down' : 'unchanged',
+      } as const;
     })
     .filter((trend) => trend.first > 0 || trend.latest > 0);
 }

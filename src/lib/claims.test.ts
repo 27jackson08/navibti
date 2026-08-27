@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -35,8 +35,44 @@ function axeScanCount(): number {
   return pageCount * surfaceCount * engineCount;
 }
 
+/**
+ * Every document that quotes the count, found rather than listed.
+ *
+ * The first version of this named three files by hand and missed a fourth —
+ * results/frontend-audit.md was still claiming 63 scans across 7 pages. A guard
+ * against stale numbers that relies on someone remembering to register each
+ * document has the same failure mode as the numbers it guards.
+ */
+function docsQuoting(pattern: RegExp): string[] {
+  const roots = ['README.md', 'AGENTS.md', 'PLAN.md', 'docs', 'results'];
+  const found: string[] = [];
+
+  const visit = (relative: string) => {
+    const url = new URL(`../../${relative}`, import.meta.url);
+    const stats = statSync(url, { throwIfNoEntry: false });
+    if (!stats) return;
+
+    if (stats.isDirectory()) {
+      for (const entry of readdirSync(url)) visit(`${relative}/${entry}`);
+      return;
+    }
+    if (!/\.(md|html)$/.test(relative)) return;
+    if (pattern.test(readFileSync(url, 'utf8'))) found.push(relative);
+  };
+
+  roots.forEach(visit);
+  return found;
+}
+
 describe('numbers quoted in the write-ups', () => {
-  const DOCS = ['README.md', 'docs/devpost.md', 'docs/navitbi-brief.html'];
+  const DOCS = docsQuoting(/axe scans/);
+
+  it('finds every document that quotes the count', () => {
+    // Four of them, at the last count. Hand-listing them is how one gets missed.
+    expect(DOCS.length).toBeGreaterThanOrEqual(4);
+    expect(DOCS).toContain('README.md');
+    expect(DOCS).toContain('results/frontend-audit.md');
+  });
 
   it('agrees with itself about how many axe scans there are', () => {
     const expected = axeScanCount();

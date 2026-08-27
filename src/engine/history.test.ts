@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCheckIns, getPatient, seededOn } from '@/db/store';
-import { domainTrends, replayHistory } from './history';
-import type { CheckIn } from './session';
+import { domainTrends, replayHistory, type DomainTrend, type HistoryDay } from './history';
+import type { CheckIn, DoseMap } from './session';
 
 const tom = getPatient('tom')!;
 const history = replayHistory(tom, getCheckIns('tom'));
@@ -47,7 +47,10 @@ describe('trends', () => {
     const trends = domainTrends(history);
     expect(trends.length).toBeGreaterThan(0);
     for (const trend of trends) {
-      expect(trend.change).toBeCloseTo(trend.latest - trend.first, 6);
+      // Rounded, not raw: `change` is the difference between the two figures as
+      // the page prints them, so a caption cannot contradict the pair beside it.
+      expect(trend.change).toBe(Math.round(trend.latest) - Math.round(trend.first));
+      expect(trend.change).toBeCloseTo(trend.latest - trend.first, 0);
     }
   });
 
@@ -80,5 +83,88 @@ describe('a red-flag day', () => {
     const flagged = replayed.at(-1)!;
     expect(flagged.redFlagged).toBe(true);
     expect(flagged.exceeded).toBe(true);
+  });
+});
+
+describe('what the progress figures are captioned', () => {
+  /**
+   * The caption is generated from the same rounded numbers the page prints, so
+   * it cannot contradict the pair beside it. It used to be derived from the raw
+   * values, with only two states — which captioned an unchanged domain "down 0"
+   * and coloured it as a decline.
+   *
+   * None of the four demo patients happened to produce that, which is a fact
+   * about those seeds rather than about the code. These construct it.
+   */
+  function trendsFor(first: DoseMap, latest: DoseMap): DomainTrend[] {
+    const day = (recommended: DoseMap, index: number): HistoryDay => ({
+      day: `2026-01-0${index + 1}`,
+      dayIndex: index,
+      sportStep: 1,
+      learnStep: 2,
+      recommended,
+      actual: {},
+      deltaPoints: 0,
+      durationMinutes: 0,
+      exceeded: false,
+      redFlagged: false,
+      isProvisional: false,
+      adherence: null,
+    });
+    return domainTrends([day(first, 0), day(latest, 1)]);
+  }
+
+  const cognitiveIn = (trends: DomainTrend[]) =>
+    trends.find((trend) => trend.domain === 'cognitive')!;
+
+  it('calls an unchanged domain unchanged, not a decline', () => {
+    const trend = cognitiveIn(trendsFor({ cognitive: 60 }, { cognitive: 60 }));
+    expect(trend.direction).toBe('unchanged');
+    expect(trend.change).toBe(0);
+    expect(trend.improving).toBe(false);
+  });
+
+  it('does not report movement the printed figures do not show', () => {
+    // Both render as 30. A raw difference would caption this "up 0".
+    const trend = cognitiveIn(trendsFor({ cognitive: 30.2 }, { cognitive: 30.4 }));
+    expect(Math.round(trend.first)).toBe(Math.round(trend.latest));
+    expect(trend.direction).toBe('unchanged');
+  });
+
+  it('reports movement the printed figures do show', () => {
+    // 30.6 renders as 31, so there is a visible change to describe.
+    const trend = cognitiveIn(trendsFor({ cognitive: 29.6 }, { cognitive: 30.6 }));
+    expect(trend.direction).toBe('up');
+    expect(trend.change).toBe(1);
+  });
+
+  it.each([
+    [120, 60, 'down', -60],
+    [60, 120, 'up', 60],
+  ] as const)('captions %i to %i as %s', (from, to, direction, change) => {
+    const trend = cognitiveIn(trendsFor({ cognitive: from }, { cognitive: to }));
+    expect(trend.direction).toBe(direction);
+    expect(trend.change).toBe(change);
+  });
+
+  it('never captions a direction the two numbers contradict', () => {
+    // Not [0, 0]: a domain with nothing at either end is filtered out rather
+    // than reported as an unchanged trend, which is the right call — there is
+    // no progress to describe about something never recommended.
+    for (const [from, to] of [
+      [10, 10.4],
+      [10.6, 10.4],
+      [1, 100],
+      [100, 1],
+      [0, 45],
+    ] as const) {
+      const trend = cognitiveIn(trendsFor({ cognitive: from }, { cognitive: to }));
+      const shown = Math.round(trend.latest) - Math.round(trend.first);
+
+      expect(trend.change, `${from} -> ${to}`).toBe(shown);
+      expect(trend.direction, `${from} -> ${to}`).toBe(
+        shown > 0 ? 'up' : shown < 0 ? 'down' : 'unchanged',
+      );
+    }
   });
 });

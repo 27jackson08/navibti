@@ -69,16 +69,16 @@ export default async function HistoryPage({ params }: PageProps<'/[patient]/hist
                       may not be. */}
                   <span
                     className={`font-mono text-2xl tabular-nums ${
-                      trend.improving ? 'text-accent' : 'text-ink'
+                      trend.direction === 'up' ? 'text-accent' : 'text-ink'
                     }`}
                   >
                     {Math.round(trend.latest)}
                   </span>
                 </p>
                 <p className="mt-1 font-mono text-xs text-ink-faint">
-                  {trend.improving
-                    ? `up ${Math.round(trend.change)} since the estimates settled`
-                    : `down ${Math.abs(Math.round(trend.change))} since the estimates settled`}
+                  {trend.direction === 'unchanged'
+                    ? 'unchanged since the estimates settled'
+                    : `${trend.direction} ${Math.abs(trend.change)} since the estimates settled`}
                 </p>
               </li>
             ))}

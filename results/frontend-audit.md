@@ -9,11 +9,16 @@ server, because contrast, focus order and layout are properties of what ships.
 
 | | |
 |---|---|
-| Pages scanned | 7 |
+| Pages scanned | 9 |
 | Surfaces per page | 3 (calm, dim, night) |
 | Browsers | Chromium, Firefox, WebKit |
-| Scans | 63 |
+| Scans | 81 |
 | **Violations** | **0** |
+
+That is 81 axe scans in total — 9 pages, each on three surfaces, across three
+browser engines. `src/lib/claims.test.ts` derives that number from the spec and
+the Playwright config and checks it against every document that quotes it,
+including this one, because it was wrong in all four of them at once.
 
 Also asserted:
 

@@ -188,7 +188,7 @@ guideline to score better on a readability metric is the wrong trade.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 1,005 unit tests
+npm run verify       # typecheck, lint, 1,012 unit tests
 npm run verify -- --full  # ...and 143 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives
