@@ -137,9 +137,15 @@ and `/how-it-works` says so rather than leaving the gap implied.
 - **Refuses to guess.** Attribution declines to name a cause when there is too
   little data, when the day does not match the pattern, or when two loads cannot
   be told apart.
-- **Provenance on every number.** Values from the literature carry a verbatim
-  quote; our own engineering choices carry a rationale. The test suite enforces
-  the distinction.
+- **Provenance on every number, checked against its own source.** Values from
+  the literature carry a verbatim quote; our own engineering choices carry a
+  rationale. The tests enforce the distinction — and that the number actually
+  appears in the sentence it claims to come from, which a quote merely *existing*
+  does not prove. The damaging error in a transcription layer is a correct quote
+  beside the wrong number. Where a quote states the value in another unit
+  ("up to 1 hour" for 60 minutes, "more than one week" for 7 days) the
+  conversion is recorded and the test refuses a recorded conversion that is no
+  longer needed.
 - **Dead ends still say the important thing.** A share link that has expired or
   been revoked lands on a page that explains what happened and carries the
   urgent-care instruction, rather than a stock 404 — and the wording is
@@ -188,7 +194,7 @@ guideline to score better on a readability metric is the wrong trade.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 1,012 unit tests
+npm run verify       # typecheck, lint, 1,020 unit tests
 npm run verify -- --full  # ...and 143 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives

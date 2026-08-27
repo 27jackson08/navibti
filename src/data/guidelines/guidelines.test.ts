@@ -106,6 +106,71 @@ describe('provenance is honest', () => {
     },
   );
 
+  /**
+   * Constants whose quote states the value in a different unit.
+   *
+   * Each conversion is written out rather than waved at, because it is a step
+   * of judgement sitting between the published sentence and the number the
+   * engine uses — and "more than one week" in particular could be read as 7 or
+   * as 8. It is read as 7 here, and the comparison is strictly greater than, so
+   * the warning fires on day 8: more than a week, exactly as published.
+   */
+  const CONVERTED: Record<string, { readonly stated: string; readonly why: string }> = {
+    EXACERBATION_MINUTE_LIMIT: {
+      stated: '1 hour',
+      why: '60 minutes is one hour',
+    },
+    MAX_SCHOOL_ABSENCE_DAYS: {
+      stated: 'one week',
+      why: '7 days is one week; the comparison is > so the warning starts on day 8',
+    },
+  };
+
+  const NUMBER_WORDS: Record<number, string> = {
+    1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven',
+    8: 'eight', 9: 'nine', 10: 'ten', 24: 'twenty-four', 48: 'forty-eight',
+  };
+
+  it.each(
+    sourced.filter(([, v]) => v.provenance === 'guideline' && typeof v.value === 'number'),
+  )('%s appears in the sentence it claims to come from', (name, value) => {
+    // A quote that exists proves nothing on its own. The damaging error in a
+    // transcription layer is a correct quote beside the wrong number — a value
+    // edited without its source, or a source pasted under the wrong constant —
+    // and every check here passed while that was possible.
+    const quote = (value.quote ?? '').toLowerCase();
+    const word = NUMBER_WORDS[value.value];
+
+    if (quote.includes(String(value.value)) || (word !== undefined && quote.includes(word))) {
+      return;
+    }
+
+    const converted = CONVERTED[name];
+    expect(
+      converted,
+      `${name} = ${value.value} does not appear in its own quote, and no conversion is recorded`,
+    ).toBeDefined();
+    expect(quote, `${name}: quote does not say "${converted.stated}"`).toContain(
+      converted.stated.toLowerCase(),
+    );
+    expect(converted.why.length).toBeGreaterThan(10);
+  });
+
+  it('records no conversion for a constant that does not need one', () => {
+    // A stale entry here would let a genuine mismatch through under cover of an
+    // explanation that no longer applies.
+    for (const name of Object.keys(CONVERTED)) {
+      const entry = sourced.find(([key]) => key === name);
+      expect(entry, `${name} is recorded as converted but is not a sourced constant`).toBeDefined();
+
+      const quote = (entry![1].quote ?? '').toLowerCase();
+      expect(
+        quote.includes(String(entry![1].value)),
+        `${name} states its value directly; the conversion entry is stale`,
+      ).toBe(false);
+    }
+  });
+
   it.each(sourced.filter(([, v]) => v.provenance === 'product-default'))(
     '%s explains itself, because it is our choice and not the literature\'s',
     (_name, value) => {
