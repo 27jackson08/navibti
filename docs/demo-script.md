@@ -14,7 +14,7 @@ Then open http://localhost:3000, click **Calm**, and reload. Do not record in
 Night: the palette reads as a generic dark dashboard on video, and Calm makes the
 deliberate low-glare choice visible.
 
-**Two things that will bite you on camera.**
+**Three things that will bite you on camera.**
 
 The reading-comfort and check-in buttons are React-hydrated — give each page a
 beat after load before clicking, or the first click does nothing.
@@ -22,6 +22,12 @@ beat after load before clicking, or the first click does nothing.
 The demo store is in memory and accumulates. Restart the server for a clean run,
 and do a full rehearsal first: the flag in §6 changes Tom's plan permanently
 until you restart.
+
+Every action now raises a confirmation at the bottom of the window and puts
+keyboard focus on it — that is deliberate, for screen reader users, and it
+clears when you click anywhere else or move to another page. It sits over the
+bottom of the viewport while it is up, so dismiss it before a full-page scroll
+shot rather than scrolling with it on screen.
 
 ---
 
@@ -149,6 +155,12 @@ back-to-back meetings"* → back to `/tom/today`.
 >
 > The plan adapts to the room the patient is actually in.
 
+**Then point at the "This is available again" button under that notice.**
+
+> And it's reversible by the patient, not just by the school — because their
+> link expires in a fortnight and a school term doesn't. Otherwise a room that
+> was full in September is still holding the plan down in June.
+
 ---
 
 ## 2:20 – 2:35 · The clinician
@@ -206,6 +218,7 @@ back-to-back meetings"* → back to `/tom/today`.
 - [ ] School packet scrolled fully, incl. sources and disclaimer
 - [ ] Employer packet
 - [ ] **Sharing → open link → flag an item → plan changes** (rehearse this)
+- [ ] **"This is available again" on `/tom/today`** — the loop runs both ways
 - [ ] Clinician link: summary, record clearance
 - [ ] History page
 - [ ] Results table

@@ -1,6 +1,15 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 /**
  * Says out loud what a control just did.
@@ -27,19 +36,33 @@ export function useAnnounce(): (message: string) => void {
 }
 
 export function Announcer({ children }: { children: ReactNode }) {
-  const [message, setMessage] = useState('');
+  const pathname = usePathname();
   const region = useRef<HTMLParagraphElement>(null);
 
+  // The path is stored with the message rather than cleared by an effect on
+  // navigation. This component lives in the root layout, so a client-side
+  // navigation does not unmount it and a confirmation would otherwise follow
+  // the user to the next page — "Reported as not possible: …" still sitting
+  // over a page where nothing was reported. Which page it belongs to is a
+  // property of the message, so it is derived during render, not synchronised.
+  const [announced, setAnnounced] = useState({ text: '', path: pathname });
+  const message = announced.path === pathname ? announced.text : '';
+
+  const announce = useCallback(
+    (text: string) => setAnnounced({ text, path: pathname }),
+    [pathname],
+  );
+
   // Focus has to wait for the render that reveals the region. Calling focus()
-  // in the same tick as setMessage silently does nothing: the element is still
-  // `hidden` at that point, and focusing a hidden element is a no-op — so the
-  // fix reads as working while focus stays exactly where it fell.
+  // in the same tick as the state update silently does nothing: the element is
+  // still `hidden` at that point, and focusing a hidden element is a no-op — so
+  // the fix reads as working while focus stays exactly where it fell.
   useEffect(() => {
     if (message) region.current?.focus();
   }, [message]);
 
   return (
-    <AnnounceContext.Provider value={setMessage}>
+    <AnnounceContext.Provider value={announce}>
       {children}
       {/*
         Visible, not sr-only. Focusing something invisible leaves a sighted
@@ -52,7 +75,7 @@ export function Announcer({ children }: { children: ReactNode }) {
         tabIndex={-1}
         // Clears when the user moves on, so a confirmation does not sit over
         // the page for the rest of the session.
-        onBlur={() => setMessage('')}
+        onBlur={() => setAnnounced({ text: '', path: pathname })}
         className={`fixed bottom-4 left-1/2 z-50 max-w-[90vw] -translate-x-1/2 border border-accent bg-surface px-4 py-2 text-sm shadow-sm print:hidden ${
           message ? '' : 'hidden'
         }`}

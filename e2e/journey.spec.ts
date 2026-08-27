@@ -542,16 +542,34 @@ test('a change made by a control is announced, and focus survives it', async ({ 
   await page.locator('h1').first().click();
   await expect(status).toBeHidden();
 
+  // It also does not follow them to the next page. The region lives in the root
+  // layout, so a client-side navigation does not unmount it — "reported as not
+  // possible" would otherwise still be sitting over a page where nothing was.
+  await page.getByRole('button', { name: /^We can.{1,3}t do this/ }).first().click();
+  await page.getByRole('button', { name: 'The timetable cannot change this term' }).click();
+  await expect(status).toBeVisible();
+
+  await page.goto('/maya/today');
+  await expect(status).toBeHidden();
+  await page.goBack();
+
   // No template placeholder survives to the page. Reading the library entry
   // straight for this echo-back put "{{hours}}" in front of a recipient, in the
   // one document the whole slot machinery exists to keep clean.
   expect(await page.locator('body').innerText()).not.toContain('{{');
 
-  // Put Maya back, so the next test sees the plan this one found. Exactly one
-  // item is flagged, and its undo names the same filled text the flag did.
+  // Each undo names the item it restores, which is how they are told apart.
+  await expect(
+    page.getByRole('button', { name: `Actually, we can: ${itemText}` }),
+  ).toBeVisible();
+
+  // Put Maya back, so the next test sees the plan this one found. Two items
+  // were flagged by now, and the list shrinks under the loop as each is undone.
   const undo = page.getByRole('button', { name: /^Actually, we can:/ });
-  await expect(undo).toHaveAttribute('aria-label', `Actually, we can: ${itemText}`);
-  await undo.click();
+  for (let remaining = await undo.count(); remaining > 0; remaining--) {
+    await undo.first().click();
+    await expect(undo).toHaveCount(remaining - 1);
+  }
   await expect(page.locator('main').getByText(/aren.{1,3}t possible/)).toBeHidden();
 });
 
