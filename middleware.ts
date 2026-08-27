@@ -59,10 +59,19 @@ export function middleware(request: NextRequest) {
   // A share URL is a credential. Anywhere else the origin is enough for the
   // analytics nobody has asked for; on a share link even the origin is more
   // than a third party needs to know.
+  const isShareLink = request.nextUrl.pathname.startsWith('/s/');
+
   response.headers.set(
     'referrer-policy',
-    request.nextUrl.pathname.startsWith('/s/') ? 'no-referrer' : 'strict-origin-when-cross-origin',
+    isShareLink ? 'no-referrer' : 'strict-origin-when-cross-origin',
   );
+
+  // Belt and braces with the noindex in the route's metadata: the meta tag only
+  // reaches a crawler that renders HTML, and the header reaches every fetch.
+  // Neither is a security control — robots directives are advisory, which is why
+  // the link also expires and can be revoked — but a recipient pasting a link
+  // into a public ticket is an accident worth closing.
+  if (isShareLink) response.headers.set('x-robots-tag', 'noindex, nofollow, noarchive');
 
   return response;
 }

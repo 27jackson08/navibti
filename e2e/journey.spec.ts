@@ -524,10 +524,24 @@ test('a dead link explains itself without giving anything away', async ({ page }
   expect(await page.locator('main').innerText()).toBe(revokedBody);
 });
 
-test('a share URL never travels in a Referer header', async ({ page }) => {
+test('a share URL never leaks through a header or a search index', async ({ page }) => {
   // The token in the path is the entire access control for that document.
-  const response = await page.goto('/s/not-a-real-token');
-  expect(response!.headers()['referrer-policy']).toBe('no-referrer');
+  const shared = await page.goto('/s/not-a-real-token');
+  expect(shared!.headers()['referrer-policy']).toBe('no-referrer');
+
+  // Not a security control — robots directives are advisory, which is why the
+  // link also expires and can be revoked. It closes the accident: a recipient
+  // pasting a live link into a public ticket or forum.
+  expect(shared!.headers()['x-robots-tag']).toContain('noindex');
+
+  // And the tab says what the document is, never who it is about: a title
+  // reaches browser history, screen shares and managed-browser sync.
+  await page.goto('/maya/packet/school');
+  expect(await page.title()).toBe('School accommodations — NaviTBI');
+
+  const ordinary = await page.goto('/maya/today');
+  expect(ordinary!.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');
+  expect(ordinary!.headers()['x-robots-tag']).toBeUndefined();
 });
 
 test('a change made by a control is announced, and focus survives it', async ({ page }, testInfo) => {

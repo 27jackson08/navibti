@@ -10,6 +10,8 @@ import { buildSession, isoDay, settingFor } from '@/engine/session';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = { title: 'Progress — NaviTBI' };
+
 export default async function HistoryPage({ params }: PageProps<'/[patient]/history'>) {
   const { patient: patientId } = await params;
   const patient = getPatient(patientId);

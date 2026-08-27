@@ -22,6 +22,19 @@ const PACKET_BLURB: Record<string, string> = {
   caregiver: 'What helps, what does not, and the red flags to watch for.',
 };
 
+
+/**
+ * Document type, never the person.
+ *
+ * A tab title is the least private string in a browser: it lands in history, in
+ * screen shares, in a screenshot of a taskbar, and in whatever a school's
+ * managed browser syncs upstream. So these say what the document is and not who
+ * it is about — which still tells an administrator with twelve tabs open which
+ * one is the accommodations letter. `src/app/metadata.test.ts` keeps it that
+ * way.
+ */
+export const metadata = { title: 'Today’s plan — NaviTBI' };
+
 export default async function TodayPage({ params }: PageProps<'/[patient]/today'>) {
   const { patient: patientId } = await params;
   const patient = getPatient(patientId);

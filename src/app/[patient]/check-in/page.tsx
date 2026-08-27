@@ -5,6 +5,8 @@ import { CheckInFlow } from './CheckInFlow';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = { title: 'Daily check-in — NaviTBI' };
+
 export default async function CheckInPage({ params }: PageProps<'/[patient]/check-in'>) {
   const { patient: patientId } = await params;
   const patient = getPatient(patientId);

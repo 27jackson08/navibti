@@ -8,6 +8,8 @@ import { isoDay } from '@/engine/session';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = { title: 'Clinician summary — NaviTBI' };
+
 export default async function ClinicianPage({ params }: PageProps<'/[patient]/clinician'>) {
   const { patient: patientId } = await params;
   const patient = getPatient(patientId);

@@ -13,6 +13,19 @@ export const dynamic = 'force-dynamic';
 
 const ROLES: readonly AccommodationRole[] = ['school', 'employer', 'caregiver'];
 
+const PACKET_TITLES: Record<AccommodationRole, string> = {
+  school: 'School accommodations',
+  employer: 'Workplace accommodations',
+  caregiver: 'Caregiver guidance',
+};
+
+export async function generateMetadata({ params }: PageProps<'/[patient]/packet/[role]'>) {
+  const { role } = await params;
+  const title = PACKET_TITLES[role as AccommodationRole];
+  // Document type, never the person — see the note in [patient]/today/page.tsx.
+  return { title: title ? `${title} — NaviTBI` : 'NaviTBI' };
+}
+
 export default async function PacketPage({ params }: PageProps<'/[patient]/packet/[role]'>) {
   const { patient: patientId, role } = await params;
   const patient = getPatient(patientId);

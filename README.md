@@ -146,6 +146,11 @@ and `/how-it-works` says so rather than leaving the gap implied.
   identical for revoked, expired, mistyped and never-existed, because saying
   which would hand the holder of a dead token a fact about the patient. The
   error boundary does the same.
+- **A tab title names the document, never the person.** Titles reach browser
+  history, screen shares and whatever a school's managed browser syncs upstream,
+  so they say "School accommodations", not who it is for. Shared pages are also
+  `noindex` by header and by meta — advisory, not a control, but a recipient
+  pasting a live link into a public ticket is an accident worth closing.
 - **The share surface is treated as the attack surface.** Tokens are 192 bits
   from a CSPRNG, compared in constant time, and expired, revoked and unknown all
   return the same 404. Pages are served under a per-request nonce CSP with
@@ -183,7 +188,7 @@ guideline to score better on a readability metric is the wrong trade.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 986 unit tests
+npm run verify       # typecheck, lint, 1,005 unit tests
 npm run verify -- --full  # ...and 143 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives

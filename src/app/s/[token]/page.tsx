@@ -27,6 +27,37 @@ export const dynamic = 'force-dynamic';
  * token: which patient, which audience, and whether raw symptom scores travel
  * with it. There is no navigation out of here into the rest of the app.
  */
+const SHARED_TITLES: Record<string, string> = {
+  school: 'School accommodations',
+  employer: 'Workplace accommodations',
+  caregiver: 'Caregiver guidance',
+  clinician: 'Clinician summary',
+};
+
+/**
+ * Two things matter on this route that do not matter anywhere else.
+ *
+ * The title carries the document type and never the patient, because a tab
+ * title reaches browser history, screen shares and whatever a school's managed
+ * browser syncs upstream.
+ *
+ * And the page is marked noindex. The token in this URL is the entire access
+ * control, so a crawler that reaches one — a recipient pasting the link into a
+ * ticket, a help desk, a public forum — could put a live clinical document into
+ * a search index. Robots directives are advisory, which is why the link also
+ * expires and can be revoked; this closes the accidental case, not the hostile
+ * one.
+ */
+export async function generateMetadata({ params }: PageProps<'/s/[token]'>) {
+  const { token } = await params;
+  const link = resolveToken(token);
+
+  return {
+    title: link ? `${SHARED_TITLES[link.role] ?? 'Shared plan'} — NaviTBI` : 'NaviTBI',
+    robots: { index: false, follow: false, nocache: true },
+  };
+}
+
 export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
   const { token } = await params;
 

@@ -8,6 +8,8 @@ import { ShareForm } from './ShareForm';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = { title: 'Shared links — NaviTBI' };
+
 export default async function SharingPage({ params }: PageProps<'/[patient]/sharing'>) {
   const { patient: patientId } = await params;
   const patient = getPatient(patientId);
