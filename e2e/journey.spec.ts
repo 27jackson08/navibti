@@ -554,3 +554,20 @@ test('a change made by a control is announced, and focus survives it', async ({ 
   await undo.click();
   await expect(page.locator('main').getByText(/aren.{1,3}t possible/)).toBeHidden();
 });
+
+test('every clinical output says where it comes from', async ({ page }) => {
+  // "Citations on every output" is one of four things this project does not
+  // cut, and the clinician summary had cut it — the one document read by the
+  // audience most likely to want to check a threshold. Asserted on the rendered
+  // page, because that is where the claim is made.
+  for (const path of ['/maya/packet/school', '/maya/packet/caregiver', '/maya/clinician']) {
+    await page.goto(path);
+
+    const sources = page.getByRole('heading', { name: 'Where this comes from' });
+    await expect(sources, `${path} cites nothing`).toBeVisible();
+
+    const listed = page.locator('footer ol li');
+    expect(await listed.count(), `${path} has an empty source list`).toBeGreaterThan(0);
+    await expect(listed.first()).toContainText(/\d{4}/);
+  }
+});

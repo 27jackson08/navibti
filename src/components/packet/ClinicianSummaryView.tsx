@@ -1,4 +1,4 @@
-import { LOAD_DOMAIN_LABELS } from '@/data/guidelines';
+import { CITATIONS, LOAD_DOMAIN_LABELS } from '@/data/guidelines';
 import type { ClinicianSummary } from '@/engine/packet/clinician';
 
 type Props = {
@@ -168,7 +168,19 @@ export function ClinicianSummaryView({ summary, includeRawSymptoms }: Props) {
       )}
 
       <footer className="border-t border-rule pt-5">
-        <p className="border-l-2 border-caution bg-caution-surface p-4 text-sm leading-relaxed">
+        <h2 className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-faint">
+          Where this comes from
+        </h2>
+        <ol className="mt-3 space-y-2 text-sm text-ink-soft">
+          {summary.sources.map((source) => (
+            <li key={source.id}>
+              {CITATIONS[source.id].authors}. <em>{CITATIONS[source.id].title}</em>.{' '}
+              {CITATIONS[source.id].source}.
+            </li>
+          ))}
+        </ol>
+
+        <p className="mt-6 border-l-2 border-caution bg-caution-surface p-4 text-sm leading-relaxed">
           <strong className="font-semibold">Not a clinical decision tool.</strong> NaviTBI
           organises self-reported data alongside published guideline thresholds. It does not
           diagnose, does not issue clearance, and its tolerance estimates are not validated in

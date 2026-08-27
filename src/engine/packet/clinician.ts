@@ -13,7 +13,17 @@
  * was not followed", and no amount of trend line answers that.
  */
 
-import { LOAD_DOMAINS, isMildAndBrief, type LoadDomain } from '@/data/guidelines';
+import {
+  CITATIONS,
+  EXACERBATION_MINUTE_LIMIT,
+  EXACERBATION_POINT_LIMIT,
+  LOAD_DOMAINS,
+  PERSISTING_SYMPTOMS_DAYS,
+  PROTOCOLS,
+  isMildAndBrief,
+  type CitationId,
+  type LoadDomain,
+} from '@/data/guidelines';
 import {
   buildSession,
   deltaPointsOf,
@@ -78,6 +88,14 @@ export interface ClinicianSummary {
    * symptom record distinguishes those.
    */
   readonly unmetSupports: readonly UnmetSupport[];
+  /**
+   * What this document is built on.
+   *
+   * Citations on every output is one of the four things this project does not
+   * cut, and this was the output that cut it — the one read by the audience
+   * most likely to want to check the basis for a stage name or a threshold.
+   */
+  readonly sources: readonly { id: CitationId; label: string }[];
 }
 
 export function clinicianSummary(
@@ -131,7 +149,28 @@ export function clinicianSummary(
     escalations: session.escalations,
     openQuestions: openQuestions(session),
     unmetSupports: session.unmetSupports,
+    sources: sourcesFor(patient),
   };
+}
+
+/**
+ * Collected from the constants this document actually quotes, not from a
+ * hand-kept list — the stage names come from the protocols, the flare test from
+ * the exacerbation limits, the escalation wording from the persistence
+ * threshold. A hardcoded array would go stale the first time one of those
+ * changed, and stale citations are worse than none.
+ */
+function sourcesFor(patient: Patient): { id: CitationId; label: string }[] {
+  const used = new Set<CitationId>([
+    PROTOCOLS['return-to-learn'].citation,
+    EXACERBATION_POINT_LIMIT.citation,
+    EXACERBATION_MINUTE_LIMIT.citation,
+    PERSISTING_SYMPTOMS_DAYS.citation,
+  ]);
+
+  if (patient.protocol === 'return-to-sport') used.add(PROTOCOLS['return-to-sport'].citation);
+
+  return [...used].map((id) => ({ id, label: CITATIONS[id].shortLabel }));
 }
 
 function describeStage(session: Session, which: 'learn' | 'sport') {

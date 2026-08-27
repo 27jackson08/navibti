@@ -52,6 +52,28 @@ describe('numbers quoted in the write-ups', () => {
     }
   });
 
+  it('lists every source the product actually cites', () => {
+    // The README's Sources section is what a reader checking the research
+    // foundation opens first, and it listed four of the six. The two missing
+    // ones — the neurometabolic cascade and the subtype literature — are cited
+    // on /how-it-works, so the product was using research the write-up did not
+    // admit to.
+    const citations = read('src/data/guidelines/citations.ts');
+    const ids = [...citations.matchAll(/id: '([a-z0-9-]+)'/g)].map((m) => m[1]);
+    expect(ids.length, 'no citation ids parsed').toBeGreaterThan(4);
+
+    // Each citation's first author surname, which is how the README names them.
+    const readme = read('README.md');
+    for (const id of ids) {
+      const block = citations.slice(citations.indexOf(`id: '${id}'`));
+      const authors = /authors:\s*'([^']+)'/.exec(block)?.[1] ?? '';
+      const surname = authors.split(/[\s,]+/)[0];
+
+      expect(surname.length, `no author parsed for ${id}`).toBeGreaterThan(2);
+      expect(readme, `README omits ${id} (${surname})`).toContain(surname);
+    }
+  });
+
   it('still states the narrower positioning claim out loud', () => {
     // MyBrainPacer and Parkwood hold "first personalised pacing app"; ours is
     // "first closed-loop accommodation translator". Asserting the wrong claim

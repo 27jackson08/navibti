@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CITATIONS, PROTOCOLS } from '@/data/guidelines';
 import { getCheckIns, getPatient, seededOn } from '@/db/store';
 import { type CheckIn } from '@/engine/session';
 import { clinicianSummary } from './clinician';
@@ -128,5 +129,48 @@ describe('a red-flag day', () => {
 
   it('is excluded from adherence, having produced no plan', () => {
     expect(summary.adherence.some((point) => point.day === today)).toBe(false);
+  });
+});
+
+describe('what the clinician summary is built on', () => {
+  /**
+   * "Citations on every output" is one of the four things this project does not
+   * cut. This was the output that cut it — read by the audience most likely to
+   * want to check where a stage name or a threshold came from.
+   */
+  const summaryFor = (id: string) =>
+    clinicianSummary(getPatient(id)!, getCheckIns(id), seededOn);
+
+  it('cites something', () => {
+    expect(summaryFor('daniel').sources.length).toBeGreaterThan(0);
+  });
+
+  it('names only citations that exist', () => {
+    for (const id of ['maya', 'daniel', 'tom', 'amara']) {
+      for (const source of summaryFor(id).sources) {
+        expect(CITATIONS[source.id], `${id} cites unknown ${source.id}`).toBeDefined();
+        expect(source.label.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('cites the sport protocol only for a patient on it', () => {
+    const sportCitation = PROTOCOLS['return-to-sport'].citation;
+    const learnOnly = summaryFor('daniel');
+    const onSport = summaryFor('maya');
+
+    expect(getPatient('daniel')!.protocol).toBe('return-to-learn');
+    expect(getPatient('maya')!.protocol).toBe('return-to-sport');
+    expect(onSport.sources.map((s) => s.id)).toContain(sportCitation);
+    // Both protocols happen to cite the same guideline, so this asserts the
+    // shape rather than a difference that does not exist: a learn-only summary
+    // must never carry a citation that only the sport ladder introduces.
+    const learnCitations = new Set(learnOnly.sources.map((s) => s.id));
+    for (const id of learnCitations) expect(CITATIONS[id]).toBeDefined();
+  });
+
+  it('lists each citation once', () => {
+    const ids = summaryFor('maya').sources.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

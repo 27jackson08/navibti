@@ -172,8 +172,8 @@ are the ones least able to advocate for themselves.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 881 unit tests
-npm run verify -- --full  # ...and 131 e2e (a11y on three engines)
+npm run verify       # typecheck, lint, 886 unit tests
+npm run verify -- --full  # ...and 132 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives
 npm run trace -- 3   # one patient's day-by-day engine trace
@@ -193,12 +193,20 @@ paths.
 - Ontario Neurotrauma Foundation. *Living Concussion Guidelines* (adults).
 - Echemendia RJ, et al. *The Concussion Recognition Tool 6 (CRT6).*
   Br J Sports Med 2023;57:692-693.
+- Giza CC, Hovda DA. *The new neurometabolic cascade of concussion.*
+  Neurosurgery 2014;75(Suppl 4):S24-S33.
+- Lumba-Brown A, Teramoto M, Bloom OJ, et al. *Concussion guidelines step 2:
+  evidence for subtype classification.* Neurosurgery 2020;86(1):2-13.
 
 ## Known limitations
 
 - Not validated in humans. All results are on synthetic cohorts.
-- No authentication. Share-link scoping is real; patient-record ownership is
-  not enforced, which is the main thing keeping this out of production.
+- No identity. Every mutation is gated on the acting patient and that gate is
+  enforced — a request cannot file a check-in against someone else's record or
+  mint a link for a patient it has not opened. What is missing is any check on
+  *who* is acting: anyone can choose to be any of the demo patients. Replacing
+  one function with a session lookup is the whole change, and it is the main
+  thing keeping this out of production.
 - In-memory demo store. The Drizzle schema for Postgres is written but unused.
 - The system is markedly conservative: mean signed tolerance error is −0.94
   reference units, and the guideline floor overrides the model on 63% of days.

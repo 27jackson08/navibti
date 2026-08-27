@@ -7,6 +7,7 @@ import {
   SUBTYPE_LABELS,
   UNTRACKED_PRESENTATIONS,
 } from '@/data/guidelines';
+import { joinWords } from '@/lib/list';
 
 export const metadata = {
   title: 'How NaviTBI models recovery',
@@ -73,7 +74,10 @@ export default function HowItWorks() {
               {mechanism.resembles.length > 0 && (
                 <p className="mt-5 border-l-2 border-rule pl-4 text-sm text-ink-soft">
                   A pattern concentrated here resembles{' '}
-                  {mechanism.resembles.map((subtype) => SUBTYPE_LABELS[subtype]).join(' or ')}{' '}
+                  {joinWords(
+                    mechanism.resembles.map((subtype) => SUBTYPE_LABELS[subtype]),
+                    'or',
+                  )}{' '}
                   presentations in the subtype literature. NaviTBI describes the resemblance; it
                   does not assign anyone a subtype, which is a clinical judgement made with an
                   examination rather than from self-reported minutes.
