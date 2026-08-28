@@ -147,6 +147,20 @@ test.describe('keyboard', () => {
     await page.keyboard.press('Enter');
 
     await expect(page.getByRole('heading', { level: 2 })).toContainText('symptoms right now');
+
+    // The ends of the severity scale say what they mean. The printed caption
+    // sits under the row, which a reader moving button to button never reaches,
+    // so a bare "0" and "10" would be the whole of what they get.
+    await expect(page.getByRole('button', { name: '0 — none at all' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '10 — as bad as it gets' })).toBeVisible();
+
+    // The middle stays unlabelled on purpose: "4" is not improved by prose.
+    await expect(page.getByRole('button', { name: '4', exact: true })).toBeVisible();
+
+    const four = page.getByRole('button', { name: '4', exact: true });
+    await four.focus();
+    await page.keyboard.press('Enter');
+    await expect(four).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('a focused control shows a visible ring', async ({ page }) => {

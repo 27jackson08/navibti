@@ -14,6 +14,12 @@ type Props = {
  * A slider needs a sustained fine motor gesture and gives no feedback until it
  * lands. Discrete buttons are one tap, hold their value visibly, and are
  * reachable by keyboard and screen reader without any custom ARIA.
+ *
+ * Deliberately toggle buttons rather than a radiogroup. A radiogroup is the
+ * more precise semantic, but it obliges roving tabindex and arrow-key handling
+ * — more custom ARIA to get wrong, on the surface used daily by someone with
+ * active symptoms, in exchange for a position announcement. Eleven plain
+ * buttons work everywhere.
  */
 export function Scale({ value, onChange, lowLabel, highLabel, legend }: Props) {
   return (
@@ -25,6 +31,13 @@ export function Scale({ value, onChange, lowLabel, highLabel, legend }: Props) {
             key={score}
             type="button"
             onClick={() => onChange(score)}
+            // What the ends of the scale mean is printed under the row, which a
+            // reader moving button to button never reaches. Carrying it on the
+            // endpoints themselves is the difference between "zero, button" and
+            // "zero, none at all".
+            aria-label={
+              score === 0 ? `0 — ${lowLabel}` : score === 10 ? `10 — ${highLabel}` : undefined
+            }
             aria-pressed={value === score}
             className={`flex aspect-square items-center justify-center border font-mono text-lg tabular-nums ${
               value === score

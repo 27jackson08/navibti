@@ -68,6 +68,14 @@ computes its own "today" disagrees with that once a day, across UTC midnight.
 counts; run it before quoting a number in README.md or docs/devpost.md, which are
 the only two files that should carry one.
 
+**A scattered e2e failure usually means the machine, not the code.** The suite
+drives three engines against one server; under load — a training run, a second
+agent, a build — groups of tests time out and the scatter differs every run.
+Playwright retries once, so anything reported failed twice. If a run is still
+scattering, check `uptime` before reading the failures as defects, and confirm
+with `npx playwright test --workers=1`, which stays green at load averages that
+break the parallel run.
+
 **Kill stray servers before running e2e.** `reuseExistingServer` is off, so a
 `next start` left over from another task holds port 3000 and the whole suite
 fails on startup. `pkill -f "next start"` first.

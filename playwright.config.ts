@@ -11,7 +11,28 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+
+  /*
+   * One retry everywhere, not only in CI.
+   *
+   * This suite drives three browser engines against one server, and on a
+   * developer machine that is also doing something else — a training run, a
+   * second agent, a build — whole groups of tests time out. Twice that produced
+   * a different scatter of "failures" each time, all of which passed when the
+   * same commit was run with a single worker. A timeout under load is not
+   * information about the product, and treating it as a defect wastes the
+   * attention that a real failure needs.
+   *
+   * This does not paper over flakiness in what is being measured: an axe scan
+   * either finds violations or does not, and a journey either reaches the
+   * assertion or does not. Anything that fails twice is reported. The known
+   * genuine race in this suite — three engines sharing one in-memory store —
+   * was fixed by the project split below rather than by retrying it away.
+   *
+   * If a run is still scattering, the machine is saturated: `--workers=1` is
+   * the reliable check, and slower.
+   */
+  retries: 1,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: 'http://localhost:3000',
