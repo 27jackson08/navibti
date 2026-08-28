@@ -27,7 +27,7 @@ import {
   type Exacerbation,
   type LoadDomain,
 } from '@/data/guidelines';
-import { joinWords } from '@/lib/list';
+import { indefiniteArticle, joinWords } from '@/lib/list';
 import { invertSpd } from '@/engine/tolerance/matrix';
 import { isPersonalized, predict, weightOf, type Posterior } from '@/engine/tolerance/posterior';
 import { FEATURE_ORDER, normalizeDose } from '@/engine/tolerance/units';
@@ -430,6 +430,23 @@ export function sensitivityProfile(posterior: Posterior): SensitivityProfile {
     'or',
   );
 
+  // Every tracked domain currently resembles something, but the sentence below
+  // reads "described as a  presentation" if one ever does not — the same shape
+  // as a packet asking for a quantity of nothing. The how-it-works page already
+  // guards this; naming a subtype is the more consequential of the two places.
+  if (resembling.length === 0) {
+    return {
+      leading: first.domain,
+      runnerUp: second.domain,
+      separation,
+      resembles: [],
+      canDescribe: true,
+      summary:
+        `Across your check-ins, ${LOAD_DOMAIN_LABELS[first.domain].toLowerCase()} costs you ` +
+        'more than anything else you log. Worth mentioning at your next appointment.',
+    };
+  }
+
   return {
     leading: first.domain,
     runnerUp: second.domain,
@@ -438,8 +455,9 @@ export function sensitivityProfile(posterior: Posterior): SensitivityProfile {
     canDescribe: true,
     summary:
       `Across your check-ins, ${LOAD_DOMAIN_LABELS[first.domain].toLowerCase()} costs you more ` +
-      `than anything else you log. Patterns concentrated there are often described as a ` +
-      `${resembling} presentation, which has specific treatments — worth raising at your next ` +
+      `than anything else you log. Patterns concentrated there are often described as ` +
+      `${indefiniteArticle(resembling)} ${resembling} presentation, which has specific ` +
+      `treatments — worth raising at your next ` +
       'appointment rather than acting on here.',
   };
 }

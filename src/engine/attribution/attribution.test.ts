@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { DOMAIN_MECHANISMS, LOAD_DOMAINS, SUBTYPE_LABELS } from '@/data/guidelines';
+import { indefiniteArticle, joinWords } from '@/lib/list';
 import { gaussian, seededRng } from '@/data/synthetic/random';
 import { priorPosterior, updateAll, type Observation } from '@/engine/tolerance/posterior';
 import {
@@ -246,6 +248,37 @@ describe('language discipline', () => {
   it('always says something, whatever the outcome', () => {
     for (const result of everyOutcome) {
       expect(result.explanation.length).toBeGreaterThan(30);
+    }
+  });
+});
+
+describe('the sentence a patient reads about their own pattern', () => {
+  /**
+   * This is the only place NaviTBI names a clinical pattern, so the wording is
+   * checked as rendered rather than as a template. Two of the five read "a
+   * ocular-motor presentation" and "a anxiety/mood presentation" — small
+   * errors, in the one document whose job is to be trusted enough to take to an
+   * appointment.
+   */
+  it.each(LOAD_DOMAINS)('reads correctly when %s leads', (domain) => {
+    const resembling = joinWords(
+      DOMAIN_MECHANISMS[domain].resembles.map((subtype) => SUBTYPE_LABELS[subtype]),
+      'or',
+    );
+    if (resembling.length === 0) return;
+
+    const sentence = `often described as ${indefiniteArticle(resembling)} ${resembling} presentation`;
+
+    expect(sentence, sentence).not.toMatch(/\ba [aeiou]/);
+    expect(sentence, sentence).not.toMatch(/\ban [^aeiou]/);
+    expect(sentence).not.toContain('  ');
+  });
+
+  it('every tracked domain resembles something, so the fallback stays unused', () => {
+    // If this starts failing, the fallback wording in sensitivityProfile is now
+    // live and worth reading rather than merely present.
+    for (const domain of LOAD_DOMAINS) {
+      expect(DOMAIN_MECHANISMS[domain].resembles.length, domain).toBeGreaterThan(0);
     }
   });
 });
