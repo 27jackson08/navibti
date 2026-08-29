@@ -19,6 +19,26 @@ function audience(page: Page, role: 'School' | 'Employer' | 'Caregiver' | 'Clini
  * needs an ambulance, and leaking a revoked link.
  */
 
+
+/**
+ * The patient's plan lists a declined accommodation by name, not by its full
+ * instruction: the figures in that sentence belong to the day it was issued,
+ * and re-rendering them with today's showed a declined cap of one meeting as
+ * "Cap live meetings at 0 per day".
+ */
+const GAPS_LABEL = 'Gaps between meetings';
+
+/** Withdraws every standing report, so a test starts from the seeded plan. */
+async function clearReportedUnavailable(page: Page, patient: string) {
+  await page.goto(`/${patient}/today`);
+  const undo = page.getByRole('button', { name: /^This is available again/ });
+
+  for (let remaining = await undo.count(); remaining > 0; remaining--) {
+    await undo.first().click();
+    await expect(undo).toHaveCount(remaining - 1);
+  }
+}
+
 test('a check-in produces a plan and a packet', async ({ page }) => {
   await page.goto('/act/amara');
   await page.goto('/amara/check-in');
@@ -173,6 +193,12 @@ test('a recipient can answer, and the plan changes', async ({ page }, testInfo) 
   const label = `response loop ${testInfo.project.name}`;
 
   await page.goto('/act/tom');
+
+  // Start from a clean plan. This test flags an accommodation and withdraws it
+  // at the end, so a run that fails in between leaves Tom's limits lowered —
+  // and the retry then measures a plan the previous attempt had already moved.
+  await clearReportedUnavailable(page, 'tom');
+
   await page.goto('/tom/sharing');
   await audience(page, 'Employer').click();
   await page.getByPlaceholder('Ms Okafor, Year 11 tutor').fill(label);
@@ -232,7 +258,7 @@ test('a recipient can answer, and the plan changes', async ({ page }, testInfo) 
   await page.goto('/tom/today');
   await page
     .locator('li')
-    .filter({ hasText: 'No back-to-back meetings' })
+    .filter({ hasText: GAPS_LABEL })
     .getByRole('button', { name: /This is available again/ })
     .click();
 

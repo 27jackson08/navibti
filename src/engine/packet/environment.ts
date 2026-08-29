@@ -56,7 +56,11 @@ export function unmetSupports(
     .map((item) => ({
       accommodationId: item.id,
       domain: item.domain,
-      text: item.text,
+      // The label where the sentence carries figures. This is a record of what
+      // was declined, not an instruction for today, and re-rendering it with
+      // today's numbers made a declined cap of one meeting read "Cap live
+      // meetings at 0 per day" once a clinician restricted the domain.
+      text: item.shortLabel ?? item.text,
       role: item.role,
     }));
 }

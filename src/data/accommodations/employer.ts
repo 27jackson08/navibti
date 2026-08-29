@@ -12,6 +12,7 @@ import type { Accommodation } from './types';
 export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
   {
     id: 'work-phased-hours',
+    shortLabel: 'A phased return to full hours',
     role: 'employer',
     domain: 'sleepFatigue',
     text: 'Phase hours back in: {{hours}} per day this week, reviewed weekly.',
@@ -46,6 +47,7 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
   },
   {
     id: 'work-meeting-cap',
+    shortLabel: 'A cap on live meetings',
     role: 'employer',
     domain: 'cognitive',
     text:
@@ -65,6 +67,7 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
   },
   {
     id: 'work-no-back-to-back',
+    shortLabel: 'Gaps between meetings',
     role: 'employer',
     domain: 'cognitive',
     text: 'No back-to-back meetings. Leave at least {{gapMinutes}} minutes between any two.',
@@ -96,6 +99,7 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
   },
   {
     id: 'work-screen-breaks',
+    shortLabel: 'Regular screen breaks',
     role: 'employer',
     domain: 'visualVestibular',
     text:
@@ -113,6 +117,7 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
   },
   {
     id: 'work-deep-focus-budget',
+    shortLabel: 'A budget for sustained analytical work',
     role: 'employer',
     domain: 'cognitive',
     text:
@@ -178,6 +183,7 @@ export const EMPLOYER_ACCOMMODATIONS: readonly Accommodation[] = [
   },
   {
     id: 'work-flexible-start',
+    shortLabel: 'A flexible start time',
     role: 'employer',
     domain: 'sleepFatigue',
     text: 'Allow a flexible start time and avoid scheduling anything before {{earliestHour}}.',

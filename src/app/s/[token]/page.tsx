@@ -144,9 +144,13 @@ export default async function SharedPage({ params }: PageProps<'/s/[token]'>) {
   const flagged: FlaggedItem[] = responsesForLink(link.id)
     .filter((entry) => entry.accommodationId !== null && entry.reason !== null)
     .map((entry) => {
-      const template = ACCOMMODATION_LIBRARY.find(
+      const accommodation = ACCOMMODATION_LIBRARY.find(
         (item) => item.id === entry.accommodationId,
-      )?.text;
+      );
+      // The label where one exists, for the same reason the patient's own view
+      // uses it: this echoes back what the recipient declined, and the figures
+      // in that sentence belong to the day it was issued rather than to today.
+      const template = accommodation?.shortLabel ?? accommodation?.text;
       return {
         id: entry.accommodationId!,
         reason: entry.reason!,

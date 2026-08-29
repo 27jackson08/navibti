@@ -79,6 +79,24 @@ export interface Accommodation {
    * Product defaults, all of them — no guideline quantifies the cost of a
    * missing accommodation.
    */
+  /**
+   * A name for this accommodation, without its numbers.
+   *
+   * Required wherever `text` carries a quantity, because the numbers in that
+   * sentence belong to the day it was issued. Echoing a declined accommodation
+   * back — "you told us these aren't possible" on the recipient's copy, and
+   * "reported unavailable" on the patient's plan — re-rendered the template
+   * with *today's* figures, so a school that declined a cap of one meeting saw
+   * "Cap live meetings at 0 per day" once a clinician had restricted the
+   * domain. The record is of which adjustment was declined; the number is
+   * noise there, and wrong.
+   *
+   * Authored rather than derived. Truncating the sentence at its first
+   * placeholder yields "Cap live meetings at", which is not a phrase, and this
+   * project does not generate accommodation prose.
+   */
+  readonly shortLabel?: string;
+
   readonly supportsLoad?: {
     readonly domain: LoadDomain;
     readonly withoutIt: number;

@@ -10,6 +10,7 @@ import type { Accommodation } from './types';
 export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
   {
     id: 'school-shortened-day',
+    shortLabel: 'A shortened school day',
     role: 'school',
     domain: 'cognitive',
     text: 'Schedule a shortened day: {{hours}} of class, ideally in the morning.',
@@ -25,6 +26,7 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
   },
   {
     id: 'school-scheduled-breaks',
+    shortLabel: 'Scheduled rest breaks in a quiet space',
     role: 'school',
     domain: 'cognitive',
     text:
@@ -63,6 +65,7 @@ export const SCHOOL_ACCOMMODATIONS: readonly Accommodation[] = [
   },
   {
     id: 'school-screen-cap',
+    shortLabel: 'A cap on screen work',
     role: 'school',
     domain: 'visualVestibular',
     text:

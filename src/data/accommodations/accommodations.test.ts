@@ -115,3 +115,36 @@ describe('allowedClaimIds', () => {
     expect(allowed.has('some-invented-recommendation')).toBe(false);
   });
 });
+
+describe('accommodations whose wording carries numbers', () => {
+  /**
+   * Anything with a placeholder needs a name without one.
+   *
+   * Both echo-back surfaces — "you told us these aren't possible" on the
+   * recipient's copy, and "reported unavailable" on the patient's plan — show
+   * an accommodation that is no longer in today's packet. Rendering its
+   * template with today's slots put a declined cap of one meeting on screen as
+   * "Cap live meetings at 0 per day".
+   */
+  const quantified = ACCOMMODATION_LIBRARY.filter((item) => item.text.includes('{{'));
+
+  it('finds the quantified items', () => {
+    expect(quantified.length).toBeGreaterThan(5);
+  });
+
+  it.each(quantified.map((item) => [item.id, item] as const))(
+    '%s has a label without numbers',
+    (_id, item) => {
+      expect(item.shortLabel, `${item.id} needs a shortLabel`).toBeDefined();
+      expect(item.shortLabel).not.toMatch(/\{\{|\d/);
+      expect(item.shortLabel!.length).toBeGreaterThan(11);
+    },
+  );
+
+  it('does not carry a label where the text has no numbers to hide', () => {
+    for (const item of ACCOMMODATION_LIBRARY) {
+      if (item.text.includes('{{')) continue;
+      expect(item.shortLabel, `${item.id} has a shortLabel it does not need`).toBeUndefined();
+    }
+  });
+});
