@@ -30,9 +30,21 @@ const BINDING_COPY: Record<DomainRecommendation['binding'], string> = {
   clinician: 'Set directly by a clinician.',
 };
 
-function format(dose: number, unit: string): string {
+export function formatDose(dose: number, unit: string): string {
   if (unit.includes('sleep')) return `${dose.toFixed(1)}`;
   return `${Math.round(dose)}`;
+}
+
+/**
+ * "1 focused minutes" — the neighbour of the zero case handled below, and
+ * reachable the same way: a clinician ceiling, or a floor that lands there.
+ *
+ * Only the minute-measured units need this. Sleep debt is printed to one
+ * decimal, so it reads "1.0 hours of sleep debt" and is already correct.
+ */
+export function unitFor(dose: number, unit: string): string {
+  if (unit.includes('sleep') || Math.round(dose) !== 1) return unit;
+  return unit.replace(/minutes$/, 'minute');
 }
 
 /**
@@ -67,8 +79,8 @@ export function DoseCard({ recommendation }: Props) {
         <p className="text-2xl">As little as you can manage</p>
       ) : (
         <p className="flex items-baseline gap-2">
-          <span className="font-mono text-4xl tabular-nums">{format(dose, unit)}</span>
-          <span className="text-sm text-ink-soft">{unit}</span>
+          <span className="font-mono text-4xl tabular-nums">{formatDose(dose, unit)}</span>
+          <span className="text-sm text-ink-soft">{unitFor(dose, unit)}</span>
         </p>
       )}
 
@@ -78,7 +90,7 @@ export function DoseCard({ recommendation }: Props) {
         aria-label={
           isMinimise(dose, unit)
             ? `As little as possible. ${BINDING_COPY[binding]}`
-            : `${format(dose, unit)} of ${unit}. ${BINDING_COPY[binding]}`
+            : `${formatDose(dose, unit)} of ${unitFor(dose, unit)}. ${BINDING_COPY[binding]}`
         }
       >
         <div
