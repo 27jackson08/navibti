@@ -114,6 +114,14 @@ and `/how-it-works` says so rather than leaving the gap implied.
 
 - **Red flags halt everything.** Any CRT6 red flag produces no plan, no dose and
   no packet — one screen and an instruction to seek urgent care.
+- **The model can never widen what the guideline permits**, and that is a
+  property test rather than a set of examples. Across both ladders, every step,
+  every domain, a range of posteriors, ramp positions, environment factors and
+  clinician ceilings, a dose may exceed the smallest binding constraint only by
+  being the guideline floor — and may never exceed a clinician's ceiling for any
+  reason, including the floor. The floor is separately asserted never to sit
+  above its own stage cap, since it is applied last and would widen the ceiling
+  invisibly if it did.
 - **Never clears sport.** Return-to-Sport step 4+ requires written medical
   clearance; the app displays the requirement and declines.
 - **Never gates school on clearance** — it states the opposite, correctly, which
@@ -194,7 +202,7 @@ guideline to score better on a readability metric is the wrong trade.
 npm install
 npm run dev          # http://localhost:3000
 
-npm run verify       # typecheck, lint, 1,149 unit tests
+npm run verify       # typecheck, lint, 1,351 unit tests
 npm run verify -- --full  # ...and 143 e2e (a11y on three engines)
 npm run eval         # regenerate results/evaluation.md
 npm run packets      # print the packets each demo persona receives
