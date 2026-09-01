@@ -38,7 +38,7 @@ export default function Home() {
         these behave like the cohort in the results rather than like curated happy paths.
       </p>
 
-      <ul className="mt-6 grid gap-px border border-rule bg-rule sm:grid-cols-3">
+      <ul className="mt-6 grid gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
         {sessions.map((session) => (
           <li key={session.patient.id} className="bg-ground">
             <Link

@@ -196,6 +196,18 @@ most are the ones least able to advocate for themselves. Red-flag wording is
 exempt and deliberately so: it is verbatim CRT6, and paraphrasing a transcribed
 guideline to score better on a readability metric is the wrong trade.
 
+## Seeing it
+
+```bash
+npm install
+npm run dev          # http://localhost:3000
+```
+
+There is no hosted instance in this repo's history; `DEPLOY.md` puts one up in
+about five minutes. Read the constraint at the top of it first — session state
+is in memory, so this deploys as a single container and not as serverless
+functions.
+
 ## Running it
 
 ```bash
